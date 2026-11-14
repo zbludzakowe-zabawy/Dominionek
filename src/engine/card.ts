@@ -1,0 +1,37 @@
+import type { CardType, PlayerState, Step, Text } from './types';
+import type { Game } from './game';
+
+export type SetId = 'basic' | 'keep' | 'hoard' | 'tower' | 'court';
+
+export type AiRole = 'village' | 'draw' | 'cantrip' | 'money' | 'attack' | 'trash' | 'gain' | 'victory' | 'other';
+
+export interface Plus {
+  cards?: number;
+  actions?: number;
+  buys?: number;
+  coins?: number;
+}
+
+export interface CardDef {
+  id: string;
+  set: SetId;
+  name: Text;
+  /** Tekst poza standardowymi bonusami (te UI rysuje z `plus`). */
+  text: Text;
+  types: CardType[];
+  cost: number;
+  /** Wartość skarbu. */
+  coins?: number;
+  /** Stałe punkty zwycięstwa. */
+  vp?: number;
+  /** Punkty zależne od talii właściciela (wszystkie jego karty). */
+  vpFn?: (cards: string[]) => number;
+  plus?: Plus;
+  play?: (g: Game, p: PlayerState) => Step;
+  /** Reakcja chroniąca przed atakami, gdy karta jest na ręce. */
+  blocksAttacks?: boolean;
+  /** Wskazówki dla botów. value ~ siła karty (0–10), role ~ do czego służy. */
+  ai: { value: number; role: AiRole; terminal?: boolean };
+}
+
+export const isType = (c: CardDef, t: CardType) => c.types.includes(t);

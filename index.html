@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Crownforge – a fantasy deck-building card game. Play solo against 1–3 bots, offline.">
+  <meta name="theme-color" content="#1b2027">
+  <title>Crownforge</title>
+  <meta name="application-name" content="Crownforge">
+  <meta name="apple-mobile-web-app-title" content="Crownforge">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+</head>
+<body>
+  <div id="root"></div>
+
+  <div class="app-banner" id="install-banner" hidden>
+    <img src="./icons/icon-192.png" alt="" width="40" height="40">
+    <div class="app-banner-text">
+      <strong data-en="Install Crownforge" data-pl="Zainstaluj Crownforge">Install Crownforge</strong>
+      <span class="only-prompt" data-en="App on your home screen, works offline." data-pl="Aplikacja na ekranie głównym, działa też bez internetu."></span>
+      <span class="only-ios"
+        data-en="Tap <b>Share</b> <svg class='share-ico' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3v12'/><path d='m8 7 4-4 4 4'/><path d='M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7'/></svg>, then <b>Add to Home Screen</b>."
+        data-pl="Stuknij <b>Udostępnij</b> <svg class='share-ico' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3v12'/><path d='m8 7 4-4 4 4'/><path d='M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7'/></svg>, potem <b>Do ekranu początkowego</b>."></span>
+    </div>
+    <button class="btn primary only-prompt" id="btn-install" data-en="Install" data-pl="Zainstaluj">Install</button>
+    <button class="banner-close" id="btn-install-close" aria-label="Close">✕</button>
+  </div>
+  <div class="app-banner" id="update-banner" role="alert" hidden>
+    <div class="app-banner-text">
+      <strong data-en="New version available" data-pl="Dostępna nowa wersja">New version available</strong>
+      <span data-en="Your game will be kept." data-pl="Twoja gra zostanie zachowana.">Your game will be kept.</span>
+    </div>
+    <button class="btn primary" id="btn-update" data-en="Refresh" data-pl="Odśwież">Refresh</button>
+    <button class="btn" id="btn-update-later" data-en="Later" data-pl="Później">Later</button>
+  </div>
+
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#2f3946"/>
+      <stop offset="1" stop-color="#161a20"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3dc8f"/>
+      <stop offset="1" stop-color="#b8892f"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="none" stroke="#d8b968" stroke-opacity=".22" stroke-width="3">
+    <circle cx="256" cy="262" r="176"/>
+    <circle cx="256" cy="262" r="150" stroke-dasharray="6 10"/>
+  </g>
+  <!-- korona -->
+  <path d="M136 312 L120 176 L192 236 L256 150 L320 236 L392 176 L376 312 Z" fill="url(#gold)" stroke="#6e5418" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="120" cy="170" r="16" fill="url(#gold)" stroke="#6e5418" stroke-width="5"/>
+  <circle cx="256" cy="142" r="18" fill="url(#gold)" stroke="#6e5418" stroke-width="5"/>
+  <circle cx="392" cy="170" r="16" fill="url(#gold)" stroke="#6e5418" stroke-width="5"/>
+  <!-- obręcz / kowadło -->
+  <path d="M128 326 H384 L370 362 H306 L322 392 H190 L206 362 H142 Z" fill="#c9cfd6" stroke="#4a525c" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M240 236 l16 -24 l16 24 l-16 24 z" fill="#2c3440" stroke="#6e5418" stroke-width="4"/>
+</svg>
