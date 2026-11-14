@@ -5,7 +5,7 @@ import { randomSeed } from '../engine/rng';
 import { KINGDOM_SIZE, randomKingdom, rerollOne } from '../engine/setup';
 import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
-import { CardFace, Coin, PileTile } from './CardView';
+import { CardFace, Coin, ConfirmButton, PileTile } from './CardView';
 import { GameScreen } from './GameScreen';
 import { loadGame, loadSettings, saveGame, saveSettings, type SavedGame, type Settings } from './store';
 
@@ -150,17 +150,19 @@ export function App() {
               {t('continue')}
             </button>
           )}
-          <button
+          <ConfirmButton
             className={'btn big' + (saved ? '' : ' primary')}
-            onClick={() => {
-              if (saved && !window.confirm(t('confirmNew'))) return;
+            label={t('newGame')}
+            question={t('confirmNew')}
+            yes={t('yes')}
+            no={t('no')}
+            needConfirm={!!saved}
+            onConfirm={() => {
               saveGame(null);
               setSaved(null);
               setScreen('setup');
             }}
-          >
-            {t('newGame')}
-          </button>
+          />
           <button className="btn big ghost" onClick={() => openRules('home')}>
             {t('rules')}
           </button>

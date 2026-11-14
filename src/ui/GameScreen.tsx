@@ -6,7 +6,7 @@ import { Game } from '../engine/game';
 import { makePlan } from '../engine/plan';
 import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
-import { CardFace, Coin, PileTile } from './CardView';
+import { CardFace, Coin, ConfirmButton, PileTile } from './CardView';
 import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings } from './store';
 
@@ -512,14 +512,15 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             <button className="btn" onClick={() => { persist(); onExit(); }}>
               {t('leaveGame')}
             </button>
-            <button
+            <ConfirmButton
               className="btn"
-              onClick={() => {
-                if (game.over || window.confirm(t('confirmNew'))) onNewGame();
-              }}
-            >
-              {t('restart')}
-            </button>
+              label={t('restart')}
+              question={t('confirmNew')}
+              yes={t('yes')}
+              no={t('no')}
+              needConfirm={!game.over}
+              onConfirm={onNewGame}
+            />
             <button className="btn ghost" onClick={() => setPanel(null)}>
               {t('close')}
             </button>

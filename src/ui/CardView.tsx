@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
@@ -114,6 +114,38 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong }: TilePro
       <div className="tile-name">{c.name[lang]}</div>
       <Coin n={c.cost} small />
       <span className="tile-count">{count}</span>
+    </div>
+  );
+}
+
+/** Przycisk z potwierdzeniem w samej stronie (zamiast window.confirm). */
+export function ConfirmButton(props: {
+  className?: string;
+  label: string;
+  question: string;
+  yes: string;
+  no: string;
+  needConfirm: boolean;
+  onConfirm: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+  if (!asking)
+    return (
+      <button className={props.className} onClick={() => (props.needConfirm ? setAsking(true) : props.onConfirm())}>
+        {props.label}
+      </button>
+    );
+  return (
+    <div className="confirm-box" role="alertdialog">
+      <span>{props.question}</span>
+      <div className="confirm-actions">
+        <button className="btn" onClick={() => setAsking(false)}>
+          {props.no}
+        </button>
+        <button className="btn primary" onClick={props.onConfirm}>
+          {props.yes}
+        </button>
+      </div>
     </div>
   );
 }
