@@ -40,6 +40,11 @@ export function usePress(onTap?: () => void, onLong?: () => void) {
   };
 }
 
+export function Art({ id, className }: { id: string; className: string }) {
+  const a = cardArt(card(id));
+  return <div className={className} style={{ backgroundImage: a.bg }} dangerouslySetInnerHTML={{ __html: a.svg }} />;
+}
+
 export function typeLine(id: string, lang: Lang): string {
   return card(id)
     .types.map((t) => tr(lang, `type.${t}`))
@@ -74,7 +79,7 @@ export function CardFace({ id, lang, className = '', onTap, onLong, badge }: Fac
       <div className="c-head">
         <span className="c-name">{c.name[lang]}</span>
       </div>
-      <div className="c-art" dangerouslySetInnerHTML={{ __html: cardArt(c) }} />
+      <Art id={id} className="c-art" />
       <div className="c-body">
         {lines.length > 0 && (
           <div className="c-plus">
@@ -110,10 +115,10 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong }: TilePro
   const press = usePress(onTap, onLong);
   return (
     <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} {...press} role="button" aria-label={c.name[lang]}>
-      <div className="tile-art" dangerouslySetInnerHTML={{ __html: cardArt(c) }} />
+      <Art id={id} className="tile-art" />
       <div className="tile-name">{c.name[lang]}</div>
       <Coin n={c.cost} small />
-      <span className="tile-count">{count}</span>
+      <span className="tile-count" title="">{count}</span>
     </div>
   );
 }
@@ -147,5 +152,17 @@ export function ConfirmButton(props: {
         </button>
       </div>
     </div>
+  );
+}
+
+/** Zagrana karta (małą); takie same karty leżą jedna na drugiej z licznikiem. */
+export function PlayedCard({ id, n, lang, onTap }: { id: string; n: number; lang: Lang; onTap: () => void }) {
+  const c = card(id);
+  return (
+    <button className={`played t-${typeKey(c)}` + (n > 1 ? ' stacked' : '')} onClick={onTap} aria-label={`${c.name[lang]} ×${n}`}>
+      <Art id={id} className="played-art" />
+      <span className="played-name">{c.name[lang]}</span>
+      {n > 1 && <span className="played-count">×{n}</span>}
+    </button>
   );
 }

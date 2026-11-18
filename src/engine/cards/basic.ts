@@ -6,7 +6,7 @@ export const BASIC: CardDef[] = [
   {
     id: 'copper',
     set: 'basic',
-    name: { en: 'Copper Mark', pl: 'Miedziana Marka' },
+    name: { en: 'Penny', pl: 'Grosz' },
     text: none,
     types: ['treasure'],
     cost: 0,
@@ -16,7 +16,7 @@ export const BASIC: CardDef[] = [
   {
     id: 'silver',
     set: 'basic',
-    name: { en: 'Silver Mark', pl: 'Srebrna Marka' },
+    name: { en: 'Silver', pl: 'Srebro' },
     text: none,
     types: ['treasure'],
     cost: 3,
@@ -26,7 +26,7 @@ export const BASIC: CardDef[] = [
   {
     id: 'gold',
     set: 'basic',
-    name: { en: 'Gold Mark', pl: 'Złota Marka' },
+    name: { en: 'Gold', pl: 'Złoto' },
     text: none,
     types: ['treasure'],
     cost: 6,

@@ -93,7 +93,7 @@ const en: Dict = {
   waitingFor: 'Waiting for {who}',
   attackedBy: 'Attack!',
 
-  'prompt.action': 'Tap an Action card to play it, or end your actions.',
+  'prompt.action': 'Tap an Action card to play it, or tap a Supply pile to buy.',
   'prompt.buy': 'Play Treasures, then tap a Supply pile to buy.',
   'prompt.trashUpTo': 'Trash cards from your hand (up to {n}).',
   'prompt.discardForCoin': 'You may discard a card for +1 coin.',
@@ -131,7 +131,7 @@ const en: Dict = {
 Have the most Victory Points (VP) when the game ends. VP come from Victory cards in your deck: Homestead 1, Manor 3, Citadel 6. Each Hex is −1.
 
 ## Your deck
-Everyone starts with 7 Copper Marks and 3 Homesteads and draws 5 cards. When your deck runs out, your discard pile is shuffled to form a new deck.
+Everyone starts with 7 Pennies and 3 Homesteads and draws 5 cards. When your deck runs out, your discard pile is shuffled to form a new deck.
 
 ## A turn
 **Action phase.** You have 1 Action. Play an Action card from your hand; it may give more Actions, cards, Buys or coins.
@@ -235,7 +235,7 @@ const pl: Dict = {
   waitingFor: 'Czekamy na: {who}',
   attackedBy: 'Atak!',
 
-  'prompt.action': 'Stuknij kartę Akcji, by ją zagrać, albo zakończ akcje.',
+  'prompt.action': 'Stuknij kartę Akcji, by ją zagrać, albo stos w Zasobach, by kupić.',
   'prompt.buy': 'Zagraj Skarby, potem stuknij stos w Zasobach, by kupić.',
   'prompt.trashUpTo': 'Spal karty z ręki (maks. {n}).',
   'prompt.discardForCoin': 'Możesz odrzucić kartę za +1 monetę.',
@@ -273,7 +273,7 @@ const pl: Dict = {
 Zdobądź najwięcej Punktów Zwycięstwa (PZ) do końca gry. PZ dają karty Zwycięstwa w twojej talii: Zagroda 1, Dwór 3, Cytadela 6. Każdy Urok to −1.
 
 ## Twoja talia
-Każdy zaczyna z 7 Miedzianymi Markami i 3 Zagrodami i dobiera 5 kart. Gdy talia się skończy, przetasuj odrzucone karty – to twoja nowa talia.
+Każdy zaczyna z 7 Groszami i 3 Zagrodami i dobiera 5 kart. Gdy talia się skończy, przetasuj odrzucone karty – to twoja nowa talia.
 
 ## Tura
 **Faza akcji.** Masz 1 Akcję. Zagraj kartę Akcji z ręki; może dać więcej akcji, kart, zakupów lub monet.

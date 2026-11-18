@@ -6,7 +6,7 @@ import { Game } from '../engine/game';
 import { makePlan } from '../engine/plan';
 import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
-import { CardFace, Coin, ConfirmButton, PileTile } from './CardView';
+import { CardFace, Coin, ConfirmButton, PileTile, PlayedCard } from './CardView';
 import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings } from './store';
 
@@ -124,14 +124,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const turn = game.turn;
   const current = game.players[turn.player];
   const myDecision = d && d.player === HUMAN ? d : null;
+  // w fazie akcji też można od razu kupić: gra sama kończy akcje i zagrywa skarby
+  const canBuyNow = myDecision?.kind === 'buy' || myDecision?.kind === 'action';
   const potential =
-    myDecision?.kind === 'buy' && !turn.boughtSomething
+    canBuyNow && !turn.boughtSomething
       ? turn.coins + me.hand.reduce((s, id) => s + (isType(card(id), 'treasure') ? card(id).coins ?? 0 : 0), 0)
       : turn.coins;
 
   const pileState = (id: string): 'buyable' | 'pickable' | 'dim' | '' => {
     if (!myDecision) return '';
-    if (myDecision.kind === 'buy') {
+    if (canBuyNow) {
       if (turn.buys > 0 && game.supply[id] > 0 && card(id).cost <= potential) return 'buyable';
       return '';
     }
@@ -168,8 +170,10 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   };
 
   const buy = (id: string) => {
-    if (!myDecision || myDecision.kind !== 'buy') return;
-    if (card(id).cost > turn.coins && myDecision.treasures.length) {
+    if (!canBuyNow) return;
+    if (game.pending?.kind === 'action') game.submit({ t: 'end' });
+    const before = game.pending;
+    if (before?.kind === 'buy' && card(id).cost > game.turn.coins && before.treasures.length) {
       game.submit({ t: 'playAll' });
     }
     const dd = game.pending;
@@ -329,10 +333,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {turn.player === HUMAN ? t('inPlay') : `${current.name} · ${t('inPlay').toLowerCase()}`}
         </div>
         <div className="play-cards">
-          {current.play.map((id, i) => (
-            <button key={i} className={`chip t-${typeKey(card(id))}`} onClick={() => setDetail({ id, from: 'other' })}>
-              {card(id).name[lang]}
-            </button>
+          {groupCards(current.play).map(([id, n]) => (
+            <PlayedCard key={id} id={id} n={n} lang={lang} onTap={() => setDetail({ id, from: 'other' })} />
           ))}
           {!current.play.length && lastLog && <span className="muted small ticker">{logText(lang, lastLog, names)}</span>}
         </div>
@@ -598,7 +600,7 @@ function DetailSheet(props: {
   const c = card(id);
   let action: React.ReactNode = null;
   if (detail.from === 'supply' && decision) {
-    if (decision.kind === 'buy' && game.turn.buys > 0 && game.supply[id] > 0 && c.cost <= potential) {
+    if ((decision.kind === 'buy' || decision.kind === 'action') && game.turn.buys > 0 && game.supply[id] > 0 && c.cost <= potential) {
       action = (
         <button className="btn primary" onClick={() => props.onBuy(id)}>
           {t('buyFor', { n: c.cost })}
@@ -674,4 +676,11 @@ function DeckList({ lang, cards, onTap }: { lang: Lang; cards: string[]; onTap: 
       ))}
     </div>
   );
+}
+
+/** Grupuje takie same karty (kolejność pierwszego wystąpienia) – [id, liczba]. */
+function groupCards(ids: string[]): [string, number][] {
+  const m = new Map<string, number>();
+  for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1);
+  return [...m.entries()];
 }
