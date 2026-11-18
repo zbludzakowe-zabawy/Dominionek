@@ -175,7 +175,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .card.large { width: min(260px, 72vw, calc((100dvh - 170px) / 1.48)); border-width: 3px; border-radius: 6px; flex: none; }
 
 /* symbol pakietu: mały znak w rogu karty */
-.c-set { position: absolute; right: 2.5cqw; top: 2.5cqw; width: 9cqw; height: 9cqw; color: color-mix(in srgb, var(--tc) 75%, #000); opacity: .75; }
+.c-set { position: absolute; right: 2.5cqw; top: 2.5cqw; width: 10cqw; height: 10cqw; color: color-mix(in srgb, var(--tc) 55%, #000); }
 .c-set svg, .tile-set svg { width: 100%; height: 100%; display: block; }
 .tile-set {
   position: absolute; right: 3px; top: 3px; width: 15px; height: 15px; padding: 1px;

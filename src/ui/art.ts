@@ -112,16 +112,25 @@ export function cardArt(c: CardDef): Art {
   return art;
 }
 
-/** Symbole pakietów (pole 16×16) – mały znak w rogu karty. */
+/** Symbole pakietów – mały znak w rogu karty. */
+const DRAGON_HEAD =
+  // łeb smoka z otwartą paszczą (kontur), patrzy w lewo
+  'M8 31Q5.5 26 6 22Q6.6 15 11 12.2L2.5 4.5L14.2 9.6L12.6 2.8L18.6 9.2L27.2 11L29.6 13.2L28.4 15.2L16.4 17.4' +
+  'L26.4 24.6L25.4 27L16.4 25.4Q14 26.6 14.6 31' +
+  'M6.3 25.2L2.6 24.6L6.2 22.2M7.4 18.6L4 16.6L8.4 15.8' +
+  'M26.4 15.4L25.4 17.2L24.2 15.8M21.4 16.4L20.6 18L19.6 16.8M23.6 22.6L23.2 20.8L22.2 21.8M20.4 20.4L20.2 18.8L19.2 19.6' +
+  'M14.6 11.6L21.4 13.8';
+const DRAGON_EYE = 'M15.8 13.2Q18.8 12.8 20.8 15Q18 16.2 15.8 13.2Z';
+
 const SET_SYMBOLS: Record<string, string> = {
-  keep: 'M3 14V5H5V3H7V5H9V3H11V5H13V14ZM7 14V10.5a1 1 0 0 1 2 0V14',
-  // łeb smoka z profilu, z rogiem, ziejący ogniem
-  hoard: 'M0.8 16L2.2 9.6Q2.6 6.4 5.2 5.2L2.6 0.9L7 4.1L9.6 4.3L12.6 5.3L11.9 6.8L9.1 7.3L11.4 8.9L8.3 10Q6.6 11.8 6.4 16ZM7.9 5.4a0.75 0.75 0 1 0 0.01 0ZM2.3 10.2L0.2 9.6L2.4 8.6ZM2.7 7.6L1 6.3L3.3 6.4ZM12.2 7.1Q14 5.2 15.9 4.8Q14.6 6.2 13.3 7.5ZM12.4 7.8L16 7.9L13.5 8.6ZM12.1 8.6Q13.9 10.3 15.6 11Q14.4 9.4 13.1 8.3Z',
+  keep:
+    '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 14V5H5V3H7V5H9V3H11V5H13V14ZM7 14V10.5a1 1 0 0 1 2 0V14" fill="currentColor" fill-rule="evenodd"/></svg>',
+  hoard:
+    '<svg viewBox="-1 -0.5 34 33" aria-hidden="true"><g transform="translate(32 0) scale(-1 1)">' +
+    `<path d="${DRAGON_HEAD}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>` +
+    `<path d="${DRAGON_EYE}" fill="currentColor"/></g></svg>`,
 };
 
 export function setSymbol(c: CardDef): string {
-  const d = SET_SYMBOLS[c.symbol ?? c.set];
-  return d
-    ? `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="currentColor" fill-rule="evenodd"/></svg>`
-    : '';
+  return SET_SYMBOLS[c.symbol ?? c.set] ?? '';
 }
