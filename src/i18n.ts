@@ -97,7 +97,7 @@ const en: Dict = {
 
   'prompt.action': 'Tap an Action card to play it, or tap a Supply pile to buy.',
   'prompt.buy': 'Play Treasures, then tap a Supply pile to buy.',
-  'prompt.noBuys': 'No buys left – end your turn.',
+  'prompt.noBuys': '',
   'prompt.trashUpTo': 'Trash cards from your hand (up to {n}).',
   'prompt.discardForCoin': 'You may discard a card for +1 coin.',
   'prompt.discardToDraw': 'Discard any number of cards – you will draw that many.',
@@ -242,7 +242,7 @@ const pl: Dict = {
 
   'prompt.action': 'Stuknij kartę Akcji, by ją zagrać, albo stos w Zasobach, by kupić.',
   'prompt.buy': 'Zagraj Skarby, potem stuknij stos w Zasobach, by kupić.',
-  'prompt.noBuys': 'Nie masz już zakupów – zakończ turę.',
+  'prompt.noBuys': '',
   'prompt.trashUpTo': 'Spal karty z ręki (maks. {n}).',
   'prompt.discardForCoin': 'Możesz odrzucić kartę za +1 monetę.',
   'prompt.discardToDraw': 'Odrzuć dowolną liczbę kart – dobierzesz tyle samo.',
