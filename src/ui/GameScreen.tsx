@@ -161,6 +161,23 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     else if (sel.length < dec.max) setSel([...sel, i]);
   };
 
+  /** Dwuklik na stosie: od razu kup / zdobądź; jeśli się nie da – pokaż podgląd. */
+  const doublePile = (id: string) => {
+    if (canBuyNow && pileState(id) === 'buyable') return buy(id);
+    if (myDecision?.kind === 'pile' && myDecision.allowed.includes(id)) return submit({ t: 'pile', pile: id });
+    tapPile(id);
+  };
+
+  /** Dwuklik na karcie przy wyborze (odrzucanie, palenie…): zaznacz ją i zatwierdź, jeśli wybór jest kompletny. */
+  const doubleSel = (i: number) => {
+    const dec = myDecision;
+    if (!dec || dec.kind !== 'cards') return;
+    if (!dec.allowed.includes(i)) return;
+    const next = sel.includes(i) ? sel : dec.max === 1 ? [i] : [...sel, i];
+    if (next.length >= dec.min && next.length <= dec.max && next.length > 0) submit({ t: 'cards', is: next });
+    else setSel(next);
+  };
+
   const tapHand = (i: number) => {
     if (!myDecision) return setDetail({ id: me.hand[i], from: 'hand', index: i });
     if (myDecision.kind === 'action' && myDecision.playable.includes(i)) return submit({ t: 'play', i });
@@ -313,6 +330,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               count={game.supply[id]}
               state={pileState(id)}
               onTap={() => tapPile(id)}
+              onDouble={() => doublePile(id)}
               onLong={() => setDetail({ id, from: 'other' })}
             />
           ))}
@@ -326,6 +344,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               count={game.supply[id]}
               state={pileState(id)}
               onTap={() => tapPile(id)}
+              onDouble={() => doublePile(id)}
               onLong={() => setDetail({ id, from: 'other' })}
             />
           ))}
@@ -397,6 +416,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               lang={lang}
               className={handState(i)}
               onTap={() => tapHand(i)}
+              onDouble={() => doubleSel(i)}
               onLong={() => setDetail({ id, from: 'hand', index: i })}
             />
           ))}
@@ -420,6 +440,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                   lang={lang}
                   className={sel.includes(i) ? 'selected' : myDecision.allowed.includes(i) ? 'playable' : 'dim'}
                   onTap={() => toggleSel(i, myDecision)}
+                  onDouble={() => doubleSel(i)}
                   onLong={() => setDetail({ id, from: 'other' })}
                 />
               ))}

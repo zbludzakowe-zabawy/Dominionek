@@ -143,7 +143,7 @@ Everyone starts with 7 Pennies and 3 Homesteads and draws 5 cards. When your dec
 The game ends after a turn in which the Citadel pile is empty, or any 3 Supply piles are empty. Ties go to the player with fewer turns.
 
 ## Tips
-Buy good cards early, Victory cards late — they do nothing in your hand. Trashing weak cards makes your deck stronger. Long-press any card to read it.`,
+Buy good cards early, Victory cards late — they do nothing in your hand. Trashing weak cards makes your deck stronger. Long-press any card to read it. Double-tap a Supply pile to buy it straight away, or a card to choose it and confirm.`,
 };
 
 const pl: Dict = {
@@ -286,7 +286,7 @@ Każdy zaczyna z 7 Groszami i 3 Zagrodami i dobiera 5 kart. Gdy talia się skoń
 Gra kończy się po turze, w której wyczerpał się stos Cytadeli albo dowolne 3 stosy w Zasobach. Przy remisie wygrywa gracz z mniejszą liczbą tur.
 
 ## Wskazówki
-Na początku kupuj dobre karty, punkty pod koniec – na ręce nic nie robią. Palenie słabych kart wzmacnia talię. Przytrzymaj palec na dowolnej karcie, by ją przeczytać.`,
+Na początku kupuj dobre karty, punkty pod koniec – na ręce nic nie robią. Palenie słabych kart wzmacnia talię. Przytrzymaj palec na dowolnej karcie, by ją przeczytać. Stuknij dwukrotnie stos w Zasobach, by od razu go kupić, albo kartę, by ją wybrać i od razu zatwierdzić.`,
 };
 
 const DICTS: Record<Lang, Dict> = { en, pl };

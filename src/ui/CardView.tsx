@@ -5,8 +5,15 @@ import { tr } from '../i18n';
 import { cardArt, typeKey } from './art';
 
 /** Stuknięcie i przytrzymanie (podgląd karty). */
-export function usePress(onTap?: () => void, onLong?: () => void) {
+/**
+ * Stuknięcie, dwuklik (zatwierdzenie bez podglądu) i przytrzymanie (podgląd karty).
+ * delayTap: pojedyncze stuknięcie czeka chwilę, czy nie przyjdzie drugie
+ * (potrzebne, gdy pojedyncze stuknięcie otwiera okno zasłaniające kartę).
+ */
+export function usePress(onTap?: () => void, onLong?: () => void, onDouble?: () => void, delayTap = false) {
   const timer = useRef<number | null>(null);
+  const lastTap = useRef(0);
+  const pendingTap = useRef<number | null>(null);
   const longFired = useRef(false);
   const start = useRef<{ x: number; y: number } | null>(null);
   const clear = () => {
@@ -35,7 +42,21 @@ export function usePress(onTap?: () => void, onLong?: () => void) {
     },
     onClick: () => {
       if (longFired.current) return;
-      onTap?.();
+      const now = Date.now();
+      if (onDouble && now - lastTap.current < 330) {
+        lastTap.current = 0;
+        if (pendingTap.current !== null) window.clearTimeout(pendingTap.current);
+        pendingTap.current = null;
+        onDouble();
+        return;
+      }
+      lastTap.current = now;
+      if (onDouble && delayTap) {
+        pendingTap.current = window.setTimeout(() => {
+          pendingTap.current = null;
+          onTap?.();
+        }, 260);
+      } else onTap?.();
     },
   };
 }
@@ -61,12 +82,13 @@ interface FaceProps {
   className?: string;
   onTap?: () => void;
   onLong?: () => void;
+  onDouble?: () => void;
   badge?: React.ReactNode;
 }
 
-export function CardFace({ id, lang, className = '', onTap, onLong, badge }: FaceProps) {
+export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, badge }: FaceProps) {
   const c = card(id);
-  const press = usePress(onTap, onLong);
+  const press = usePress(onTap, onLong, onDouble);
   const plus = c.plus ?? {};
   const lines: string[] = [];
   if (plus.cards) lines.push(tr(lang, 'plus.cards', { n: plus.cards }));
@@ -108,11 +130,12 @@ interface TileProps {
   state?: 'buyable' | 'pickable' | 'dim' | '';
   onTap?: () => void;
   onLong?: () => void;
+  onDouble?: () => void;
 }
 
-export function PileTile({ id, lang, count, state = '', onTap, onLong }: TileProps) {
+export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble }: TileProps) {
   const c = card(id);
-  const press = usePress(onTap, onLong);
+  const press = usePress(onTap, onLong, onDouble, !!onDouble);
   return (
     <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} {...press} role="button" aria-label={c.name[lang]}>
       <Art id={id} className="tile-art" />
