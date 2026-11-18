@@ -283,20 +283,24 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       </header>
 
       <div className="opponents">
-        {game.players
-          .filter((p) => p.id !== HUMAN)
-          .map((p) => (
-            <div key={p.id} className={'opp' + (turn.player === p.id ? ' active' : '')}>
+        {[me, ...game.players.filter((p) => p.id !== HUMAN)].map((p) => (
+          <div key={p.id} className={'opp' + (turn.player === p.id ? ' active' : '') + (p.id === HUMAN ? ' me' : '')}>
+            <div className="opp-main">
               <div className="opp-name">
-                {p.name} <span className="muted small">{p.bot ? t(`level.${p.bot}`) : ''}</span>
+                {p.id === HUMAN ? t('you') : p.name}{' '}
+                {p.bot && <span className="muted small opp-level">{t(`level.${p.bot}`)}</span>}
               </div>
               <div className="opp-stats">
                 <span title={t('hand')}>✋ {p.hand.length}</span>
-                <span title={t('deck')}>▤ {p.deck.length}</span>
-                <span className="vp-chip">{game.scoreOf(p).vp} {t('vp')}</span>
+                <span className="opp-deck" title={t('deck')}>▤ {p.deck.length}</span>
               </div>
             </div>
-          ))}
+            <span className="vp-badge" title={t('vp')}>
+              <b>{game.scoreOf(p).vp}</b>
+              <small>{t('vp')}</small>
+            </span>
+          </div>
+        ))}
       </div>
 
       <main className="supply">
@@ -343,15 +347,14 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       <section className={'status' + (attacked ? ' attacked' : '')}>
         <div className="counters">
           <span className="phase">{t(`phase.${turn.phase}`)}</span>
-          <span>
+          <span className="counter">
             {t('actions')} <b>{turn.actions}</b>
           </span>
-          <span>
+          <span className="counter">
             {t('buys')} <b>{turn.buys}</b>
           </span>
-          <span className="coins-counter">
-            <Coin n={turn.coins} />
-            {potential > turn.coins && <span className="muted small">→{potential}</span>}
+          <span className="counter coins-counter" title={t('coins')}>
+            {t('coins')} <Coin n={potential} />
           </span>
         </div>
         <div className="prompt-row">
