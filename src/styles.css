@@ -181,7 +181,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   transition: transform .12s, box-shadow .12s, opacity .12s;
 }
-.tile-art { height: 34px; background-size: cover; background-position: center; }
+.tile-art { height: 56px; background-size: cover; background-position: center; }
 .tile-name {
   font-family: Georgia, serif; font-weight: 700; font-size: .72rem; line-height: 1.08; text-align: center; padding: 0 3px;
   overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 2.16em;
@@ -265,7 +265,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .supply-basic { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .basic-col { display: contents; }
 .supply-basic .tile-name { font-size: .62rem; }
-.supply-basic .tile-art { height: 20px; }
+.supply-basic .tile-art { height: 34px; }
 .supply-kingdom { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 
 .play-area { flex: none; padding: 4px 10px; border-top: 1px solid var(--line); background: rgba(0, 0, 0, .15); min-height: 44px; }
@@ -291,6 +291,11 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .prompt { flex: 1; font-size: .85rem; line-height: 1.3; }
 .attack-tag { color: var(--danger); }
 .prompt-buttons { display: flex; gap: 6px; align-items: center; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 340px) {
+  .prompt-row { flex-wrap: wrap; }
+  .prompt { flex: 1 1 100%; }
+  .prompt-buttons { margin-left: auto; }
+}
 
 .hand-area { flex: none; padding: 6px 8px calc(8px + env(safe-area-inset-bottom)); background: var(--bg); position: relative; }
 .deck-pill {
@@ -355,8 +360,16 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .hand { grid-template-columns: repeat(var(--n), minmax(0, 112px)); }
 }
 @media (max-height: 700px) {
+  .tile-art { height: 40px; }
+  .supply-basic .tile-art { height: 24px; }
+  .play-area { min-height: 0; padding-top: 2px; padding-bottom: 2px; }
+  .play-label { display: none; }
+  .hand { min-height: 0; padding-top: 12px; grid-template-columns: repeat(var(--n), minmax(0, 84px)); }
+}
+@media (max-height: 600px) {
   .tile-art { height: 26px; }
-  .supply-basic .tile-art { height: 18px; }
+  .supply-basic .tile-art { display: none; }
+  .prompt { font-size: .78rem; }
   .hand { grid-template-columns: repeat(var(--n), minmax(0, 88px)); }
 }
 

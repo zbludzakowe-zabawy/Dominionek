@@ -95,8 +95,8 @@ const en: Dict = {
   waitingFor: 'Waiting for {who}',
   attackedBy: 'Attack!',
 
-  'prompt.action': 'Tap an Action card to play it, or tap a Supply pile to buy.',
-  'prompt.buy': 'Play Treasures, then tap a Supply pile to buy.',
+  'prompt.action': 'Play an Action card or tap a pile to buy.',
+  'prompt.buy': 'Play Treasures and tap a pile to buy.',
   'prompt.noBuys': '',
   'prompt.trashUpTo': 'Trash cards from your hand (up to {n}).',
   'prompt.discardForCoin': 'You may discard a card for +1 coin.',
@@ -240,8 +240,8 @@ const pl: Dict = {
   waitingFor: 'Czekamy na: {who}',
   attackedBy: 'Atak!',
 
-  'prompt.action': 'Stuknij kartę Akcji, by ją zagrać, albo stos w Zasobach, by kupić.',
-  'prompt.buy': 'Zagraj Skarby, potem stuknij stos w Zasobach, by kupić.',
+  'prompt.action': 'Zagraj kartę Akcji albo stuknij stos, by kupić.',
+  'prompt.buy': 'Zagraj Skarby i stuknij stos, by kupić.',
   'prompt.noBuys': '',
   'prompt.trashUpTo': 'Spal karty z ręki (maks. {n}).',
   'prompt.discardForCoin': 'Możesz odrzucić kartę za +1 monetę.',
