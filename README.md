@@ -9,6 +9,9 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
   (wyczerpane Cytadele albo 3 puste stosy), remisy rozstrzyga mniejsza liczba tur.
 - **Pakiet „The Crossroads Keep” / „Twierdza na Rozstajach”**: 25 kart Królestwa
   (akcje, ataki, reakcja, palenie kart, zdobywanie, karta punktów).
+- **Pakiet „Dragon's Hoard” / „Skarbiec Smoka”**: 16 kart Królestwa: skarby z efektami,
+  żetony Punktów Zwycięstwa, smocze ataki. Gdy w Królestwie są karty Skarbca, do gry mogą dojść
+  Smocze Złoto (5 monet) i Pałac (10 PZ); wyczerpanie Pałaców kończy grę.
 - **Gra solo** przeciwko 1–3 botom, każdy na poziomie łatwym, średnim lub trudnym.
   Trudny bot na starcie partii rozgrywa w pamięci gry próbne i wybiera plan pod wylosowane Królestwo.
 - **Królestwo**: losowanie 10 kart, ponowne losowanie pojedynczej karty albo ręczny wybór.
@@ -17,7 +20,7 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 
 ## Plan
 
-1. Pakiety: Dragon's Hoard (Skarbiec Smoka), Alchemist's Tower (Wieża Alchemika), Court Whispers (Szepty Dworu).
+1. Pakiety: Alchemist's Tower (Wieża Alchemika), Court Whispers (Szepty Dworu).
 2. Gra online dla 2 osób przez link-pokój (WebRTC).
 3. Statystyki gier.
 
@@ -50,10 +53,10 @@ pushu na `main` (jednorazowo: Settings → Pages → Source: GitHub Actions).
 - `src/engine/`: silnik bez interfejsu
   - `game.ts`: przebieg gry jako generator decyzji. Stan gry = ustawienia + ziarno + lista odpowiedzi,
     dzięki czemu zapis i odtworzenie są deterministyczne (podstawa pod przyszły tryb online).
-  - `cards/`: definicje kart (`basic.ts`, `keep.ts`)
+  - `cards/`: definicje kart (`basic.ts`, `keep.ts`, `hoard.ts`)
   - `bot.ts`, `plan.ts`: boty i planowanie trudnego bota
   - `setup.ts`: losowanie Królestwa
-- `src/ui/`: interfejs (React): ekrany, karty, wzory SVG (`art.ts`), zapis (`store.ts`)
+- `src/ui/`: interfejs (React): ekrany, karty, rysunki kart (`motifs.ts`), tła i symbole pakietów (`art.ts`), zapis (`store.ts`)
 - `src/i18n.ts`: teksty EN/PL
 - `src/pwa.ts`, `src/sw-template.js`: instalacja, tryb offline, baner aktualizacji
 - `public/`: manifest i ikony (`scripts/icon.svg` → `scripts/make-icons.cjs`)

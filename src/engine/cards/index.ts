@@ -1,9 +1,10 @@
 import type { CardDef, SetId } from '../card';
 import { BASIC } from './basic';
 import { KEEP } from './keep';
+import { HOARD, HOARD_BASICS } from './hoard';
 
 export const CARDS: Record<string, CardDef> = {};
-for (const c of [...BASIC, ...KEEP]) CARDS[c.id] = c;
+for (const c of [...BASIC, ...HOARD_BASICS, ...KEEP, ...HOARD]) CARDS[c.id] = c;
 
 export function card(id: string): CardDef {
   const c = CARDS[id];
@@ -19,7 +20,7 @@ export interface SetInfo {
 
 export const SETS: SetInfo[] = [
   { id: 'keep', name: { en: 'The Crossroads Keep', pl: 'Twierdza na Rozstajach' }, available: true },
-  { id: 'hoard', name: { en: "Dragon's Hoard", pl: 'Skarbiec Smoka' }, available: false },
+  { id: 'hoard', name: { en: "Dragon's Hoard", pl: 'Skarbiec Smoka' }, available: true },
   { id: 'tower', name: { en: "Alchemist's Tower", pl: 'Wieża Alchemika' }, available: false },
   { id: 'court', name: { en: 'Court Whispers', pl: 'Szepty Dworu' }, available: false },
 ];

@@ -99,6 +99,11 @@ function stats(g: Game, p: PlayerState): DeckStats {
   return { size: all.length, money, terminals, villages, counts };
 }
 
+/** Ile zostało w stosie, którego wyczerpanie kończy grę (Pałac, jeśli jest; inaczej Cytadela). */
+function endPileLeft(g: Game): number {
+  return g.supply.palace !== undefined ? g.supply.palace : g.supply.citadel;
+}
+
 function vpLead(g: Game, p: PlayerState): number {
   const mine = g.scoreOf(p).vp;
   const best = Math.max(...g.players.filter((o) => o !== p).map((o) => g.scoreOf(o).vp));
@@ -120,9 +125,12 @@ export function chooseBuy(
   plan?: Plan,
 ): string | null {
   const can = (id: string) => allowed.includes(id) && c(id).cost <= coins;
-  const citadels = g.supply.citadel;
+  const citadels = endPileLeft(g);
+  const hasPalace = g.supply.palace !== undefined;
 
   if (level === 'easy') {
+    if (can('palace') && rnd() < 0.7) return 'palace';
+    if (can('dragongold') && rnd() < 0.5) return 'dragongold';
     if (can('citadel') && rnd() < 0.7) return 'citadel';
     if (can('gold') && rnd() < 0.6) return 'gold';
     const options = allowed.filter((id) => c(id).cost <= coins && id !== 'hex' && id !== 'copper' && c(id).cost >= Math.min(3, coins - 2));
@@ -133,7 +141,9 @@ export function chooseBuy(
 
   const s = stats(g, p);
   const endgame = citadels <= 3 || g.emptyPiles() >= 2;
-  if (can('citadel')) return 'citadel';
+  if (can('palace')) return 'palace';
+  if (hasPalace && can('dragongold') && citadels > 4) return 'dragongold';
+  if (can('citadel') && (!hasPalace || citadels <= 6)) return 'citadel';
   if (coins >= 6) {
     if (citadels <= 4 && can('manor')) return 'manor';
     const act = bestAction(g, p, s, coins, allowed, 6);
@@ -158,15 +168,23 @@ export function chooseBuy(
 function planBuy(g: Game, p: PlayerState, coins: number, allowed: string[], plan: Plan): string | null {
   const can = (id: string) => allowed.includes(id) && c(id).cost <= coins;
   const s = stats(g, p);
-  const citadels = g.supply.citadel;
+  const citadels = endPileLeft(g);
   const piles = g.emptyPiles();
   const lead = vpLead(g, p);
+  const hasPalace = g.supply.palace !== undefined;
+  const top = hasPalace ? 'palace' : 'citadel';
+  const topVp = c(top).vp ?? 6;
 
-  if (can('citadel')) {
-    // nie bierz przedostatniej/ostatniej Cytadeli, jeśli to oznacza przegraną
-    if (citadels === 1 && lead + 6 <= 0 && can('manor')) return 'manor';
-    if (citadels === 2 && lead + 6 < -6 && can('manor')) return 'manor';
-    return 'citadel';
+  if (can(top)) {
+    // nie bierz przedostatniego/ostatniego stosu kończącego grę, jeśli to oznacza przegraną
+    const fallback = hasPalace ? 'citadel' : 'manor';
+    if (citadels === 1 && lead + topVp <= 0 && can(fallback)) return fallback;
+    if (citadels === 2 && lead + topVp < -topVp && can(fallback)) return fallback;
+    return top;
+  }
+  if (hasPalace) {
+    if (can('dragongold') && citadels > 3) return 'dragongold';
+    if (can('citadel') && citadels <= 6) return 'citadel';
   }
   if (coins >= 5 && can('manor') && (citadels <= 4 || piles >= 2)) return 'manor';
   for (const [id, n] of plan.want) {
@@ -191,7 +209,7 @@ function bestAction(
 ): string | null {
   const candidates = allowed.filter((id) => {
     const d = c(id);
-    if (d.set === 'basic' || !isType(d, 'action') || d.cost > coins || d.cost < minCost) return false;
+    if (d.set === 'basic' || !(isType(d, 'action') || isType(d, 'treasure')) || d.cost > coins || d.cost < minCost) return false;
     const have = s.counts.get(id) ?? 0;
     if (d.ai.role === 'trash' && (have >= 1 || p.turns > 6)) return false;
     if (d.ai.role === 'attack' && have >= (id === 'weaver' ? 2 : 1)) return false;
