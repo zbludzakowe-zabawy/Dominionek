@@ -12,7 +12,7 @@ import { saveGame, type SavedGame, type Settings } from './store';
 
 const HUMAN = 0;
 /** Telefon: górny rząd – pieniądze rosnąco, punkty rosnąco, na końcu Urok (−1). */
-const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'homestead', 'manor', 'citadel', 'hex'];
+const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex'];
 
 /**
  * Królestwo w rzędach po 5: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
@@ -33,7 +33,7 @@ interface Props {
   onRules: () => void;
   onExit: () => void;
   onNewGame: () => void;
-  onRematch: (kingdom: string[]) => void;
+  onRematch: (kingdom: string[], extras: boolean) => void;
 }
 
 type Detail = { id: string; from: 'supply' | 'hand' | 'other'; index?: number };
@@ -80,7 +80,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     const id = window.setTimeout(() => {
       const next: Record<number, Plan> = { ...saved.plans };
       for (const p of game.players) {
-        if (p.bot === 'hard' && !next[p.id]) next[p.id] = makePlan(game.setup.kingdom, game.setup.seed + p.id * 7919);
+        if (p.bot === 'hard' && !next[p.id]) next[p.id] = makePlan(game.setup.kingdom, game.setup.seed + p.id * 7919, game.setup.extras);
       }
       setPlans(next);
       persist(next);
@@ -346,13 +346,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       <main className="supply">
         {/* stałe stosy: pieniądze (od najwyższej wartości) i punkty z Urokiem;
             na komputerze dwie kolumny przy lewym brzegu: punkty, obok pieniądze */}
-        <div className="supply-basic">
+        <div className={'supply-basic n' + game.basics.length}>
           {[
-            ['money', ['gold', 'silver', 'copper']],
-            ['victory', ['citadel', 'manor', 'homestead', 'hex']],
+            ['money', ['dragongold', 'gold', 'silver', 'copper']],
+            ['victory', ['palace', 'citadel', 'manor', 'homestead', 'hex']],
           ].map(([col, ids]) => (
             <div key={col as string} className={`basic-col ${col}`}>
-              {(ids as string[]).map((id) => (
+              {(ids as string[]).filter((id) => game.basics.includes(id)).map((id) => (
                 <PileTile
                   key={id}
                   id={id}
@@ -369,7 +369,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           ))}
         </div>
         <div className="supply-kingdom">
-          {kingdomLayout(game.pileOrder.slice(7), lang).map((id) => (
+          {kingdomLayout(game.kingdom, lang).map((id) => (
             <PileTile
               key={id}
               id={id}
@@ -623,13 +623,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                     </b>
                   </div>
                   <div className="muted small">
-                    {s.breakdown.map((b) => `${card(b.card).name[lang]} ×${b.count} (${b.vp})`).join(' · ')} · {s.turns} {t('turns')}
+                    {[...s.breakdown.map((b) => `${card(b.card).name[lang]} ×${b.count} (${b.vp})`), ...(s.tokens ? [`${t('vpTokens')} (${s.tokens})`] : [])].join(' · ')} · {s.turns} {t('turns')}
                   </div>
                 </li>
               ))}
             </ol>
             <div className="end-buttons">
-              <button className="btn primary" onClick={() => onRematch(game.setup.kingdom)}>
+              <button className="btn primary" onClick={() => onRematch(game.setup.kingdom, !!game.setup.extras?.length)}>
                 {t('sameKingdom')}
               </button>
               <button className="btn" onClick={onNewGame}>

@@ -112,6 +112,9 @@ const en: Dict = {
   'prompt.setAside': 'Set aside {card}? Otherwise it goes to your hand.',
   'prompt.gainToHandUpTo': 'Gain a card costing up to {n} into your hand.',
   'prompt.topdeck': 'Put a card from your hand onto your deck.',
+  'prompt.trashN': 'Trash a card from your hand.',
+  'prompt.discardForCoins': 'Discard any number of cards – +1 coin for each.',
+  'prompt.copyTreasure': 'You may choose a Treasure from your hand to gain a copy of it.',
 
   'log.turn': '{who} — turn {n}',
   'log.play': '{who} plays {card}',
@@ -128,6 +131,10 @@ const en: Dict = {
   'log.topdeck': '{who} puts {card} onto deck',
   'log.topdeckHidden': '{who} puts a card onto deck',
   'log.gameOver': 'Game over',
+  'log.vpToken': '{who} takes +{n} VP token',
+  vpTokens: 'VP tokens',
+  hoardExtras: 'Add Dragon Gold and Palace',
+  hoardExtrasInfo: 'Dragon Gold is worth 5 coins, a Palace 10 VP. When the Palaces run out, the game ends. Drawn at random – the more Dragon\'s Hoard cards, the likelier.',
 
   rulesText: `
 ## Goal
@@ -257,6 +264,9 @@ const pl: Dict = {
   'prompt.setAside': 'Odłożyć na bok: {card}? W przeciwnym razie trafi na rękę.',
   'prompt.gainToHandUpTo': 'Zdobądź na rękę kartę kosztującą do {n}.',
   'prompt.topdeck': 'Połóż kartę z ręki na wierzch talii.',
+  'prompt.trashN': 'Spal kartę z ręki.',
+  'prompt.discardForCoins': 'Odrzuć dowolną liczbę kart – za każdą +1 moneta.',
+  'prompt.copyTreasure': 'Możesz wybrać Skarb z ręki, by zdobyć taki sam.',
 
   'log.turn': '{who} — tura {n}',
   'log.play': '{who}: zagrywa {card}',
@@ -273,6 +283,10 @@ const pl: Dict = {
   'log.topdeck': '{who}: kładzie na talię {card}',
   'log.topdeckHidden': '{who}: kładzie kartę na talię',
   'log.gameOver': 'Koniec gry',
+  'log.vpToken': '{who}: bierze +{n} żeton PZ',
+  vpTokens: 'Żetony PZ',
+  hoardExtras: 'Dodaj Smocze Złoto i Pałac',
+  hoardExtrasInfo: 'Smocze Złoto jest warte 5 monet, Pałac 10 PZ. Gdy Pałace się skończą, gra się kończy. Losowane – im więcej kart Skarbca Smoka, tym większa szansa.',
 
   rulesText: `
 ## Cel

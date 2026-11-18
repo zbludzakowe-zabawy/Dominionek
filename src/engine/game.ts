@@ -17,6 +17,8 @@ import type {
 export const BASIC_TREASURES = ['copper', 'silver', 'gold'];
 export const BASIC_VICTORY = ['homestead', 'manor', 'citadel'];
 export const HEX = 'hex';
+/** Stosy, które Skarbiec Smoka może dodać do stałych: Smocze Złoto i Pałac. */
+export const HOARD_EXTRAS = ['dragongold', 'palace'];
 
 export interface Score {
   player: number;
@@ -52,6 +54,10 @@ export class Game {
   readonly players: PlayerState[];
   readonly supply: Record<string, number> = {};
   readonly pileOrder: string[];
+  /** Stałe stosy (pieniądze, punkty, Urok, ew. Smocze Złoto i Pałac). */
+  readonly basics: string[];
+  /** Karty Królestwa (posortowane wg kosztu). */
+  readonly kingdom: string[];
   readonly trash: string[] = [];
   readonly log: LogEntry[] = [];
   readonly answers: Answer[] = [];
@@ -91,7 +97,18 @@ export class Game {
       if (!CARDS[id]) throw new Error(`Nieznana karta: ${id}`);
       this.supply[id] = isType(card(id), 'victory') ? vpCount : 10;
     }
-    this.pileOrder = [...BASIC_TREASURES, ...BASIC_VICTORY, HEX, ...kingdom];
+    const extras = HOARD_EXTRAS.filter((id) => setup.extras?.includes(id));
+    if (extras.includes('dragongold')) this.supply.dragongold = 12;
+    if (extras.includes('palace')) this.supply.palace = vpCount;
+    this.basics = [
+      ...BASIC_TREASURES,
+      ...(extras.includes('dragongold') ? ['dragongold'] : []),
+      ...BASIC_VICTORY,
+      ...(extras.includes('palace') ? ['palace'] : []),
+      HEX,
+    ];
+    this.kingdom = kingdom;
+    this.pileOrder = [...this.basics, ...kingdom];
 
     for (const p of this.players) {
       p.deck = this.rng.shuffle([...Array(7).fill('copper'), ...Array(3).fill('homestead')]);
@@ -155,6 +172,7 @@ export class Game {
 
   isGameOver(): boolean {
     if (this.supply.citadel <= 0) return true;
+    if (this.supply.palace !== undefined && this.supply.palace <= 0) return true;
     return this.emptyPiles() >= 3;
   }
 
@@ -278,6 +296,12 @@ export class Game {
     const out: string[] = [];
     for (const i of sorted) out.unshift(...p.hand.splice(i, 1));
     return out;
+  }
+
+  /** Żetony Punktów Zwycięstwa. */
+  addVp(p: PlayerState, n: number): void {
+    p.vpTokens += n;
+    this.logMsg(p.id, 'log.vpToken', { n });
   }
 
   trashCards(p: PlayerState, ids: string[]): void {

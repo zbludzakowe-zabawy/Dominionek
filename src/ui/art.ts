@@ -59,7 +59,9 @@ export function cardArt(c: CardDef): Art {
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
     `<rect width="${W}" height="${H}" fill="url(#g)"/>`,
   );
-  const lattice = r.int(3);
+  // Skarbiec Smoka: tło ze smoczych łusek zamiast kratki
+  const scales = (c.symbol ?? c.set) === 'hoard';
+  const lattice = scales ? 3 : r.int(3);
   const step = 8 + r.int(5);
   let grid = '';
   if (lattice === 0) {
@@ -67,13 +69,18 @@ export function cardArt(c: CardDef): Art {
   } else if (lattice === 1) {
     for (let x = step / 2; x < W; x += step) grid += `M${f(x)} 0V${H}`;
     for (let y = step / 2; y < H; y += step) grid += `M0 ${f(y)}H${W}`;
+  } else if (lattice === 3) {
+    const sw = 9;
+    for (let row = 0, y = -2; y < H + sw; row++, y += sw / 2) {
+      for (let x = row % 2 ? -sw / 2 : 0; x < W + sw; x += sw) grid += `M${f(x)} ${f(y)}a${sw / 2} ${sw / 2} 0 0 0 ${sw} 0`;
+    }
   } else {
     for (let y = 0; y < H + step; y += step / 1.6) {
       grid += `M0 ${f(y)}`;
       for (let x = 0; x <= W; x += step) grid += `Q${f(x + step / 2)} ${f(y + (r.next() > 0.5 ? 2 : -2))} ${f(x + step)} ${f(y)}`;
     }
   }
-  parts.push(`<path d="${grid}" stroke="${line}" stroke-opacity=".13" stroke-width=".5" fill="none"/>`);
+  parts.push(`<path d="${grid}" stroke="${scales ? accent : line}" stroke-opacity="${scales ? '.2' : '.13'}" stroke-width=".5" fill="none"/>`);
   const R = 26;
   parts.push(`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${accent}" stroke-opacity=".22" stroke-width=".5"/>`);
   parts.push(
@@ -103,4 +110,17 @@ export function cardArt(c: CardDef): Art {
   const art = { bg: `url("data:image/svg+xml,${encodeURIComponent(bgSvg)}")`, svg };
   cache.set(c.id, art);
   return art;
+}
+
+/** Symbole pakietów (pole 16×16) – mały znak w rogu karty. */
+const SET_SYMBOLS: Record<string, string> = {
+  keep: 'M3 14V5H5V3H7V5H9V3H11V5H13V14ZM7 14V10.5a1 1 0 0 1 2 0V14',
+  hoard: 'M1.5 11Q3 5.5 8.5 5L11.5 1.5L12 5Q14.5 5.6 15 8.5L11.5 9.2Q10 12.5 4 12.5Z',
+};
+
+export function setSymbol(c: CardDef): string {
+  const d = SET_SYMBOLS[c.symbol ?? c.set];
+  return d
+    ? `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`
+    : '';
 }

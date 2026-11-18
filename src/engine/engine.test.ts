@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Game } from './game';
 import { decide } from './bot';
 import { Rng } from './rng';
-import { randomKingdom, rerollOne } from './setup';
+import { randomKingdom, rerollOne, rollHoardExtras } from './setup';
+import type { SetId } from './card';
 import { kingdomCards } from './cards';
 import type { BotLevel, GameSetup } from './types';
 
@@ -10,10 +11,12 @@ const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
 
 function makeSetup(seed: number, n: number): GameSetup {
   const r = new Rng(seed ^ 0x9e3779b9);
-  const kingdom = randomKingdom(['keep'], () => r.next());
+  const sets: SetId[] = seed % 3 === 0 ? ['keep'] : seed % 3 === 1 ? ['hoard'] : ['keep', 'hoard'];
+  const kingdom = randomKingdom(sets, () => r.next());
   return {
     seed,
     kingdom,
+    extras: rollHoardExtras(kingdom, () => r.next()) ? ['dragongold', 'palace'] : [],
     players: Array.from({ length: n }, (_, i) => ({ name: `P${i}`, bot: LEVELS[(seed + i) % 3] })),
   };
 }
@@ -39,7 +42,7 @@ function playOut(g: Game, seed: number, maxSteps = 20000): void {
 
 describe('silnik', () => {
   it('stan początkowy', () => {
-    const g = new Game(makeSetup(1, 2));
+    const g = new Game({ ...makeSetup(1, 2), extras: [] });
     for (const p of g.players) {
       expect(p.hand.length).toBe(5);
       expect(g.allCards(p).length).toBe(10);
@@ -121,6 +124,49 @@ describe('silnik', () => {
     const r = g.resolve(p, 'tithe').next();
     expect(r.done).toBe(false);
     expect(r.value && r.value.kind).toBe('cards');
+  });
+
+  it('Skarbiec: Smocze Złoto i Pałac w zasobach, wyczerpanie Pałaców kończy grę', () => {
+    const g = new Game({ ...makeSetup(7, 2), extras: ['dragongold', 'palace'] });
+    expect(g.basics).toEqual(['copper', 'silver', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex']);
+    expect(g.supply.palace).toBe(8);
+    expect(g.supply.dragongold).toBe(12);
+    expect(g.isGameOver()).toBe(false);
+    g.supply.palace = 0;
+    expect(g.isGameOver()).toBe(true);
+  });
+
+  it('Klucz do Skarbca liczy różne rodzaje Skarbów w grze', () => {
+    const g = new Game(makeSetup(8, 2));
+    const p = g.players[g.turn.player];
+    p.play = ['copper', 'copper', 'silver', 'hoardkey'];
+    const coins = g.turn.coins;
+    g.resolve(p, 'hoardkey').next();
+    expect(g.turn.coins).toBe(coins + 3);
+  });
+
+  it('Mapa Skarbu zagrywa pierwszy odkryty Skarb', () => {
+    const g = new Game(makeSetup(9, 2));
+    const p = g.players[g.turn.player];
+    p.deck = ['homestead', 'inn', 'gold', 'copper'];
+    p.discard = [];
+    p.play = ['map'];
+    const coins = g.turn.coins;
+    g.resolve(p, 'map').next();
+    expect(g.turn.coins).toBe(coins + 1 + 3);
+    expect(p.play).toEqual(['map', 'gold']);
+    expect(p.discard).toEqual(['homestead', 'inn']);
+    expect(p.deck).toEqual(['copper']);
+  });
+
+  it('żetony PZ liczą się do wyniku', () => {
+    const g = new Game(makeSetup(10, 2));
+    const p = g.players[0];
+    const before = g.scoreOf(p).vp;
+    g.resolve(p, 'ancientcoin').next();
+    g.resolve(p, 'altar').next();
+    expect(p.vpTokens).toBe(2);
+    expect(g.scoreOf(p).vp).toBe(before + 2);
   });
 
   it('losowanie Królestwa', () => {

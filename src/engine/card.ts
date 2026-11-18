@@ -15,6 +15,8 @@ export interface Plus {
 export interface CardDef {
   id: string;
   set: SetId;
+  /** Symbol pakietu w rogu karty (domyślnie wg `set`). */
+  symbol?: SetId;
   name: Text;
   /** Tekst poza standardowymi bonusami (te UI rysuje z `plus`). */
   text: Text;

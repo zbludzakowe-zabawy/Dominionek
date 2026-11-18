@@ -23,6 +23,8 @@ export interface GameSetup {
   seed: number;
   players: PlayerSetup[];
   kingdom: string[];
+  /** Dodatkowe stosy stałe (Skarbiec Smoka): 'dragongold', 'palace'. */
+  extras?: string[];
 }
 
 export interface PlayerState {

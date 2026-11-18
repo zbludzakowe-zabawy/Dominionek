@@ -9,7 +9,7 @@ import { Rng } from './rng';
 const isTerminal = (id: string) => isType(card(id), 'action') && !((card(id).plus?.actions ?? 0) > 0);
 
 function candidates(kingdom: string[]): Plan[] {
-  const acts = kingdom.filter((id) => isType(card(id), 'action'));
+  const acts = kingdom.filter((id) => isType(card(id), 'action') || isType(card(id), 'treasure'));
   const out: Plan[] = [{ want: [] }];
   for (const id of acts) {
     out.push({ want: [[id, 1]] });
@@ -40,7 +40,7 @@ function combos(best: Plan[], kingdom: string[]): Plan[] {
   return out;
 }
 
-function evaluate(kingdom: string[], plan: Plan, games: number, rng: Rng): number {
+function evaluate(kingdom: string[], plan: Plan, games: number, rng: Rng, extras?: string[]): number {
   let score = 0;
   for (let k = 0; k < games; k++) {
     const seed = rng.int(2 ** 31);
@@ -48,6 +48,7 @@ function evaluate(kingdom: string[], plan: Plan, games: number, rng: Rng): numbe
     const g = new Game({
       seed,
       kingdom,
+      extras,
       players: [0, 1].map((i) => ({ name: `S${i}`, bot: i === me ? 'hard' : 'medium' })),
     });
     let steps = 0;
@@ -68,21 +69,21 @@ function evaluate(kingdom: string[], plan: Plan, games: number, rng: Rng): numbe
 const cache = new Map<string, Plan>();
 
 /** Najlepszy plan dla danego Królestwa. Deterministyczny dla tego samego ziarna. */
-export function makePlan(kingdom: string[], seed: number): Plan {
-  const key = `${seed}:${[...kingdom].sort().join(',')}`;
+export function makePlan(kingdom: string[], seed: number, extras?: string[]): Plan {
+  const key = `${seed}:${[...kingdom].sort().join(',')}:${(extras ?? []).join(',')}`;
   const hit = cache.get(key);
   if (hit) return hit;
   const rng = new Rng(seed ^ 0x51ed27);
   const first = candidates(kingdom)
-    .map((plan) => ({ plan, v: evaluate(kingdom, plan, 8, rng) }))
+    .map((plan) => ({ plan, v: evaluate(kingdom, plan, 8, rng, extras) }))
     .sort((a, b) => b.v - a.v);
   const top = first.slice(0, 4).map((x) => x.plan);
   const second = [...top, ...combos(top, kingdom)]
-    .map((plan) => ({ plan, v: evaluate(kingdom, plan, 16, rng) }))
+    .map((plan) => ({ plan, v: evaluate(kingdom, plan, 16, rng, extras) }))
     .sort((a, b) => b.v - a.v);
   const finalists = second.slice(0, 3).map((x) => x.plan);
   const best = finalists
-    .map((plan) => ({ plan, v: evaluate(kingdom, plan, 30, rng) }))
+    .map((plan) => ({ plan, v: evaluate(kingdom, plan, 30, rng, extras) }))
     .sort((a, b) => b.v - a.v)[0].plan;
   cache.set(key, best);
   return best;

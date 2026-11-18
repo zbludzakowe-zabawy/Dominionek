@@ -126,7 +126,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .t-victory { --tc: var(--t-victory); }
 .t-curse { --tc: var(--t-curse); }
 .c-head {
-  padding: 3cqw 5cqw; min-height: 17cqw; display: flex; align-items: center; justify-content: center;
+  position: relative;
+  padding: 3cqw 11cqw; min-height: 17cqw; display: flex; align-items: center; justify-content: center;
   background: color-mix(in srgb, var(--tc) 22%, var(--paper));
   border-bottom: 1px solid color-mix(in srgb, var(--tc) 60%, transparent);
 }
@@ -172,6 +173,15 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .card.dim { opacity: .55; }
 /* podgląd: karta mieści się na ekranie razem z przyciskami */
 .card.large { width: min(260px, 72vw, calc((100dvh - 170px) / 1.48)); border-width: 3px; border-radius: 6px; flex: none; }
+
+/* symbol pakietu: mały znak w rogu karty */
+.c-set { position: absolute; right: 2.5cqw; top: 2.5cqw; width: 9cqw; height: 9cqw; color: color-mix(in srgb, var(--tc) 75%, #000); opacity: .75; }
+.c-set svg, .tile-set svg { width: 100%; height: 100%; display: block; }
+.tile-set {
+  position: absolute; right: 3px; top: 3px; width: 15px; height: 15px; padding: 1px;
+  border-radius: 3px; background: rgba(27, 32, 39, .7); color: #e7d6a2;
+}
+@container (max-width: 100px) { .c-set { width: 12cqw; height: 12cqw; } }
 
 /* ---------- stos w zasobach ---------- */
 .tile {
@@ -264,6 +274,10 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .supply { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 8px; }
 .supply-basic { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .basic-col { display: contents; }
+/* z Pałacem i Smoczym Złotem (9 stosów) – na telefonie dwa rzędy */
+.supply-basic.n9 { grid-template-columns: repeat(5, 1fr); }
+.extras { display: flex; flex-direction: column; gap: 8px; }
+.extras-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 120px)); gap: 8px; }
 .supply-basic .tile { order: var(--po); }
 .supply-basic .tile-name { font-size: .62rem; }
 .supply-basic .tile-art { height: 34px; }
@@ -379,16 +393,19 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   /* Zasoby: [punkty | pieniądze] przy lewym brzegu, obok Królestwo */
   .game .supply { flex-direction: row; align-items: flex-start; gap: 14px; padding: 8px 12px; }
   .game .supply-basic { display: flex; flex-direction: row-reverse; gap: 6px; flex: none; }
-  .game .basic-col { display: flex; flex-direction: column; gap: 5px; width: 92px; }
+  .game .basic-col { display: flex; flex-direction: column; gap: 5px; width: 106px; }
   .game .supply-basic .tile { order: 0; }
   .game .supply-basic .tile-art { height: 24px; }
-  .game .supply-basic .tile-name { font-size: .7rem; -webkit-line-clamp: 1; min-height: 0; }
+  .game .supply-basic .tile-name { font-size: .7rem; -webkit-line-clamp: 1; min-height: 0; text-align: left; padding: 1px 3px 0 25px; }
+  /* niższe kafelki stałych stosów: koszt obok nazwy, nie pod nią */
+  .game .supply-basic .tile { padding-bottom: 5px; }
+  .game .supply-basic .tile .coin { bottom: 4px; }
   .game .supply-kingdom { flex: 1; min-width: 0; grid-template-columns: repeat(5, minmax(0, 140px)); justify-content: start; }
   .game .supply-kingdom .tile-art { height: 56px; }
   .game .play-cards { flex-wrap: wrap; overflow: visible; }
   /* panel gracza (zagrane, faza, ręka) zaczyna się tam, gdzie Królestwo;
      miejsce pod kolumnami stałych stosów zostaje wolne na później */
-  .game > .play-area, .game > .status, .game > .hand-area { margin-left: 204px; border-left: 1px solid var(--line); }
+  .game > .play-area, .game > .status, .game > .hand-area { margin-left: 232px; border-left: 1px solid var(--line); }
   .game .hand { grid-template-columns: repeat(var(--n), minmax(0, 104px)); }
   .game .hand.n8, .game .hand.n9, .game .hand.n10, .game .hand.n11, .game .hand.n12 { grid-template-columns: repeat(var(--n), minmax(0, 80px)); }
 }

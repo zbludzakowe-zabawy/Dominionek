@@ -1,5 +1,5 @@
 import type { SetId } from './card';
-import { kingdomCards } from './cards';
+import { card, kingdomCards } from './cards';
 
 export const KINGDOM_SIZE = 10;
 
@@ -21,3 +21,14 @@ export function rerollOne(kingdom: string[], index: number, sets: SetId[], rnd: 
   next[index] = pool[Math.floor(rnd() * pool.length)];
   return next;
 }
+
+/**
+ * Smocze Złoto i Pałac: dokładane z prawdopodobieństwem równym udziałowi kart
+ * Skarbca Smoka w Królestwie (losujemy jedną kartę Królestwa – jeśli jest ze Skarbca, są w grze).
+ */
+export function rollHoardExtras(kingdom: string[], rnd: () => number = Math.random): boolean {
+  if (!kingdom.length) return false;
+  return card(kingdom[Math.floor(rnd() * kingdom.length)]).set === 'hoard';
+}
+
+export const hasHoardCards = (kingdom: string[]) => kingdom.some((id) => card(id).set === 'hoard');

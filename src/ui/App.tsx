@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { card, kingdomCards, SETS } from '../engine/cards';
 import type { SetId } from '../engine/card';
 import { randomSeed } from '../engine/rng';
-import { KINGDOM_SIZE, randomKingdom, rerollOne } from '../engine/setup';
+import { KINGDOM_SIZE, hasHoardCards, randomKingdom, rerollOne, rollHoardExtras } from '../engine/setup';
 import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
 import { CardFace, Coin, ConfirmButton, PileTile } from './CardView';
@@ -33,10 +33,11 @@ export function App() {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const startGame = (k: string[]) => {
+  const startGame = (k: string[], withExtras: boolean) => {
     const setup: GameSetup = {
       seed: randomSeed(),
       kingdom: k,
+      extras: withExtras ? ['dragongold', 'palace'] : [],
       players: [
         { name: settings.name.trim() || t('defaultName'), bot: null },
         ...settings.bots.map((bot, i) => ({ name: BOT_NAMES[i], bot })),
@@ -77,7 +78,7 @@ export function App() {
           setSaved(null);
           setScreen('setup');
         }}
-        onRematch={(k) => startGame(k)}
+        onRematch={(k, ex) => startGame(k, ex)}
       />
     );
   }
@@ -125,7 +126,7 @@ export function App() {
         setKingdom={setKingdom}
         langToggle={langToggle}
         onBack={() => setScreen('setup')}
-        onStart={() => startGame(kingdom)}
+        onStart={(ex) => startGame(kingdom, ex)}
       />
     );
   }
@@ -294,9 +295,17 @@ function KingdomScreen(props: {
   setKingdom: (k: string[]) => void;
   langToggle: React.ReactNode;
   onBack: () => void;
-  onStart: () => void;
+  onStart: (extras: boolean) => void;
 }) {
   const { lang, sets, kingdom, setKingdom } = props;
+  // Smocze Złoto i Pałac – losowane, gdy w Królestwie są karty Skarbca; można zmienić ręcznie
+  const hoardIn = hasHoardCards(kingdom);
+  const [extras, setExtras] = useState(false);
+  const kingdomKey = [...kingdom].sort().join(',');
+  useEffect(() => {
+    setExtras(kingdom.length === KINGDOM_SIZE && rollHoardExtras(kingdom));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kingdomKey]);
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
   const [detail, setDetail] = useState<string | null>(null);
   const [manual, setManual] = useState(props.mode === 'manual');
@@ -371,7 +380,24 @@ function KingdomScreen(props: {
           </>
         )}
 
-        <button className="btn primary big sticky" disabled={kingdom.length !== KINGDOM_SIZE} onClick={props.onStart}>
+        {hoardIn && (
+          <section className="extras">
+            <label className="check">
+              <input type="checkbox" checked={extras} onChange={(e) => setExtras(e.target.checked)} />
+              <span>{t('hoardExtras')}</span>
+            </label>
+            {extras && (
+              <div className="extras-tiles">
+                {['dragongold', 'palace'].map((id) => (
+                  <PileTile key={id} id={id} lang={lang} count={id === 'palace' ? 8 : 12} onTap={() => setDetail(id)} onLong={() => setDetail(id)} />
+                ))}
+              </div>
+            )}
+            <p className="muted small">{t('hoardExtrasInfo')}</p>
+          </section>
+        )}
+
+        <button className="btn primary big sticky" disabled={kingdom.length !== KINGDOM_SIZE} onClick={() => props.onStart(hoardIn && extras)}>
           {t('start')}
         </button>
       </main>

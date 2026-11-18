@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
-import { cardArt, typeKey } from './art';
+import { cardArt, setSymbol, typeKey } from './art';
 
 /** Stuknięcie i przytrzymanie (podgląd karty). */
 /**
@@ -66,6 +66,11 @@ export function Art({ id, className }: { id: string; className: string }) {
   return <div className={className} style={{ backgroundImage: a.bg }} dangerouslySetInnerHTML={{ __html: a.svg }} />;
 }
 
+export function SetIcon({ id, className }: { id: string; className: string }) {
+  const svg = setSymbol(card(id));
+  return svg ? <span className={className} dangerouslySetInnerHTML={{ __html: svg }} /> : null;
+}
+
 export function typeLine(id: string, lang: Lang): string {
   return card(id)
     .types.map((t) => tr(lang, `type.${t}`))
@@ -100,6 +105,7 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
     <div className={`card t-${typeKey(c)} ${className}`} {...press} role="button" aria-label={c.name[lang]}>
       <div className="c-head">
         <span className="c-name">{c.name[lang]}</span>
+        <SetIcon id={id} className="c-set" />
       </div>
       <Art id={id} className="c-art" />
       <div className="c-body">
@@ -140,6 +146,7 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble,
   return (
     <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} style={style} {...press} role="button" aria-label={c.name[lang]}>
       <Art id={id} className="tile-art" />
+      <SetIcon id={id} className="tile-set" />
       <div className="tile-name">{c.name[lang]}</div>
       <Coin n={c.cost} small />
       <span className="tile-count" title="">{count}</span>
