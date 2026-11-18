@@ -264,6 +264,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .supply { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 8px; }
 .supply-basic { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
 .basic-col { display: contents; }
+.supply-basic .tile { order: var(--po); }
 .supply-basic .tile-name { font-size: .62rem; }
 .supply-basic .tile-art { height: 34px; }
 .supply-kingdom { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
@@ -379,6 +380,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .game .supply { flex-direction: row; align-items: flex-start; gap: 14px; padding: 8px 12px; }
   .game .supply-basic { display: flex; flex-direction: row-reverse; gap: 6px; flex: none; }
   .game .basic-col { display: flex; flex-direction: column; gap: 5px; width: 92px; }
+  .game .supply-basic .tile { order: 0; }
   .game .supply-basic .tile-art { height: 24px; }
   .game .supply-basic .tile-name { font-size: .7rem; -webkit-line-clamp: 1; min-height: 0; }
   .game .supply-kingdom { flex: 1; min-width: 0; grid-template-columns: repeat(5, minmax(0, 140px)); justify-content: start; }

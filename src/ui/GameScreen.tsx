@@ -11,6 +11,19 @@ import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings } from './store';
 
 const HUMAN = 0;
+/** Telefon: górny rząd – pieniądze rosnąco, punkty rosnąco, na końcu Urok (−1). */
+const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'homestead', 'manor', 'citadel', 'hex'];
+
+/**
+ * Królestwo w rzędach po 5: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
+ * Zwraca kolejność do wyświetlenia (rzędy od góry).
+ */
+function kingdomLayout(ids: string[], lang: Lang, perRow = 5): string[] {
+  const sorted = [...ids].sort((a, b) => card(a).cost - card(b).cost || card(a).name[lang].localeCompare(card(b).name[lang]));
+  const rows: string[][] = [];
+  for (let i = 0; i < sorted.length; i += perRow) rows.push(sorted.slice(i, i + perRow));
+  return rows.reverse().flat();
+}
 const DELAY = { slow: 1100, normal: 650, fast: 250 };
 
 interface Props {
@@ -349,13 +362,14 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                   onTap={() => tapPile(id)}
                   onDouble={() => doublePile(id)}
                   onLong={() => setDetail({ id, from: 'other' })}
+                  style={{ ['--po' as string]: PHONE_BASIC_ORDER.indexOf(id) }}
                 />
               ))}
             </div>
           ))}
         </div>
         <div className="supply-kingdom">
-          {game.pileOrder.slice(7).map((id) => (
+          {kingdomLayout(game.pileOrder.slice(7), lang).map((id) => (
             <PileTile
               key={id}
               id={id}

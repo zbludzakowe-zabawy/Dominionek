@@ -131,13 +131,14 @@ interface TileProps {
   onTap?: () => void;
   onLong?: () => void;
   onDouble?: () => void;
+  style?: React.CSSProperties;
 }
 
-export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble }: TileProps) {
+export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble, style }: TileProps) {
   const c = card(id);
   const press = usePress(onTap, onLong, onDouble, !!onDouble);
   return (
-    <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} {...press} role="button" aria-label={c.name[lang]}>
+    <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} style={style} {...press} role="button" aria-label={c.name[lang]}>
       <Art id={id} className="tile-art" />
       <div className="tile-name">{c.name[lang]}</div>
       <Coin n={c.cost} small />
