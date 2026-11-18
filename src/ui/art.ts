@@ -115,12 +115,13 @@ export function cardArt(c: CardDef): Art {
 /** Symbole pakietów (pole 16×16) – mały znak w rogu karty. */
 const SET_SYMBOLS: Record<string, string> = {
   keep: 'M3 14V5H5V3H7V5H9V3H11V5H13V14ZM7 14V10.5a1 1 0 0 1 2 0V14',
-  hoard: 'M1.5 11Q3 5.5 8.5 5L11.5 1.5L12 5Q14.5 5.6 15 8.5L11.5 9.2Q10 12.5 4 12.5Z',
+  // łeb smoka z profilu, z rogiem, ziejący ogniem
+  hoard: 'M0.8 16L2.2 9.6Q2.6 6.4 5.2 5.2L2.6 0.9L7 4.1L9.6 4.3L12.6 5.3L11.9 6.8L9.1 7.3L11.4 8.9L8.3 10Q6.6 11.8 6.4 16ZM7.9 5.4a0.75 0.75 0 1 0 0.01 0ZM2.3 10.2L0.2 9.6L2.4 8.6ZM2.7 7.6L1 6.3L3.3 6.4ZM12.2 7.1Q14 5.2 15.9 4.8Q14.6 6.2 13.3 7.5ZM12.4 7.8L16 7.9L13.5 8.6ZM12.1 8.6Q13.9 10.3 15.6 11Q14.4 9.4 13.1 8.3Z',
 };
 
 export function setSymbol(c: CardDef): string {
   const d = SET_SYMBOLS[c.symbol ?? c.set];
   return d
-    ? `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="currentColor"/></svg>`
+    ? `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" fill="currentColor" fill-rule="evenodd"/></svg>`
     : '';
 }
