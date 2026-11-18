@@ -180,10 +180,11 @@ export class Game {
     // Zakupy
     t.phase = 'buy';
     for (;;) {
-      if (t.buys <= 0) break;
+      // przy 0 zakupach gracz tylko kończy turę (interfejs może to zrobić sam – opcja w menu)
       const treasures = t.boughtSomething ? [] : indicesOf(p.hand, (id) => isType(card(id), 'treasure'));
-      const buyable = this.pileOrder.filter((id) => this.supply[id] > 0 && card(id).cost <= t.coins);
-      const a = yield { kind: 'buy', player: p.id, prompt: { k: 'prompt.buy' }, treasures, buyable };
+      const buyable = t.buys > 0 ? this.pileOrder.filter((id) => this.supply[id] > 0 && card(id).cost <= t.coins) : [];
+      const prompt = { k: t.buys > 0 ? 'prompt.buy' : 'prompt.noBuys' };
+      const a = yield { kind: 'buy', player: p.id, prompt, treasures, buyable };
       if (a.t === 'end') break;
       if (a.t === 'play') {
         yield* this.playFromHand(p, a.i);

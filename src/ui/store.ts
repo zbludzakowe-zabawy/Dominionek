@@ -17,7 +17,8 @@ export interface Settings {
 }
 
 export interface SavedGame {
-  v: 1;
+  /** 2: silnik pyta o koniec tury także przy 0 zakupach (starsze zapisy nie pasują). */
+  v: 2;
   setup: GameSetup;
   answers: Answer[];
   plans: Record<number, Plan>;
@@ -58,7 +59,7 @@ export function loadGame(): SavedGame | null {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as SavedGame;
-    return s.v === 1 ? s : null;
+    return s.v === 2 ? s : null;
   } catch {
     return null;
   }

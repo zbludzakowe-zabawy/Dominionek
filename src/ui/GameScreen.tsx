@@ -49,7 +49,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans) =>
-    saveGame(game.over ? null : { v: 1, setup: game.setup, answers: game.answers, plans: pl ?? {} });
+    saveGame(game.over ? null : { v: 2, setup: game.setup, answers: game.answers, plans: pl ?? {} });
 
   const refresh = () => setTick((x) => x + 1);
 
@@ -90,18 +90,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const d = game.pending;
   const botTurn = !!d && d.player !== HUMAN;
 
-  // automatyczne kończenie tury: faza zakupów, a za posiadane monety (także ze skarbów
-  // na ręce) nie da się kupić niczego poza kartami za 0 – nic więcej nie da się zrobić
+  // automatyczne kończenie tury (opcja w menu): tylko gdy nie zostały już żadne zakupy.
+  // Dopóki jest zakup, czekamy na gracza – może chce kupić coś za 0.
   useEffect(() => {
-    if (!settings.autoEnd || !plans || !d || d.player !== HUMAN || d.kind !== 'buy') return;
-    const money =
-      game.turn.coins +
-      (game.turn.boughtSomething ? 0 : game.players[HUMAN].hand.reduce((s, id) => s + (card(id).coins ?? 0), 0));
-    const worthBuying = game.pileOrder.some((id) => game.supply[id] > 0 && card(id).cost > 0 && card(id).cost <= money);
-    if (worthBuying) return;
+    if (!settings.autoEnd || !plans || !d || d.player !== HUMAN || d.kind !== 'buy' || game.turn.buys > 0) return;
     const id = window.setTimeout(() => {
       if (game.pending === d) submit({ t: 'end' });
-    }, 700);
+    }, 450);
     return () => window.clearTimeout(id);
   });
 
@@ -125,7 +120,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       }, 0);
       return () => window.clearTimeout(id);
     }
-    const quick = d.kind === 'buy' && d.treasures.length > 0;
+    const quick = d.kind === 'buy' && (d.treasures.length > 0 || d.buyable.length === 0);
     const id = window.setTimeout(() => {
       step();
       persist();
@@ -336,18 +331,27 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       </div>
 
       <main className="supply">
+        {/* stałe stosy: pieniądze (od najwyższej wartości) i punkty z Urokiem;
+            na komputerze dwie kolumny przy lewym brzegu: punkty, obok pieniądze */}
         <div className="supply-basic">
-          {game.pileOrder.slice(0, 7).map((id) => (
-            <PileTile
-              key={id}
-              id={id}
-              lang={lang}
-              count={game.supply[id]}
-              state={pileState(id)}
-              onTap={() => tapPile(id)}
-              onDouble={() => doublePile(id)}
-              onLong={() => setDetail({ id, from: 'other' })}
-            />
+          {[
+            ['money', ['gold', 'silver', 'copper']],
+            ['victory', ['citadel', 'manor', 'homestead', 'hex']],
+          ].map(([col, ids]) => (
+            <div key={col as string} className={`basic-col ${col}`}>
+              {(ids as string[]).map((id) => (
+                <PileTile
+                  key={id}
+                  id={id}
+                  lang={lang}
+                  count={game.supply[id]}
+                  state={pileState(id)}
+                  onTap={() => tapPile(id)}
+                  onDouble={() => doublePile(id)}
+                  onLong={() => setDetail({ id, from: 'other' })}
+                />
+              ))}
+            </div>
           ))}
         </div>
         <div className="supply-kingdom">
