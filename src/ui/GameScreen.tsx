@@ -6,11 +6,24 @@ import { Game } from '../engine/game';
 import { makePlan } from '../engine/plan';
 import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
-import { CardFace, Coin, PileTile } from './CardView';
+import { CardFace, Coin, ConfirmButton, PileTile, PlayedCard } from './CardView';
 import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings } from './store';
 
 const HUMAN = 0;
+/** Telefon: górny rząd – pieniądze rosnąco, punkty rosnąco, na końcu Urok (−1). */
+const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'homestead', 'manor', 'citadel', 'hex'];
+
+/**
+ * Królestwo w rzędach po 5: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
+ * Zwraca kolejność do wyświetlenia (rzędy od góry).
+ */
+function kingdomLayout(ids: string[], lang: Lang, perRow = 5): string[] {
+  const sorted = [...ids].sort((a, b) => card(a).cost - card(b).cost || card(a).name[lang].localeCompare(card(b).name[lang]));
+  const rows: string[][] = [];
+  for (let i = 0; i < sorted.length; i += perRow) rows.push(sorted.slice(i, i + perRow));
+  return rows.reverse().flat();
+}
 const DELAY = { slow: 1100, normal: 650, fast: 250 };
 
 interface Props {
@@ -49,7 +62,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans) =>
-    saveGame(game.over ? null : { v: 1, setup: game.setup, answers: game.answers, plans: pl ?? {} });
+    saveGame(game.over ? null : { v: 2, setup: game.setup, answers: game.answers, plans: pl ?? {} });
 
   const refresh = () => setTick((x) => x + 1);
 
@@ -90,6 +103,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const d = game.pending;
   const botTurn = !!d && d.player !== HUMAN;
 
+  // automatyczne kończenie tury (opcja w menu): tylko gdy nie zostały już żadne zakupy.
+  // Dopóki jest zakup, czekamy na gracza – może chce kupić coś za 0.
+  useEffect(() => {
+    if (!settings.autoEnd || !plans || !d || d.player !== HUMAN || d.kind !== 'buy' || game.turn.buys > 0) return;
+    const id = window.setTimeout(() => {
+      if (game.pending === d) submit({ t: 'end' });
+    }, 450);
+    return () => window.clearTimeout(id);
+  });
+
   // ruchy botów
   useEffect(() => {
     if (!plans || !d || d.player === HUMAN) {
@@ -110,7 +133,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       }, 0);
       return () => window.clearTimeout(id);
     }
-    const quick = d.kind === 'buy' && d.treasures.length > 0;
+    const quick = d.kind === 'buy' && (d.treasures.length > 0 || d.buyable.length === 0);
     const id = window.setTimeout(() => {
       step();
       persist();
@@ -124,14 +147,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const turn = game.turn;
   const current = game.players[turn.player];
   const myDecision = d && d.player === HUMAN ? d : null;
+  // w fazie akcji też można od razu kupić: gra sama kończy akcje i zagrywa skarby
+  const canBuyNow = myDecision?.kind === 'buy' || myDecision?.kind === 'action';
   const potential =
-    myDecision?.kind === 'buy' && !turn.boughtSomething
+    canBuyNow && !turn.boughtSomething
       ? turn.coins + me.hand.reduce((s, id) => s + (isType(card(id), 'treasure') ? card(id).coins ?? 0 : 0), 0)
       : turn.coins;
 
   const pileState = (id: string): 'buyable' | 'pickable' | 'dim' | '' => {
     if (!myDecision) return '';
-    if (myDecision.kind === 'buy') {
+    if (canBuyNow) {
       if (turn.buys > 0 && game.supply[id] > 0 && card(id).cost <= potential) return 'buyable';
       return '';
     }
@@ -159,6 +184,23 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     else if (sel.length < dec.max) setSel([...sel, i]);
   };
 
+  /** Dwuklik na stosie: od razu kup / zdobądź; jeśli się nie da – pokaż podgląd. */
+  const doublePile = (id: string) => {
+    if (canBuyNow && pileState(id) === 'buyable') return buy(id);
+    if (myDecision?.kind === 'pile' && myDecision.allowed.includes(id)) return submit({ t: 'pile', pile: id });
+    tapPile(id);
+  };
+
+  /** Dwuklik na karcie przy wyborze (odrzucanie, palenie…): zaznacz ją i zatwierdź, jeśli wybór jest kompletny. */
+  const doubleSel = (i: number) => {
+    const dec = myDecision;
+    if (!dec || dec.kind !== 'cards') return;
+    if (!dec.allowed.includes(i)) return;
+    const next = sel.includes(i) ? sel : dec.max === 1 ? [i] : [...sel, i];
+    if (next.length >= dec.min && next.length <= dec.max && next.length > 0) submit({ t: 'cards', is: next });
+    else setSel(next);
+  };
+
   const tapHand = (i: number) => {
     if (!myDecision) return setDetail({ id: me.hand[i], from: 'hand', index: i });
     if (myDecision.kind === 'action' && myDecision.playable.includes(i)) return submit({ t: 'play', i });
@@ -168,8 +210,10 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   };
 
   const buy = (id: string) => {
-    if (!myDecision || myDecision.kind !== 'buy') return;
-    if (card(id).cost > turn.coins && myDecision.treasures.length) {
+    if (!canBuyNow) return;
+    if (game.pending?.kind === 'action') game.submit({ t: 'end' });
+    const before = game.pending;
+    if (before?.kind === 'buy' && card(id).cost > game.turn.coins && before.treasures.length) {
       game.submit({ t: 'playAll' });
     }
     const dd = game.pending;
@@ -213,7 +257,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 {t('playAll')}
               </button>
             )}
-            <button className="btn primary" onClick={() => submit({ t: 'end' })}>
+            <button className="btn end-turn" onClick={() => submit({ t: 'end' })}>
               {t('endTurn')}
             </button>
           </>
@@ -279,38 +323,53 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       </header>
 
       <div className="opponents">
-        {game.players
-          .filter((p) => p.id !== HUMAN)
-          .map((p) => (
-            <div key={p.id} className={'opp' + (turn.player === p.id ? ' active' : '')}>
+        {[me, ...game.players.filter((p) => p.id !== HUMAN)].map((p) => (
+          <div key={p.id} className={'opp' + (turn.player === p.id ? ' active' : '') + (p.id === HUMAN ? ' me' : '')}>
+            <div className="opp-main">
               <div className="opp-name">
-                {p.name} <span className="muted small">{p.bot ? t(`level.${p.bot}`) : ''}</span>
+                {p.id === HUMAN ? t('you') : p.name}{' '}
+                {p.bot && <span className="muted small opp-level">{t(`level.${p.bot}`)}</span>}
               </div>
               <div className="opp-stats">
                 <span title={t('hand')}>✋ {p.hand.length}</span>
-                <span title={t('deck')}>▤ {p.deck.length}</span>
-                <span className="vp-chip">{game.scoreOf(p).vp} {t('vp')}</span>
+                <span className="opp-deck" title={t('deck')}>▤ {p.deck.length}</span>
               </div>
             </div>
-          ))}
+            <span className="vp-badge" title={t('vp')}>
+              <b>{game.scoreOf(p).vp}</b>
+              <small>{t('vp')}</small>
+            </span>
+          </div>
+        ))}
       </div>
 
       <main className="supply">
+        {/* stałe stosy: pieniądze (od najwyższej wartości) i punkty z Urokiem;
+            na komputerze dwie kolumny przy lewym brzegu: punkty, obok pieniądze */}
         <div className="supply-basic">
-          {game.pileOrder.slice(0, 7).map((id) => (
-            <PileTile
-              key={id}
-              id={id}
-              lang={lang}
-              count={game.supply[id]}
-              state={pileState(id)}
-              onTap={() => tapPile(id)}
-              onLong={() => setDetail({ id, from: 'other' })}
-            />
+          {[
+            ['money', ['gold', 'silver', 'copper']],
+            ['victory', ['citadel', 'manor', 'homestead', 'hex']],
+          ].map(([col, ids]) => (
+            <div key={col as string} className={`basic-col ${col}`}>
+              {(ids as string[]).map((id) => (
+                <PileTile
+                  key={id}
+                  id={id}
+                  lang={lang}
+                  count={game.supply[id]}
+                  state={pileState(id)}
+                  onTap={() => tapPile(id)}
+                  onDouble={() => doublePile(id)}
+                  onLong={() => setDetail({ id, from: 'other' })}
+                  style={{ ['--po' as string]: PHONE_BASIC_ORDER.indexOf(id) }}
+                />
+              ))}
+            </div>
           ))}
         </div>
         <div className="supply-kingdom">
-          {game.pileOrder.slice(7).map((id) => (
+          {kingdomLayout(game.pileOrder.slice(7), lang).map((id) => (
             <PileTile
               key={id}
               id={id}
@@ -318,6 +377,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               count={game.supply[id]}
               state={pileState(id)}
               onTap={() => tapPile(id)}
+              onDouble={() => doublePile(id)}
               onLong={() => setDetail({ id, from: 'other' })}
             />
           ))}
@@ -329,10 +389,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {turn.player === HUMAN ? t('inPlay') : `${current.name} · ${t('inPlay').toLowerCase()}`}
         </div>
         <div className="play-cards">
-          {current.play.map((id, i) => (
-            <button key={i} className={`chip t-${typeKey(card(id))}`} onClick={() => setDetail({ id, from: 'other' })}>
-              {card(id).name[lang]}
-            </button>
+          {groupCards(current.play).map(([id, n]) => (
+            <PlayedCard key={id} id={id} n={n} lang={lang} onTap={() => setDetail({ id, from: 'other' })} />
           ))}
           {!current.play.length && lastLog && <span className="muted small ticker">{logText(lang, lastLog, names)}</span>}
         </div>
@@ -340,17 +398,25 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
 
       <section className={'status' + (attacked ? ' attacked' : '')}>
         <div className="counters">
-          <span className="phase">{t(`phase.${turn.phase}`)}</span>
-          <span>
-            {t('actions')} <b>{turn.actions}</b>
-          </span>
-          <span>
-            {t('buys')} <b>{turn.buys}</b>
-          </span>
-          <span className="coins-counter">
-            <Coin n={turn.coins} />
-            {potential > turn.coins && <span className="muted small">→{potential}</span>}
-          </span>
+          <span className="phase">{t(`phase.${turn.phase}`)}:</span>
+          {turn.phase === 'buy' ? (
+            <>
+              <Coin n={potential} />
+              <span className="counter">
+                {t('buys')} <b>{turn.buys}</b>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="counter">
+                {t('actions')} <b>{turn.actions}</b>
+              </span>
+              <span className="counter">
+                {t('buys')} <b>{turn.buys}</b>
+              </span>
+              <Coin n={potential} />
+            </>
+          )}
         </div>
         <div className="prompt-row">
           <div className="prompt">
@@ -383,6 +449,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               lang={lang}
               className={handState(i)}
               onTap={() => tapHand(i)}
+              onDouble={() => doubleSel(i)}
               onLong={() => setDetail({ id, from: 'hand', index: i })}
             />
           ))}
@@ -406,6 +473,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                   lang={lang}
                   className={sel.includes(i) ? 'selected' : myDecision.allowed.includes(i) ? 'playable' : 'dim'}
                   onTap={() => toggleSel(i, myDecision)}
+                  onDouble={() => doubleSel(i)}
                   onLong={() => setDetail({ id, from: 'other' })}
                 />
               ))}
@@ -506,20 +574,25 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 ))}
               </div>
             </div>
+            <label className="check menu-check">
+              <input type="checkbox" checked={settings.autoEnd} onChange={(e) => onSettings({ autoEnd: e.target.checked })} />
+              <span>{t('autoEnd')}</span>
+            </label>
             <button className="btn" onClick={onRules}>
               {t('rules')}
             </button>
             <button className="btn" onClick={() => { persist(); onExit(); }}>
               {t('leaveGame')}
             </button>
-            <button
+            <ConfirmButton
               className="btn"
-              onClick={() => {
-                if (game.over || window.confirm(t('confirmNew'))) onNewGame();
-              }}
-            >
-              {t('restart')}
-            </button>
+              label={t('restart')}
+              question={t('confirmNew')}
+              yes={t('yes')}
+              no={t('no')}
+              needConfirm={!game.over}
+              onConfirm={onNewGame}
+            />
             <button className="btn ghost" onClick={() => setPanel(null)}>
               {t('close')}
             </button>
@@ -597,7 +670,7 @@ function DetailSheet(props: {
   const c = card(id);
   let action: React.ReactNode = null;
   if (detail.from === 'supply' && decision) {
-    if (decision.kind === 'buy' && game.turn.buys > 0 && game.supply[id] > 0 && c.cost <= potential) {
+    if ((decision.kind === 'buy' || decision.kind === 'action') && game.turn.buys > 0 && game.supply[id] > 0 && c.cost <= potential) {
       action = (
         <button className="btn primary" onClick={() => props.onBuy(id)}>
           {t('buyFor', { n: c.cost })}
@@ -673,4 +746,11 @@ function DeckList({ lang, cards, onTap }: { lang: Lang; cards: string[]; onTap: 
       ))}
     </div>
   );
+}
+
+/** Grupuje takie same karty (kolejność pierwszego wystąpienia) – [id, liczba]. */
+function groupCards(ids: string[]): [string, number][] {
+  const m = new Map<string, number>();
+  for (const id of ids) m.set(id, (m.get(id) ?? 0) + 1);
+  return [...m.entries()];
 }

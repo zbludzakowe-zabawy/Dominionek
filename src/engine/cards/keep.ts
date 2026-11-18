@@ -214,13 +214,19 @@ export const KEEP: CardDef[] = [
     set: 'keep',
     name: t('Tithe Collector', 'Poborca Dziesięciny'),
     text: t(
-      'You may trash a card from your hand. If it was a Copper Mark, +2 coins.',
-      'Możesz spalić kartę z ręki. Jeśli była to Miedziana Marka: +2 monety.',
+      'If you have a Penny in hand, trash it for +2 coins. Otherwise you may trash another card from your hand.',
+      'Jeśli masz na ręce Grosz, spal go i weź +2 monety. W przeciwnym razie możesz spalić inną kartę z ręki.',
     ),
     types: ['action'],
     cost: 3,
     plus: { coins: 1 },
     *play(g, p) {
+      const penny = p.hand.indexOf('copper');
+      if (penny >= 0) {
+        g.trashCards(p, g.takeFromHand(p, [penny]));
+        g.turn.coins += 2;
+        return;
+      }
       const is = yield* g.chooseFromHand(p, {
         prompt: { k: 'prompt.trashUpTo', p: { n: 1 } },
         min: 0,
@@ -228,9 +234,7 @@ export const KEEP: CardDef[] = [
         purpose: 'trash',
         source: 'tithe',
       });
-      const ids = g.takeFromHand(p, is);
-      g.trashCards(p, ids);
-      if (ids[0] === 'copper') g.turn.coins += 2;
+      g.trashCards(p, g.takeFromHand(p, is));
     },
     ai: { value: 4, role: 'trash' },
   },
@@ -382,8 +386,8 @@ export const KEEP: CardDef[] = [
     set: 'keep',
     name: t('Bandit Chief', 'Herszt Bandytów'),
     text: t(
-      'Each other player reveals the top 2 cards of their deck, trashes a revealed Treasure other than Copper Mark (their choice) and discards the rest.',
-      'Każdy inny gracz odkrywa 2 wierzchnie karty talii, pali odkryty Skarb inny niż Miedziana Marka (sam wybiera), a resztę odrzuca.',
+      'Each other player reveals the top 2 cards of their deck, trashes a revealed Treasure other than Penny (their choice) and discards the rest.',
+      'Każdy inny gracz odkrywa 2 wierzchnie karty talii, pali odkryty Skarb inny niż Grosz (sam wybiera), a resztę odrzuca.',
     ),
     types: ['action', 'attack'],
     cost: 5,

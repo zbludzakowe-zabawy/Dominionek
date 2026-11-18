@@ -102,6 +102,27 @@ describe('silnik', () => {
     expect(hardWins / games).toBeGreaterThan(0.75);
   });
 
+  it('Poborca Dziesięciny sam pali Grosz i daje +3 monety', () => {
+    const g = new Game(makeSetup(5, 2));
+    const p = g.players[g.turn.player];
+    p.hand = ['copper', 'homestead', 'silver'];
+    const coins = g.turn.coins;
+    const r = g.resolve(p, 'tithe').next();
+    expect(r.done).toBe(true); // bez pytania gracza
+    expect(g.trash).toEqual(['copper']);
+    expect(p.hand).toEqual(['homestead', 'silver']);
+    expect(g.turn.coins).toBe(coins + 3);
+  });
+
+  it('Poborca Dziesięciny bez Grosza pyta o inną kartę', () => {
+    const g = new Game(makeSetup(6, 2));
+    const p = g.players[g.turn.player];
+    p.hand = ['homestead', 'silver'];
+    const r = g.resolve(p, 'tithe').next();
+    expect(r.done).toBe(false);
+    expect(r.value && r.value.kind).toBe('cards');
+  });
+
   it('losowanie Królestwa', () => {
     const k = randomKingdom(['keep']);
     expect(new Set(k).size).toBe(10);

@@ -1,12 +1,19 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
 import { cardArt, typeKey } from './art';
 
 /** Stuknięcie i przytrzymanie (podgląd karty). */
-export function usePress(onTap?: () => void, onLong?: () => void) {
+/**
+ * Stuknięcie, dwuklik (zatwierdzenie bez podglądu) i przytrzymanie (podgląd karty).
+ * delayTap: pojedyncze stuknięcie czeka chwilę, czy nie przyjdzie drugie
+ * (potrzebne, gdy pojedyncze stuknięcie otwiera okno zasłaniające kartę).
+ */
+export function usePress(onTap?: () => void, onLong?: () => void, onDouble?: () => void, delayTap = false) {
   const timer = useRef<number | null>(null);
+  const lastTap = useRef(0);
+  const pendingTap = useRef<number | null>(null);
   const longFired = useRef(false);
   const start = useRef<{ x: number; y: number } | null>(null);
   const clear = () => {
@@ -35,9 +42,28 @@ export function usePress(onTap?: () => void, onLong?: () => void) {
     },
     onClick: () => {
       if (longFired.current) return;
-      onTap?.();
+      const now = Date.now();
+      if (onDouble && now - lastTap.current < 330) {
+        lastTap.current = 0;
+        if (pendingTap.current !== null) window.clearTimeout(pendingTap.current);
+        pendingTap.current = null;
+        onDouble();
+        return;
+      }
+      lastTap.current = now;
+      if (onDouble && delayTap) {
+        pendingTap.current = window.setTimeout(() => {
+          pendingTap.current = null;
+          onTap?.();
+        }, 260);
+      } else onTap?.();
     },
   };
+}
+
+export function Art({ id, className }: { id: string; className: string }) {
+  const a = cardArt(card(id));
+  return <div className={className} style={{ backgroundImage: a.bg }} dangerouslySetInnerHTML={{ __html: a.svg }} />;
 }
 
 export function typeLine(id: string, lang: Lang): string {
@@ -56,12 +82,13 @@ interface FaceProps {
   className?: string;
   onTap?: () => void;
   onLong?: () => void;
+  onDouble?: () => void;
   badge?: React.ReactNode;
 }
 
-export function CardFace({ id, lang, className = '', onTap, onLong, badge }: FaceProps) {
+export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, badge }: FaceProps) {
   const c = card(id);
-  const press = usePress(onTap, onLong);
+  const press = usePress(onTap, onLong, onDouble);
   const plus = c.plus ?? {};
   const lines: string[] = [];
   if (plus.cards) lines.push(tr(lang, 'plus.cards', { n: plus.cards }));
@@ -74,7 +101,7 @@ export function CardFace({ id, lang, className = '', onTap, onLong, badge }: Fac
       <div className="c-head">
         <span className="c-name">{c.name[lang]}</span>
       </div>
-      <div className="c-art" dangerouslySetInnerHTML={{ __html: cardArt(c) }} />
+      <Art id={id} className="c-art" />
       <div className="c-body">
         {lines.length > 0 && (
           <div className="c-plus">
@@ -103,17 +130,63 @@ interface TileProps {
   state?: 'buyable' | 'pickable' | 'dim' | '';
   onTap?: () => void;
   onLong?: () => void;
+  onDouble?: () => void;
+  style?: React.CSSProperties;
 }
 
-export function PileTile({ id, lang, count, state = '', onTap, onLong }: TileProps) {
+export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble, style }: TileProps) {
   const c = card(id);
-  const press = usePress(onTap, onLong);
+  const press = usePress(onTap, onLong, onDouble, !!onDouble);
   return (
-    <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} {...press} role="button" aria-label={c.name[lang]}>
-      <div className="tile-art" dangerouslySetInnerHTML={{ __html: cardArt(c) }} />
+    <div className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}`} style={style} {...press} role="button" aria-label={c.name[lang]}>
+      <Art id={id} className="tile-art" />
       <div className="tile-name">{c.name[lang]}</div>
       <Coin n={c.cost} small />
-      <span className="tile-count">{count}</span>
+      <span className="tile-count" title="">{count}</span>
     </div>
+  );
+}
+
+/** Przycisk z potwierdzeniem w samej stronie (zamiast window.confirm). */
+export function ConfirmButton(props: {
+  className?: string;
+  label: string;
+  question: string;
+  yes: string;
+  no: string;
+  needConfirm: boolean;
+  onConfirm: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+  if (!asking)
+    return (
+      <button className={props.className} onClick={() => (props.needConfirm ? setAsking(true) : props.onConfirm())}>
+        {props.label}
+      </button>
+    );
+  return (
+    <div className="confirm-box" role="alertdialog">
+      <span>{props.question}</span>
+      <div className="confirm-actions">
+        <button className="btn" onClick={() => setAsking(false)}>
+          {props.no}
+        </button>
+        <button className="btn primary" onClick={props.onConfirm}>
+          {props.yes}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Zagrana karta (małą); takie same karty leżą jedna na drugiej z licznikiem. */
+export function PlayedCard({ id, n, lang, onTap }: { id: string; n: number; lang: Lang; onTap: () => void }) {
+  const c = card(id);
+  return (
+    <button className={`played t-${typeKey(c)}` + (n > 1 ? ' stacked' : '')} onClick={onTap} aria-label={`${c.name[lang]} ×${n}`}>
+      <Art id={id} className="played-art" />
+      <span className="played-name">{c.name[lang]}</span>
+      {n > 1 && <span className="played-count">×{n}</span>}
+    </button>
   );
 }

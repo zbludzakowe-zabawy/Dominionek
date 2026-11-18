@@ -9,13 +9,16 @@ export interface Settings {
   lang: Lang;
   name: string;
   speed: Speed;
+  /** Automatycznie kończ turę, gdy gracz nie może już nic sensownego zrobić. */
+  autoEnd: boolean;
   bots: BotLevel[];
   sets: SetId[];
   mode: 'random' | 'manual';
 }
 
 export interface SavedGame {
-  v: 1;
+  /** 2: silnik pyta o koniec tury także przy 0 zakupach (starsze zapisy nie pasują). */
+  v: 2;
   setup: GameSetup;
   answers: Answer[];
   plans: Record<number, Plan>;
@@ -33,7 +36,7 @@ const defaultLang = (): Lang => {
 };
 
 export function loadSettings(): Settings {
-  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', bots: ['medium'], sets: ['keep'], mode: 'random' };
+  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, bots: ['medium'], sets: ['keep'], mode: 'random' };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) return { ...base, ...JSON.parse(raw) };
@@ -56,7 +59,7 @@ export function loadGame(): SavedGame | null {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as SavedGame;
-    return s.v === 1 ? s : null;
+    return s.v === 2 ? s : null;
   } catch {
     return null;
   }

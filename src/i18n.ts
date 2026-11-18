@@ -31,12 +31,14 @@ const en: Dict = {
   yourName: 'Your name',
   defaultName: 'Player',
   speed: 'Opponent speed',
+  autoEnd: 'End my turn automatically when I have no buys left',
   'speed.slow': 'Slow',
   'speed.normal': 'Normal',
   'speed.fast': 'Fast',
   preparing: 'Opponents are studying the Kingdom…',
   turnOf: 'Turn {n} · {who}',
   yourTurn: 'Your turn',
+  you: 'You',
   actions: 'Actions',
   buys: 'Buys',
   coins: 'Coins',
@@ -93,8 +95,9 @@ const en: Dict = {
   waitingFor: 'Waiting for {who}',
   attackedBy: 'Attack!',
 
-  'prompt.action': 'Tap an Action card to play it, or end your actions.',
-  'prompt.buy': 'Play Treasures, then tap a Supply pile to buy.',
+  'prompt.action': 'Play an Action card or tap a pile to buy.',
+  'prompt.buy': 'Play Treasures and tap a pile to buy.',
+  'prompt.noBuys': '',
   'prompt.trashUpTo': 'Trash cards from your hand (up to {n}).',
   'prompt.discardForCoin': 'You may discard a card for +1 coin.',
   'prompt.discardToDraw': 'Discard any number of cards – you will draw that many.',
@@ -131,7 +134,7 @@ const en: Dict = {
 Have the most Victory Points (VP) when the game ends. VP come from Victory cards in your deck: Homestead 1, Manor 3, Citadel 6. Each Hex is −1.
 
 ## Your deck
-Everyone starts with 7 Copper Marks and 3 Homesteads and draws 5 cards. When your deck runs out, your discard pile is shuffled to form a new deck.
+Everyone starts with 7 Pennies and 3 Homesteads and draws 5 cards. When your deck runs out, your discard pile is shuffled to form a new deck.
 
 ## A turn
 **Action phase.** You have 1 Action. Play an Action card from your hand; it may give more Actions, cards, Buys or coins.
@@ -142,7 +145,7 @@ Everyone starts with 7 Copper Marks and 3 Homesteads and draws 5 cards. When you
 The game ends after a turn in which the Citadel pile is empty, or any 3 Supply piles are empty. Ties go to the player with fewer turns.
 
 ## Tips
-Buy good cards early, Victory cards late — they do nothing in your hand. Trashing weak cards makes your deck stronger. Long-press any card to read it.`,
+Buy good cards early, Victory cards late — they do nothing in your hand. Trashing weak cards makes your deck stronger. Long-press any card to read it. Double-tap a Supply pile to buy it straight away, or a card to choose it and confirm.`,
 };
 
 const pl: Dict = {
@@ -173,12 +176,14 @@ const pl: Dict = {
   yourName: 'Twoje imię',
   defaultName: 'Gracz',
   speed: 'Tempo przeciwników',
+  autoEnd: 'Automatycznie kończ moją turę, gdy nie mam już zakupów',
   'speed.slow': 'Wolne',
   'speed.normal': 'Normalne',
   'speed.fast': 'Szybkie',
   preparing: 'Przeciwnicy studiują Królestwo…',
   turnOf: 'Tura {n} · {who}',
   yourTurn: 'Twoja tura',
+  you: 'Ty',
   actions: 'Akcje',
   buys: 'Zakupy',
   coins: 'Monety',
@@ -235,8 +240,9 @@ const pl: Dict = {
   waitingFor: 'Czekamy na: {who}',
   attackedBy: 'Atak!',
 
-  'prompt.action': 'Stuknij kartę Akcji, by ją zagrać, albo zakończ akcje.',
-  'prompt.buy': 'Zagraj Skarby, potem stuknij stos w Zasobach, by kupić.',
+  'prompt.action': 'Zagraj kartę Akcji albo stuknij stos, by kupić.',
+  'prompt.buy': 'Zagraj Skarby i stuknij stos, by kupić.',
+  'prompt.noBuys': '',
   'prompt.trashUpTo': 'Spal karty z ręki (maks. {n}).',
   'prompt.discardForCoin': 'Możesz odrzucić kartę za +1 monetę.',
   'prompt.discardToDraw': 'Odrzuć dowolną liczbę kart – dobierzesz tyle samo.',
@@ -273,7 +279,7 @@ const pl: Dict = {
 Zdobądź najwięcej Punktów Zwycięstwa (PZ) do końca gry. PZ dają karty Zwycięstwa w twojej talii: Zagroda 1, Dwór 3, Cytadela 6. Każdy Urok to −1.
 
 ## Twoja talia
-Każdy zaczyna z 7 Miedzianymi Markami i 3 Zagrodami i dobiera 5 kart. Gdy talia się skończy, przetasuj odrzucone karty – to twoja nowa talia.
+Każdy zaczyna z 7 Groszami i 3 Zagrodami i dobiera 5 kart. Gdy talia się skończy, przetasuj odrzucone karty – to twoja nowa talia.
 
 ## Tura
 **Faza akcji.** Masz 1 Akcję. Zagraj kartę Akcji z ręki; może dać więcej akcji, kart, zakupów lub monet.
@@ -284,7 +290,7 @@ Każdy zaczyna z 7 Miedzianymi Markami i 3 Zagrodami i dobiera 5 kart. Gdy talia
 Gra kończy się po turze, w której wyczerpał się stos Cytadeli albo dowolne 3 stosy w Zasobach. Przy remisie wygrywa gracz z mniejszą liczbą tur.
 
 ## Wskazówki
-Na początku kupuj dobre karty, punkty pod koniec – na ręce nic nie robią. Palenie słabych kart wzmacnia talię. Przytrzymaj palec na dowolnej karcie, by ją przeczytać.`,
+Na początku kupuj dobre karty, punkty pod koniec – na ręce nic nie robią. Palenie słabych kart wzmacnia talię. Przytrzymaj palec na dowolnej karcie, by ją przeczytać. Stuknij dwukrotnie stos w Zasobach, by od razu go kupić, albo kartę, by ją wybrać i od razu zatwierdzić.`,
 };
 
 const DICTS: Record<Lang, Dict> = { en, pl };

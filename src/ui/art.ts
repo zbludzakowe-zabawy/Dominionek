@@ -1,7 +1,8 @@
-// Abstrakcyjne, spokojne wzory kart generowane w SVG – deterministycznie z id karty.
-// Rozety, kratownice i pierścienie przypominające witraże i herby.
+// Obrazki kart: rysunek kreską (motifs.ts) na spokojnym, wzorzystym tle
+// generowanym deterministycznie z id karty.
 import { Rng } from '../engine/rng';
 import type { CardDef } from '../engine/card';
+import { MOTIFS } from './motifs';
 
 function hash(s: string): number {
   let h = 2166136261;
@@ -32,9 +33,17 @@ const PALETTE: Record<string, [string, string, string]> = {
 };
 
 const f = (n: number) => n.toFixed(1);
-const cache = new Map<string, string>();
 
-export function cardArt(c: CardDef): string {
+export interface Art {
+  /** Tło (data URI) – kratownica, poświata, pierścień. */
+  bg: string;
+  /** Rysunek karty (SVG). */
+  svg: string;
+}
+
+const cache = new Map<string, Art>();
+
+export function cardArt(c: CardDef): Art {
   const hit = cache.get(c.id);
   if (hit) return hit;
   const r = new Rng(hash(c.id));
@@ -45,12 +54,10 @@ export function cardArt(c: CardDef): string {
   const cy = H / 2;
   const parts: string[] = [];
 
-  // tło: delikatny gradient + kratownica
-  const gid = `g${hash(c.id).toString(36)}`;
   parts.push(
-    `<defs><radialGradient id="${gid}" cx="50%" cy="50%" r="75%"><stop offset="0" stop-color="${line}" stop-opacity=".22"/><stop offset="1" stop-color="${bg}" stop-opacity="0"/></radialGradient></defs>`,
+    `<defs><radialGradient id="g" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="${line}" stop-opacity=".2"/><stop offset="1" stop-color="${bg}" stop-opacity="0"/></radialGradient></defs>`,
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    `<rect width="${W}" height="${H}" fill="url(#${gid})"/>`,
+    `<rect width="${W}" height="${H}" fill="url(#g)"/>`,
   );
   const lattice = r.int(3);
   const step = 8 + r.int(5);
@@ -66,57 +73,34 @@ export function cardArt(c: CardDef): string {
       for (let x = 0; x <= W; x += step) grid += `Q${f(x + step / 2)} ${f(y + (r.next() > 0.5 ? 2 : -2))} ${f(x + step)} ${f(y)}`;
     }
   }
-  parts.push(`<path d="${grid}" stroke="${line}" stroke-opacity=".12" stroke-width=".5" fill="none"/>`);
-
-  // rozeta
-  const n = [5, 6, 7, 8, 9, 10, 12][r.int(7)];
-  const R = 20 + r.int(7);
-  const inner = 5 + r.int(6);
-  const bend = 0.3 + r.next() * 0.9;
-  let petals = '';
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-    const a1 = a - Math.PI / n;
-    const a2 = a + Math.PI / n;
-    const px = cx + Math.cos(a) * R;
-    const py = cy + Math.sin(a) * R;
-    const b1x = cx + Math.cos(a1) * R * bend;
-    const b1y = cy + Math.sin(a1) * R * bend;
-    const b2x = cx + Math.cos(a2) * R * bend;
-    const b2y = cy + Math.sin(a2) * R * bend;
-    const sx = cx + Math.cos(a) * inner;
-    const sy = cy + Math.sin(a) * inner;
-    petals += `M${f(sx)} ${f(sy)}Q${f(b1x)} ${f(b1y)} ${f(px)} ${f(py)}Q${f(b2x)} ${f(b2y)} ${f(sx)} ${f(sy)}Z`;
-  }
-  parts.push(`<path d="${petals}" fill="${line}" fill-opacity=".08" stroke="${line}" stroke-opacity=".75" stroke-width=".7"/>`);
-
-  // pierścienie i wielokąt
-  parts.push(`<circle cx="${cx}" cy="${cy}" r="${f(R + 3)}" fill="none" stroke="${accent}" stroke-opacity=".35" stroke-width=".5"/>`);
-  if (r.next() > 0.4) {
-    parts.push(
-      `<circle cx="${cx}" cy="${cy}" r="${f(R + 6)}" fill="none" stroke="${line}" stroke-opacity=".25" stroke-width=".4" stroke-dasharray="${f(1 + r.int(3))} ${f(1.5 + r.int(3))}"/>`,
-    );
-  }
-  const m = [3, 4, 6, 8][r.int(4)];
-  const pr = inner + 3 + r.int(4);
-  let poly = '';
-  for (let i = 0; i < m; i++) {
-    const a = (i / m) * Math.PI * 2 + (r.next() > 0.5 ? Math.PI / m : 0) - Math.PI / 2;
-    poly += `${i ? 'L' : 'M'}${f(cx + Math.cos(a) * pr)} ${f(cy + Math.sin(a) * pr)}`;
-  }
-  parts.push(`<path d="${poly}Z" fill="none" stroke="${accent}" stroke-opacity=".8" stroke-width=".7"/>`);
-  parts.push(`<circle cx="${cx}" cy="${cy}" r="${f(1.6 + r.next() * 1.4)}" fill="${accent}" fill-opacity=".85"/>`);
-
-  // kropki na zewnątrz
-  const dots = n * (r.next() > 0.5 ? 2 : 1);
+  parts.push(`<path d="${grid}" stroke="${line}" stroke-opacity=".13" stroke-width=".5" fill="none"/>`);
+  const R = 26;
+  parts.push(`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${accent}" stroke-opacity=".22" stroke-width=".5"/>`);
+  parts.push(
+    `<circle cx="${cx}" cy="${cy}" r="${R + 4}" fill="none" stroke="${line}" stroke-opacity=".16" stroke-width=".4" stroke-dasharray="${1 + r.int(3)} ${2 + r.int(3)}"/>`,
+  );
+  const dots = 12 + 4 * r.int(3);
   let dd = '';
   for (let i = 0; i < dots; i++) {
     const a = (i / dots) * Math.PI * 2 - Math.PI / 2;
-    dd += `<circle cx="${f(cx + Math.cos(a) * (R + 9))}" cy="${f(cy + Math.sin(a) * (R + 9))}" r=".7"/>`;
+    dd += `<circle cx="${f(cx + Math.cos(a) * (R + 8))}" cy="${f(cy + Math.sin(a) * (R + 8))}" r=".6"/>`;
   }
-  parts.push(`<g fill="${accent}" fill-opacity=".45">${dd}</g>`);
+  parts.push(`<g fill="${accent}" fill-opacity=".3">${dd}</g>`);
+  const bgSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice">${parts.join('')}</svg>`;
 
-  const svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${parts.join('')}</svg>`;
-  cache.set(c.id, svg);
-  return svg;
+  const m = MOTIFS[c.id];
+  let svg = '';
+  if (m) {
+    svg =
+      `<svg viewBox="-6 -3 60 54" preserveAspectRatio="xMidYMid meet" aria-hidden="true">` +
+      `<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35">` +
+      `<path d="${m.m}" stroke="${line}"/>` +
+      (m.a ? `<path d="${m.a}" stroke="${accent}"/>` : '') +
+      `</g>` +
+      (m.f ? `<path d="${m.f}" fill="${accent}"/>` : '') +
+      `</svg>`;
+  }
+  const art = { bg: `url("data:image/svg+xml,${encodeURIComponent(bgSvg)}")`, svg };
+  cache.set(c.id, art);
+  return art;
 }
