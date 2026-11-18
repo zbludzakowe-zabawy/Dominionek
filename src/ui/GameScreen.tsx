@@ -90,6 +90,21 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const d = game.pending;
   const botTurn = !!d && d.player !== HUMAN;
 
+  // automatyczne kończenie tury: faza zakupów, a za posiadane monety (także ze skarbów
+  // na ręce) nie da się kupić niczego poza kartami za 0 – nic więcej nie da się zrobić
+  useEffect(() => {
+    if (!settings.autoEnd || !plans || !d || d.player !== HUMAN || d.kind !== 'buy') return;
+    const money =
+      game.turn.coins +
+      (game.turn.boughtSomething ? 0 : game.players[HUMAN].hand.reduce((s, id) => s + (card(id).coins ?? 0), 0));
+    const worthBuying = game.pileOrder.some((id) => game.supply[id] > 0 && card(id).cost > 0 && card(id).cost <= money);
+    if (worthBuying) return;
+    const id = window.setTimeout(() => {
+      if (game.pending === d) submit({ t: 'end' });
+    }, 700);
+    return () => window.clearTimeout(id);
+  });
+
   // ruchy botów
   useEffect(() => {
     if (!plans || !d || d.player === HUMAN) {
@@ -541,6 +556,10 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 ))}
               </div>
             </div>
+            <label className="check menu-check">
+              <input type="checkbox" checked={settings.autoEnd} onChange={(e) => onSettings({ autoEnd: e.target.checked })} />
+              <span>{t('autoEnd')}</span>
+            </label>
             <button className="btn" onClick={onRules}>
               {t('rules')}
             </button>
