@@ -217,7 +217,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 {t('playAll')}
               </button>
             )}
-            <button className="btn primary" onClick={() => submit({ t: 'end' })}>
+            <button className="btn end-turn" onClick={() => submit({ t: 'end' })}>
               {t('endTurn')}
             </button>
           </>
@@ -346,16 +346,25 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
 
       <section className={'status' + (attacked ? ' attacked' : '')}>
         <div className="counters">
-          <span className="phase">{t(`phase.${turn.phase}`)}</span>
-          <span className="counter">
-            {t('actions')} <b>{turn.actions}</b>
-          </span>
-          <span className="counter">
-            {t('buys')} <b>{turn.buys}</b>
-          </span>
-          <span className="counter coins-counter" title={t('coins')}>
-            {t('coins')} <Coin n={potential} />
-          </span>
+          <span className="phase">{t(`phase.${turn.phase}`)}:</span>
+          {turn.phase === 'buy' ? (
+            <>
+              <Coin n={potential} />
+              <span className="counter">
+                {t('buys')} <b>{turn.buys}</b>
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="counter">
+                {t('actions')} <b>{turn.actions}</b>
+              </span>
+              <span className="counter">
+                {t('buys')} <b>{turn.buys}</b>
+              </span>
+              <Coin n={potential} />
+            </>
+          )}
         </div>
         <div className="prompt-row">
           <div className="prompt">

@@ -47,6 +47,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .btn:active { filter: brightness(1.2); }
 .btn.primary { background: var(--accent); color: #1d1a12; border-color: transparent; font-weight: 600; }
 .btn.ghost { background: transparent; }
+.btn.end-turn { background: #3f6fa3; border-color: #5a8cc2; color: #f2f6fb; font-weight: 600; }
 .btn.big { padding: 14px 22px; font-size: 1.05rem; width: 100%; }
 .btn:disabled { opacity: .4; cursor: default; }
 .icon-btn {
@@ -278,7 +279,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .status { flex: none; padding: 6px 10px; background: var(--bg2); border-top: 1px solid var(--line); }
 .status.attacked { background: #3a2622; }
 .counters { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 6px 8px; font-size: .85rem; color: var(--muted); }
-.counters .phase { color: var(--gold); font-weight: 600; margin-right: 4px; }
+.counters .phase { color: var(--gold); font-weight: 600; }
 .counter {
   display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; min-height: 28px;
   border-radius: 999px; background: var(--panel); border: 1px solid var(--line);
