@@ -371,6 +371,9 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .game .supply-kingdom { flex: 1; min-width: 0; grid-template-columns: repeat(5, minmax(0, 140px)); justify-content: start; }
   .game .supply-kingdom .tile-art { height: 56px; }
   .game .play-cards { flex-wrap: wrap; overflow: visible; }
+  /* panel gracza (zagrane, faza, ręka) zaczyna się tam, gdzie Królestwo;
+     miejsce pod kolumnami stałych stosów zostaje wolne na później */
+  .game > .play-area, .game > .status, .game > .hand-area { margin-left: 204px; border-left: 1px solid var(--line); }
   .game .hand { grid-template-columns: repeat(var(--n), minmax(0, 104px)); }
   .game .hand.n8, .game .hand.n9, .game .hand.n10, .game .hand.n11, .game .hand.n12 { grid-template-columns: repeat(var(--n), minmax(0, 80px)); }
 }
