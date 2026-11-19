@@ -176,10 +176,13 @@ export const TOWER: CardDef[] = [
     id: 'cauldron',
     set: 'tower',
     name: t('Bubbling Cauldron', 'Kipiący Kocioł'),
-    text: t('', ''),
+    text: t('If you have an Elixir in play, +1 Card.', 'Jeśli masz w grze Eliksir: +1 karta.'),
     types: ['action'],
     cost: 5,
-    plus: { actions: 2, potions: 1 },
+    plus: { actions: 2, coins: 1, buys: 1 },
+    *play(g, p) {
+      if (p.play.includes('elixir')) g.draw(p, 1);
+    },
     ai: { value: 5, role: 'village' },
   },
 

@@ -204,6 +204,20 @@ describe('silnik', () => {
     expect(g.turn.coins).toBe(coins + 3);
   });
 
+  it('Kipiący Kocioł: +2 akcje, +1 moneta, +1 zakup; z Eliksirem w grze +1 karta', () => {
+    const g = new Game(makeSetup(14, 2));
+    const p = g.players[g.turn.player];
+    const t0 = { ...g.turn };
+    let hand = p.hand.length;
+    g.resolve(p, 'cauldron').next();
+    expect([g.turn.actions - t0.actions, g.turn.coins - t0.coins, g.turn.buys - t0.buys]).toEqual([2, 1, 1]);
+    expect(p.hand.length).toBe(hand);
+    p.play = ['elixir'];
+    hand = p.hand.length;
+    g.resolve(p, 'cauldron').next();
+    expect(p.hand.length).toBe(hand + 1);
+  });
+
   it('losowanie Królestwa', () => {
     const k = randomKingdom(['keep']);
     expect(new Set(k).size).toBe(10);
