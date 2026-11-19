@@ -11,6 +11,22 @@ import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings } from './store';
 
 const HUMAN = 0;
+/** Telefon trzymany poziomo – osobny, niski układ. */
+const LANDSCAPE_PHONE = '(orientation: landscape) and (max-height: 520px)';
+
+function useMedia(query: string): boolean {
+  const get = () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(query).matches : false);
+  const [match, setMatch] = useState(get);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia(query);
+    const on = () => setMatch(mq.matches);
+    mq.addEventListener('change', on);
+    on();
+    return () => mq.removeEventListener('change', on);
+  }, [query]);
+  return match;
+}
 /** Telefon: górny rząd – pieniądze rosnąco, punkty rosnąco, na końcu Urok (−1). */
 const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex'];
 
@@ -59,6 +75,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const [panel, setPanel] = useState<'log' | 'menu' | 'deck' | null>(null);
   const [ff, setFf] = useState(false); // przewijanie do tury gracza
   const [showEnd, setShowEnd] = useState(true);
+  const landscape = useMedia(LANDSCAPE_PHONE);
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans) =>
@@ -300,6 +317,11 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   }
 
   const attacked = myDecision && myDecision.source && turn.player !== HUMAN;
+  // pasek fazy: zwinięty = jedna linijka (liczniki + przyciski), bez podpowiedzi;
+  // podpowiedzi do wyborów (atak, palenie…) pokazujemy zawsze
+  const barCollapsed = settings.barCollapsed ?? landscape;
+  const importantPrompt = !!myDecision && myDecision.kind !== 'action' && myDecision.kind !== 'buy';
+  const kingdomAscending = kingdomLayout(game.kingdom, lang, game.kingdom.length);
   const lastLog = game.log.length ? game.log[game.log.length - 1] : null;
   const scores = game.over ? game.scores() : null;
 
@@ -379,6 +401,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               onTap={() => tapPile(id)}
               onDouble={() => doublePile(id)}
               onLong={() => setDetail({ id, from: 'other' })}
+              style={{ ['--ko' as string]: kingdomAscending.indexOf(id) }}
             />
           ))}
         </div>
@@ -396,7 +419,15 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         </div>
       </section>
 
-      <section className={'status' + (attacked ? ' attacked' : '')}>
+      <section className={'status' + (attacked ? ' attacked' : '') + (barCollapsed && !importantPrompt ? ' is-collapsed' : '')}>
+        <button
+          className="bar-toggle"
+          aria-label={barCollapsed ? t('expandBar') : t('collapseBar')}
+          title={barCollapsed ? t('expandBar') : t('collapseBar')}
+          onClick={() => onSettings({ barCollapsed: !barCollapsed })}
+        >
+          {barCollapsed ? '▴' : '▾'}
+        </button>
         <div className="counters">
           <span className="phase">{t(`phase.${turn.phase}`)}:</span>
           {turn.phase === 'buy' ? (

@@ -65,6 +65,13 @@ Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/Peer
 - Komputer (≥900 px): jedna kolumna, ręka na dole. Stałe stosy w dwóch kolumnach przy lewym brzegu
   (punkty od Pałacu/Cytadeli do Uroku, obok pieniądze od Smoczego Złota do Grosza), Królestwo obok;
   dolny panel gracza wcięty do wysokości Królestwa (miejsce po lewej zostawione na później).
+- Telefon poziomo (`(orientation: landscape) and (max-height: 520px)`): jedna kolumna, ręka mała na dole,
+  stałe stosy w jednym niskim rzędzie bez obrazków, Królestwo w jednym rzędzie 10 kart (od najtańszej
+  z lewej, CSS `order: var(--ko)`), zagrane karty jako same nazwy. Układ komputerowy działa tylko przy
+  `min-width: 900px` i `min-height: 521px`.
+- Pasek fazy można zwinąć do jednej linijki (strzałka; `settings.barCollapsed`, null = auto: zwinięty
+  w poziomie). Podpowiedzi do wyborów (atak, palenie) widać zawsze.
+- Skarby na karcie: duża moneta z wartością (najważniejsza informacja).
 - Królestwo: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
 - Liczba kart na stosie: kwadracik w lewym górnym rogu. Licznik monet: tylko zagrane monety.
   Faza zakupów: „Faza zakupów: (monety) Zakupy N”. „Koniec tury” – niebieski przycisk.
