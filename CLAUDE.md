@@ -23,7 +23,12 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 | `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 13 kart + Eliksir (skarb za 4, daje 1 Eliksir) |
 | `court` | Court Whispers | Szepty Dworu | plan: karty wielotypowe, „jedno z” |
 
-Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/PeerJS, host pilnuje zasad).
+Dalej w planie (kolejność jak w README → Plan):
+1. Przegląd działania kart – użytkownik uważa, że efekty kart wymagają zmian (temat z innego wątku).
+2. Gra online dla 2–4 osób przez link-pokój (WebRTC/PeerJS, host pilnuje zasad) – nadal ważne.
+3. Skrót działania karty na stosach Królestwa ikonkami (torba zakupowa = +zakup, moneta = +monety,
+   karta = +karty itd.), żeby bez otwierania karty było widać, co robi. Przed wdrożeniem podgląd.
+4. Szepty Dworu, statystyki gier.
 
 ## Architektura
 
