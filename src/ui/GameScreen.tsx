@@ -401,7 +401,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           <span className="phase">{t(`phase.${turn.phase}`)}:</span>
           {turn.phase === 'buy' ? (
             <>
-              <Coin n={potential} />
+              <Coin n={turn.coins} />
               <span className="counter">
                 {t('buys')} <b>{turn.buys}</b>
               </span>
@@ -414,7 +414,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               <span className="counter">
                 {t('buys')} <b>{turn.buys}</b>
               </span>
-              <Coin n={potential} />
+              <Coin n={turn.coins} />
             </>
           )}
         </div>
