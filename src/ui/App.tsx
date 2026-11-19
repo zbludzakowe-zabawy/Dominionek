@@ -5,7 +5,7 @@ import { randomSeed } from '../engine/rng';
 import { KINGDOM_SIZE, hasHoardCards, randomKingdom, rerollOne, rollHoardExtras } from '../engine/setup';
 import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
-import { CardFace, Coin, ConfirmButton, PileTile } from './CardView';
+import { CardFace, ConfirmButton, Cost, PileTile } from './CardView';
 import { GameScreen } from './GameScreen';
 import { loadGame, loadSettings, saveGame, saveSettings, type SavedGame, type Settings } from './store';
 
@@ -407,7 +407,7 @@ function KingdomScreen(props: {
             <CardFace id={detail} lang={lang} className="large" />
             <div className="sheet-actions">
               <span className="muted">
-                {t('cost')} <Coin n={card(detail).cost} small />
+                {t('cost')} <Cost id={detail} small />
               </span>
               <button className="btn" onClick={() => setDetail(null)}>
                 {t('close')}

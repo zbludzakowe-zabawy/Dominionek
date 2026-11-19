@@ -11,7 +11,9 @@ const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
 
 function makeSetup(seed: number, n: number): GameSetup {
   const r = new Rng(seed ^ 0x9e3779b9);
-  const sets: SetId[] = seed % 3 === 0 ? ['keep'] : seed % 3 === 1 ? ['hoard'] : ['keep', 'hoard'];
+  const sets: SetId[] = (
+    [['keep'], ['hoard'], ['tower'], ['keep', 'hoard'], ['keep', 'tower'], ['hoard', 'tower', 'keep']] as SetId[][]
+  )[seed % 6];
   const kingdom = randomKingdom(sets, () => r.next());
   return {
     seed,
@@ -167,6 +169,39 @@ describe('silnik', () => {
     g.resolve(p, 'altar').next();
     expect(p.vpTokens).toBe(2);
     expect(g.scoreOf(p).vp).toBe(before + 2);
+  });
+
+  it('Wieża Alchemika: stos Eliksiru, koszt w Eliksirach', () => {
+    const g = new Game({ ...makeSetup(11, 2), kingdom: ['retort', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern', 'forgemaster', 'siren', 'bazaar'], extras: [] });
+    expect(g.basics).toContain('elixir');
+    expect(g.supply.elixir).toBe(16);
+    g.turn.coins = 5;
+    g.turn.potions = 0;
+    expect(g.canAfford('golem')).toBe(false);
+    g.turn.potions = 1;
+    expect(g.canAfford('golem')).toBe(true);
+    expect(g.canAfford('retort', 1)).toBe(false);
+    const p = g.players[g.turn.player];
+    g.resolve(p, 'elixir').next();
+    expect(g.turn.potions).toBe(2);
+  });
+
+  it('bez kart z Eliksirem nie ma stosu Eliksiru', () => {
+    const g = new Game({ ...makeSetup(12, 2), kingdom: ['inn', 'ranger', 'tinker', 'guard', 'lantern', 'forgemaster', 'siren', 'bazaar', 'council', 'sage'], extras: [] });
+    expect(g.basics).not.toContain('elixir');
+  });
+
+  it('Rtęć daje +2 tylko z Eliksirem w grze', () => {
+    const g = new Game(makeSetup(13, 2));
+    const p = g.players[g.turn.player];
+    p.play = ['quicksilver'];
+    let coins = g.turn.coins;
+    g.resolve(p, 'quicksilver').next();
+    expect(g.turn.coins).toBe(coins + 1);
+    p.play = ['elixir', 'quicksilver'];
+    coins = g.turn.coins;
+    g.resolve(p, 'quicksilver').next();
+    expect(g.turn.coins).toBe(coins + 3);
   });
 
   it('losowanie Królestwa', () => {

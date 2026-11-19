@@ -44,6 +44,7 @@ const en: Dict = {
   actions: 'Actions',
   buys: 'Buys',
   coins: 'Coins',
+  potions: 'Elixirs',
   deck: 'Deck',
   discardPile: 'Discard',
   hand: 'Hand',
@@ -115,6 +116,11 @@ const en: Dict = {
   'prompt.gainToHandUpTo': 'Gain a card costing up to {n} into your hand.',
   'prompt.topdeck': 'Put a card from your hand onto your deck.',
   'prompt.trashN': 'Trash a card from your hand.',
+  'prompt.takeOne': 'Choose a card to put into your hand; the rest go back.',
+  'prompt.vapors': 'Discard a Treasure or gain a Hex?',
+  'opt.discardTreasure': 'Discard a Treasure',
+  'opt.gainHex': 'Gain a Hex',
+  'prompt.gainExactly': 'Gain a card costing exactly {n}.',
   'prompt.discardForCoins': 'Discard any number of cards – +1 coin for each.',
   'prompt.copyTreasure': 'You may choose a Treasure from your hand to gain a copy of it.',
 
@@ -154,7 +160,7 @@ Everyone starts with 7 Pennies and 3 Homesteads and draws 5 cards. When your dec
 The game ends after a turn in which the Citadel pile is empty, or any 3 Supply piles are empty. Ties go to the player with fewer turns.
 
 ## Tips
-Buy good cards early, Victory cards late — they do nothing in your hand. Trashing weak cards makes your deck stronger. Long-press any card to read it. Double-tap a Supply pile to buy it straight away, or a card to choose it and confirm.`,
+Buy good cards early, Victory cards late — they do nothing in your hand. Trashing weak cards makes your deck stronger. Some cards cost coins and an Elixir (the purple flask) – play Elixir cards to pay it. Long-press any card to read it. Double-tap a Supply pile to buy it straight away, or a card to choose it and confirm.`,
 };
 
 const pl: Dict = {
@@ -198,6 +204,7 @@ const pl: Dict = {
   actions: 'Akcje',
   buys: 'Zakupy',
   coins: 'Monety',
+  potions: 'Eliksiry',
   deck: 'Talia',
   discardPile: 'Odrzucone',
   hand: 'Ręka',
@@ -269,6 +276,11 @@ const pl: Dict = {
   'prompt.gainToHandUpTo': 'Zdobądź na rękę kartę kosztującą do {n}.',
   'prompt.topdeck': 'Połóż kartę z ręki na wierzch talii.',
   'prompt.trashN': 'Spal kartę z ręki.',
+  'prompt.takeOne': 'Wybierz kartę na rękę; reszta wraca na talię.',
+  'prompt.vapors': 'Odrzucasz Skarb czy bierzesz Urok?',
+  'opt.discardTreasure': 'Odrzucam Skarb',
+  'opt.gainHex': 'Biorę Urok',
+  'prompt.gainExactly': 'Zdobądź kartę kosztującą dokładnie {n}.',
   'prompt.discardForCoins': 'Odrzuć dowolną liczbę kart – za każdą +1 moneta.',
   'prompt.copyTreasure': 'Możesz wybrać Skarb z ręki, by zdobyć taki sam.',
 
@@ -308,7 +320,7 @@ Każdy zaczyna z 7 Groszami i 3 Zagrodami i dobiera 5 kart. Gdy talia się skoń
 Gra kończy się po turze, w której wyczerpał się stos Cytadeli albo dowolne 3 stosy w Zasobach. Przy remisie wygrywa gracz z mniejszą liczbą tur.
 
 ## Wskazówki
-Na początku kupuj dobre karty, punkty pod koniec – na ręce nic nie robią. Palenie słabych kart wzmacnia talię. Przytrzymaj palec na dowolnej karcie, by ją przeczytać. Stuknij dwukrotnie stos w Zasobach, by od razu go kupić, albo kartę, by ją wybrać i od razu zatwierdzić.`,
+Na początku kupuj dobre karty, punkty pod koniec – na ręce nic nie robią. Palenie słabych kart wzmacnia talię. Niektóre karty kosztują monety i Eliksir (fioletowa buteleczka) – płacisz nim, zagrywając karty Eliksiru. Przytrzymaj palec na dowolnej karcie, by ją przeczytać. Stuknij dwukrotnie stos w Zasobach, by od razu go kupić, albo kartę, by ją wybrać i od razu zatwierdzić.`,
 };
 
 const DICTS: Record<Lang, Dict> = { en, pl };

@@ -1,6 +1,6 @@
 // Planowanie trudnego bota: na starcie gry rozgrywa w pamięci szybkie partie
 // próbne różnych planów zakupów przeciwko średniemu botowi i wybiera najlepszy.
-import { isType } from './card';
+import { isType, potionCost } from './card';
 import { card } from './cards';
 import { decide, type Plan } from './bot';
 import { Game } from './game';
@@ -12,31 +12,41 @@ function candidates(kingdom: string[]): Plan[] {
   const acts = kingdom.filter((id) => isType(card(id), 'action') || isType(card(id), 'treasure'));
   const out: Plan[] = [{ want: [] }];
   for (const id of acts) {
-    out.push({ want: [[id, 1]] });
-    out.push({ want: [[id, isTerminal(id) ? 2 : 4]] });
+    // karty z Eliksirem w koszcie wymagają najpierw Eliksiru
+    const pre: [string, number][] = potionCost(card(id)) > 0 ? [['elixir', 1]] : [];
+    out.push({ want: [...pre, [id, 1]] });
+    out.push({ want: [...pre, [id, isTerminal(id) ? 2 : 4]] });
   }
   return out;
 }
 
 function combos(best: Plan[], kingdom: string[]): Plan[] {
   const out: Plan[] = [];
-  const singles = best.filter((p) => p.want.length === 1).map((p) => p.want[0]);
+  const singles = best
+    .map((p) => p.want.filter(([id]) => id !== 'elixir'))
+    .filter((w) => w.length === 1)
+    .map((w) => w[0]);
   for (let i = 0; i < singles.length; i++) {
     for (let j = 0; j < singles.length; j++) {
       const [a, na] = singles[i];
       const [b, nb] = singles[j];
       if (a === b) continue;
+      const pre: [string, number][] = potionCost(card(a)) > 0 || potionCost(card(b)) > 0 ? [['elixir', 1]] : [];
       if (isTerminal(a) && isTerminal(b)) {
-        if (i < j) out.push({ want: [[a, 1], [b, 1]] });
+        if (i < j) out.push({ want: [...pre, [a, 1], [b, 1]] });
         continue;
       }
-      out.push({ want: [[a, na], [b, nb]] });
+      out.push({ want: [...pre, [a, na], [b, nb]] });
     }
   }
   // wioska + karta dobierania
   const villages = kingdom.filter((id) => (card(id).plus?.actions ?? 0) >= 2);
   const draws = kingdom.filter((id) => isTerminal(id) && (card(id).plus?.cards ?? 0) >= 2 || card(id).ai.role === 'draw');
-  for (const v of villages) for (const d of draws) out.push({ want: [[d, 2], [v, 2], [d, 3], [v, 3]] });
+  for (const v of villages)
+    for (const d of draws) {
+      const pre: [string, number][] = potionCost(card(v)) > 0 || potionCost(card(d)) > 0 ? [['elixir', 1]] : [];
+      out.push({ want: [...pre, [d, 2], [v, 2], [d, 3], [v, 3]] });
+    }
   return out;
 }
 
