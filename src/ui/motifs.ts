@@ -32,12 +32,12 @@ const waves = (y: number) => `M2 ${y}q3 -2.5 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0`;
 const ELIXIR_BODY = 'M19.6 4.8h8.8M20.92 4.8v11.0L12.12 30.54a7.92 7.92 0 0 0 6.82 11.66h10.12a7.92 7.92 0 0 0 6.82 -11.66L27.08 15.8v-11.0';
 const ELIXIR_LIQUID = 'M15.2 26.14h17.6l2.86 5.28a5.72 5.72 0 0 1 -5.06 8.58H17.4a5.72 5.72 0 0 1 -5.06 -8.58z';
 const ELIXIR_VARIANTS: Record<'purple' | 'gold', Motif> = {
-  // fioletowa, jak ikonka kosztu
+  // w kolorach ikonki kosztu (obrys i wypełnienie z kart akcji)
   purple: {
     m: ELIXIR_BODY,
     a: spark(40, 10, 3) + spark(8, 14, 2),
     f: ELIXIR_LIQUID,
-    colors: { m: '#b9a3f2', a: '#d9cfae', f: '#7b5fd6', fOpacity: 0.9 },
+    colors: { m: '#a9b8c6', a: '#d9cfae', f: '#6d7d8e', fOpacity: 0.95 },
   },
   // kształt jak ikonka, kolorystyka złota (skarb)
   gold: {
