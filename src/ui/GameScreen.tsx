@@ -28,7 +28,7 @@ function useMedia(query: string): boolean {
   return match;
 }
 /** Telefon: górny rząd – pieniądze rosnąco, punkty rosnąco, na końcu Urok (−1). */
-const PHONE_BASIC_ORDER = ['copper', 'silver', 'elixir', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex'];
+const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'dragongold', 'elixir', 'homestead', 'manor', 'citadel', 'palace', 'hex'];
 
 /**
  * Królestwo w rzędach po 5: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
@@ -374,7 +374,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             na komputerze dwie kolumny przy lewym brzegu: punkty, obok pieniądze */}
         <div className={'supply-basic n' + game.basics.length}>
           {[
-            ['money', ['dragongold', 'gold', 'elixir', 'silver', 'copper']],
+            ['money', ['dragongold', 'gold', 'silver', 'copper', 'elixir']],
             ['victory', ['palace', 'citadel', 'manor', 'homestead', 'hex']],
           ].map(([col, ids]) => (
             <div key={col as string} className={`basic-col ${col}`}>

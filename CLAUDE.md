@@ -65,11 +65,11 @@ Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/Peer
 
 ## Układ ekranu (ustalony z użytkownikiem)
 
-- Telefon: gracze z punktami (zielone ramki PZ) → stałe stosy w rzędzie (pieniądze rosnąco, punkty
+- Telefon: gracze z punktami (zielone ramki PZ) → stałe stosy w rzędzie (pieniądze rosnąco, Eliksir po Złocie, punkty
   rosnąco, Urok na końcu; z Pałacem 2 rzędy) → Królestwo 2×5 → zagrane (takie same karty w stosiku
   z licznikiem) → pasek fazy → ręka.
 - Komputer (≥900 px): jedna kolumna, ręka na dole. Stałe stosy w dwóch kolumnach przy lewym brzegu
-  (punkty od Pałacu/Cytadeli do Uroku, obok pieniądze od Smoczego Złota do Grosza), Królestwo obok;
+  (punkty od Pałacu/Cytadeli do Uroku, obok pieniądze od Smoczego Złota do Grosza, Eliksir pod nimi), Królestwo obok;
   dolny panel gracza wcięty do wysokości Królestwa (miejsce po lewej zostawione na później).
 - Telefon poziomo (`(orientation: landscape) and (max-height: 520px)`): jedna kolumna, ręka mała na dole,
   stałe stosy w jednym niskim rzędzie bez obrazków, Królestwo w jednym rzędzie 10 kart (od najtańszej
