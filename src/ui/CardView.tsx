@@ -81,6 +81,30 @@ export function Coin({ n, small }: { n: number | string; small?: boolean }) {
   return <span className={'coin' + (small ? ' small' : '')}>{n}</span>;
 }
 
+/** Eliksir – fioletowa buteleczka (druga waluta). Z liczbą, gdy podana. */
+export function Flask({ n, small }: { n?: number; small?: boolean }) {
+  return (
+    <span className={'flask' + (small ? ' small' : '')} title="Elixir">
+      <svg viewBox="0 0 16 20" aria-hidden="true">
+        <path d="M6 1.5h4M6.6 1.5v5L2.6 13.2a3.6 3.6 0 0 0 3.1 5.3h4.6a3.6 3.6 0 0 0 3.1-5.3L9.4 6.5v-5" />
+        <path className="fill" d="M4 11.2h8l1.3 2.4a2.6 2.6 0 0 1 -2.3 3.9H5a2.6 2.6 0 0 1 -2.3 -3.9z" />
+      </svg>
+      {n !== undefined && <b>{n}</b>}
+    </span>
+  );
+}
+
+/** Koszt karty: moneta i ewentualnie Eliksir. */
+export function Cost({ id, small }: { id: string; small?: boolean }) {
+  const c = card(id);
+  return (
+    <span className="cost">
+      <Coin n={c.cost} small={small} />
+      {(c.potionCost ?? 0) > 0 && <Flask small={small} />}
+    </span>
+  );
+}
+
 interface FaceProps {
   id: string;
   lang: Lang;
@@ -121,7 +145,7 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
         {text && <div className={'c-text' + (text.length > 90 ? ' long' : '')}>{text}</div>}
       </div>
       <div className="c-foot">
-        <Coin n={c.cost} small />
+        <Cost id={id} small />
         <span className="c-type">{typeLine(id, lang)}</span>
       </div>
       {badge}
@@ -148,7 +172,7 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble,
       <Art id={id} className="tile-art" />
       <SetIcon id={id} className="tile-set" />
       <div className="tile-name">{c.name[lang]}</div>
-      <Coin n={c.cost} small />
+      <Cost id={id} small />
       <span className="tile-count" title="">{count}</span>
     </div>
   );

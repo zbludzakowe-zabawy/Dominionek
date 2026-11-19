@@ -1,6 +1,6 @@
 import { Rng } from './rng';
 import { CARDS, card } from './cards';
-import { isType } from './card';
+import { isType, potionCost } from './card';
 import type {
   Answer,
   Ask,
@@ -42,6 +42,8 @@ interface HandChoice {
 interface PileChoice {
   prompt: Msg;
   maxCost: number;
+  /** Maks. koszt w Eliksirach (domyślnie 0 – karty z Eliksirem w koszcie są poza zasięgiem). */
+  maxPotion?: number;
   filter?: (id: string) => boolean;
   optional?: boolean;
   purpose?: Purpose;
@@ -92,16 +94,22 @@ export class Game {
     this.supply.manor = vpCount;
     this.supply.citadel = vpCount;
     this.supply.hex = Math.max(10, 10 * (n - 1));
-    const kingdom = [...setup.kingdom].sort((a, b) => card(a).cost - card(b).cost || a.localeCompare(b));
+    const kingdom = [...setup.kingdom].sort(
+      (a, b) => card(a).cost - card(b).cost || potionCost(card(a)) - potionCost(card(b)) || a.localeCompare(b),
+    );
     for (const id of kingdom) {
       if (!CARDS[id]) throw new Error(`Nieznana karta: ${id}`);
       this.supply[id] = isType(card(id), 'victory') ? vpCount : 10;
     }
     const extras = HOARD_EXTRAS.filter((id) => setup.extras?.includes(id));
+    // Eliksir – gdy jakakolwiek karta Królestwa kosztuje Eliksir
+    const elixir = kingdom.some((id) => potionCost(card(id)) > 0);
+    if (elixir) this.supply.elixir = 16;
     if (extras.includes('dragongold')) this.supply.dragongold = 12;
     if (extras.includes('palace')) this.supply.palace = vpCount;
     this.basics = [
       ...BASIC_TREASURES,
+      ...(elixir ? ['elixir'] : []),
       ...(extras.includes('dragongold') ? ['dragongold'] : []),
       ...BASIC_VICTORY,
       ...(extras.includes('palace') ? ['palace'] : []),
@@ -154,7 +162,7 @@ export class Game {
   // ---------- przebieg gry ----------
 
   private freshTurn(player: number, number: number): TurnState {
-    return { player, number, phase: 'action', actions: 1, buys: 1, coins: 0, boughtSomething: false, gained: [] };
+    return { player, number, phase: 'action', actions: 1, buys: 1, coins: 0, potions: 0, boughtSomething: false, gained: [] };
   }
 
   private *run(first: number): Step {
@@ -200,7 +208,7 @@ export class Game {
     for (;;) {
       // przy 0 zakupach gracz tylko kończy turę (interfejs może to zrobić sam – opcja w menu)
       const treasures = t.boughtSomething ? [] : indicesOf(p.hand, (id) => isType(card(id), 'treasure'));
-      const buyable = t.buys > 0 ? this.pileOrder.filter((id) => this.supply[id] > 0 && card(id).cost <= t.coins) : [];
+      const buyable = t.buys > 0 ? this.pileOrder.filter((id) => this.supply[id] > 0 && this.canAfford(id)) : [];
       const prompt = { k: t.buys > 0 ? 'prompt.buy' : 'prompt.noBuys' };
       const a = yield { kind: 'buy', player: p.id, prompt, treasures, buyable };
       if (a.t === 'end') break;
@@ -214,6 +222,7 @@ export class Game {
         }
       } else if (a.t === 'buy') {
         t.coins -= card(a.pile).cost;
+        t.potions -= potionCost(card(a.pile));
         t.buys--;
         t.boughtSomething = true;
         this.logMsg(p.id, 'log.buy', { card: '@' + a.pile });
@@ -229,6 +238,12 @@ export class Game {
     this.draw(p, 5);
   }
 
+  /** Czy obecny gracz stać na kartę (monety i Eliksiry). */
+  canAfford(id: string, coins = this.turn.coins, potions = this.turn.potions): boolean {
+    const c = card(id);
+    return c.cost <= coins && potionCost(c) <= potions;
+  }
+
   *playFromHand(p: PlayerState, i: number): Step {
     const [id] = p.hand.splice(i, 1);
     p.play.push(id);
@@ -241,6 +256,7 @@ export class Game {
     const c = card(id);
     const t = this.turn;
     if (c.coins) t.coins += c.coins;
+    if (c.potions) t.potions += c.potions;
     if (c.plus) {
       if (c.plus.cards) this.draw(p, c.plus.cards);
       if (c.plus.actions) t.actions += c.plus.actions;
@@ -401,7 +417,11 @@ export class Game {
 
   *choosePile(p: PlayerState, o: PileChoice): Ask<string | null> {
     const allowed = this.pileOrder.filter(
-      (id) => this.supply[id] > 0 && card(id).cost <= o.maxCost && (!o.filter || o.filter(id)),
+      (id) =>
+        this.supply[id] > 0 &&
+        card(id).cost <= o.maxCost &&
+        potionCost(card(id)) <= (o.maxPotion ?? 0) &&
+        (!o.filter || o.filter(id)),
     );
     if (allowed.length === 0) return null;
     const a = yield {

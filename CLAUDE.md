@@ -20,7 +20,7 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 |---|---|---|---|
 | `keep` | The Crossroads Keep | Twierdza na Rozstajach | gotowy, 25 kart |
 | `hoard` | Dragon's Hoard | Skarbiec Smoka | gotowy, 16 kart + Smocze Złoto (9→5 monet) i Pałac (11→10 PZ) |
-| `tower` | Alchemist's Tower | Wieża Alchemika | plan: druga waluta Eliksir |
+| `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 13 kart + Eliksir (skarb za 4, daje 1 Eliksir) |
 | `court` | Court Whispers | Szepty Dworu | plan: karty wielotypowe, „jedno z” |
 
 Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/PeerJS, host pilnuje zasad).
@@ -34,11 +34,14 @@ Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/Peer
     są zapisywane, więc boty mogą używać `Math.random`.
   - Rodzaje decyzji (`types.ts`): `action`, `buy`, `cards` (z ręki albo z listy, `purpose` podpowiada
     botom), `pile`, `options`, `yesno`. Decyzja może mieć `hint` (podpowiedź karty dla botów).
-  - Karty: `cards/basic.ts`, `cards/keep.ts`, `cards/hoard.ts`, rejestr w `cards/index.ts` (`SETS`
+  - Karty: `cards/basic.ts`, `cards/keep.ts`, `cards/hoard.ts`, `cards/tower.ts`, rejestr w `cards/index.ts` (`SETS`
     – flaga `available`). Karta = `CardDef` (`card.ts`): `plus` (standardowe bonusy, rysowane przez UI),
     `play` (generator efektu), `coins`, `vp`/`vpFn`, `blocksAttacks`, `symbol`, `ai` (value/role).
     Pomocnicze metody `Game`: `draw`, `takeTop`, `gain(p,id,'discard'|'hand'|'deck')`, `trashCards`,
     `discardCards`, `addVp`, `attack(p, fn)`, `chooseFromHand/chooseFromList/choosePile/chooseOptions/yesNo`.
+  - Eliksir (druga waluta): `CardDef.potionCost` (koszt) i `potions` (ile daje skarb), `TurnState.potions`,
+    `Game.canAfford(id)`. `choosePile` ma `maxPotion` (domyślnie 0 – karty z Eliksirem w koszcie są poza
+    zasięgiem „zdobądź kartę do X”). Stos `elixir` dochodzi sam, gdy karta Królestwa ma `potionCost`.
   - Ręka jest zawsze posortowana (`sortCards`), indeksy w decyzjach dotyczą tej kolejności.
   - Przy 0 zakupach silnik i tak pyta o koniec tury (UI kończy ją sam, jeśli opcja `autoEnd`).
   - `bot.ts` – heurystyki (easy/medium); `plan.ts` – trudny bot na starcie rozgrywa w pamięci gry
@@ -51,8 +54,11 @@ Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/Peer
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
   - `motifs.ts` – rysunki kart (pole 48×48, ziemia ~y=44; `m` linie, `a` akcent, `f` wypełnienia).
-  - `art.ts` – tło karty (kratka / łuski dla Skarbca), symbole pakietów (Skarbiec: konturowy łeb smoka
-    z otwartą paszczą, patrzy w lewo, bez płomienia, bez tła).
+  - `art.ts` – tło karty (kratka / łuski dla Skarbca / sześciokąty dla Wieży), symbole pakietów
+    (Twierdza: wieża; Skarbiec: konturowy łeb smoka z otwartą paszczą, patrzy w lewo, bez płomienia,
+    bez tła; Wieża: konturowa buteleczka eliksiru).
+  - Koszt z Eliksirem: komponent `Cost` (moneta + fioletowa buteleczka `Flask`); licznik Eliksirów
+    na pasku fazy, gdy stos Eliksiru jest w grze.
 - `src/i18n.ts` – wszystkie teksty UI/podpowiedzi/dziennika EN+PL (`tr`, liczba mnoga PL).
 - PWA: `src/pwa.ts`, `src/sw-template.js` (plugin w `vite.config.ts` liczy wersję SW z plików),
   `public/manifest.webmanifest`, ikony z `scripts/icon.svg` (`scripts/make-icons.cjs`).

@@ -2,7 +2,7 @@
 // żetony Punktów Zwycięstwa i smocze ataki. Do tego dwa dodatkowe stosy stałe:
 // Smocze Złoto i Pałac (dokładane do gry, gdy w Królestwie są karty Skarbca).
 import type { CardDef } from '../card';
-import { isType } from '../card';
+import { isType, potionCost } from '../card';
 import { card } from './index';
 
 const t = (en: string, pl: string) => ({ en, pl });
@@ -165,6 +165,7 @@ export const HOARD: CardDef[] = [
       const pile = yield* g.choosePile(p, {
         prompt: { k: 'prompt.gainUpTo', p: { n: card(id).cost + 2 } },
         maxCost: card(id).cost + 2,
+        maxPotion: potionCost(card(id)),
         source: 'gemcutter',
       });
       if (pile) g.gain(p, pile);

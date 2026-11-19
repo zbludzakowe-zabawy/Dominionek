@@ -22,8 +22,12 @@ export interface CardDef {
   text: Text;
   types: CardType[];
   cost: number;
+  /** Koszt w Eliksirach (Wieża Alchemika). */
+  potionCost?: number;
   /** Wartość skarbu. */
   coins?: number;
+  /** Ile Eliksirów daje skarb. */
+  potions?: number;
   /** Stałe punkty zwycięstwa. */
   vp?: number;
   /** Punkty zależne od talii właściciela (wszystkie jego karty). */
@@ -37,3 +41,5 @@ export interface CardDef {
 }
 
 export const isType = (c: CardDef, t: CardType) => c.types.includes(t);
+
+export const potionCost = (c: CardDef) => c.potionCost ?? 0;

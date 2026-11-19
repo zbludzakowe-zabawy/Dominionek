@@ -6,7 +6,7 @@ import { Game } from '../engine/game';
 import { makePlan } from '../engine/plan';
 import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
-import { CardFace, Coin, ConfirmButton, PileTile, PlayedCard } from './CardView';
+import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard } from './CardView';
 import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings } from './store';
 
@@ -28,7 +28,7 @@ function useMedia(query: string): boolean {
   return match;
 }
 /** Telefon: górny rząd – pieniądze rosnąco, punkty rosnąco, na końcu Urok (−1). */
-const PHONE_BASIC_ORDER = ['copper', 'silver', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex'];
+const PHONE_BASIC_ORDER = ['copper', 'silver', 'elixir', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex'];
 
 /**
  * Królestwo w rzędach po 5: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
@@ -170,11 +170,15 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     canBuyNow && !turn.boughtSomething
       ? turn.coins + me.hand.reduce((s, id) => s + (isType(card(id), 'treasure') ? card(id).coins ?? 0 : 0), 0)
       : turn.coins;
+  const potentialPotions =
+    canBuyNow && !turn.boughtSomething ? turn.potions + me.hand.reduce((s, id) => s + (card(id).potions ?? 0), 0) : turn.potions;
+  const hasElixir = game.basics.includes('elixir');
+  const affordable = (id: string) => card(id).cost <= potential && (card(id).potionCost ?? 0) <= potentialPotions;
 
   const pileState = (id: string): 'buyable' | 'pickable' | 'dim' | '' => {
     if (!myDecision) return '';
     if (canBuyNow) {
-      if (turn.buys > 0 && game.supply[id] > 0 && card(id).cost <= potential) return 'buyable';
+      if (turn.buys > 0 && game.supply[id] > 0 && affordable(id)) return 'buyable';
       return '';
     }
     if (myDecision.kind === 'pile') return myDecision.allowed.includes(id) ? 'pickable' : 'dim';
@@ -230,7 +234,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     if (!canBuyNow) return;
     if (game.pending?.kind === 'action') game.submit({ t: 'end' });
     const before = game.pending;
-    if (before?.kind === 'buy' && card(id).cost > game.turn.coins && before.treasures.length) {
+    if (before?.kind === 'buy' && !game.canAfford(id) && before.treasures.length) {
       game.submit({ t: 'playAll' });
     }
     const dd = game.pending;
@@ -370,7 +374,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             na komputerze dwie kolumny przy lewym brzegu: punkty, obok pieniądze */}
         <div className={'supply-basic n' + game.basics.length}>
           {[
-            ['money', ['dragongold', 'gold', 'silver', 'copper']],
+            ['money', ['dragongold', 'gold', 'elixir', 'silver', 'copper']],
             ['victory', ['palace', 'citadel', 'manor', 'homestead', 'hex']],
           ].map(([col, ids]) => (
             <div key={col as string} className={`basic-col ${col}`}>
@@ -433,6 +437,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {turn.phase === 'buy' ? (
             <>
               <Coin n={turn.coins} />
+              {hasElixir && <Flask n={turn.potions} />}
               <span className="counter">
                 {t('buys')} <b>{turn.buys}</b>
               </span>
@@ -446,6 +451,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 {t('buys')} <b>{turn.buys}</b>
               </span>
               <Coin n={turn.coins} />
+              {hasElixir && <Flask n={turn.potions} />}
             </>
           )}
         </div>
@@ -544,7 +550,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           lang={lang}
           game={game}
           decision={myDecision}
-          potential={potential}
+          affordable={affordable}
           onClose={() => setDetail(null)}
           onBuy={buy}
           onGain={(id) => submit({ t: 'pile', pile: id })}
@@ -689,22 +695,23 @@ function DetailSheet(props: {
   lang: Lang;
   game: Game;
   decision: Decision | null;
-  potential: number;
+  affordable: (id: string) => boolean;
   onClose: () => void;
   onBuy: (id: string) => void;
   onGain: (id: string) => void;
   onPlay: (i: number) => void;
 }) {
-  const { detail, lang, game, decision, potential } = props;
+  const { detail, lang, game, decision, affordable } = props;
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
   const id = detail.id;
   const c = card(id);
   let action: React.ReactNode = null;
   if (detail.from === 'supply' && decision) {
-    if ((decision.kind === 'buy' || decision.kind === 'action') && game.turn.buys > 0 && game.supply[id] > 0 && c.cost <= potential) {
+    if ((decision.kind === 'buy' || decision.kind === 'action') && game.turn.buys > 0 && game.supply[id] > 0 && affordable(id)) {
       action = (
         <button className="btn primary" onClick={() => props.onBuy(id)}>
           {t('buyFor', { n: c.cost })}
+          {(c.potionCost ?? 0) > 0 && <Flask small />}
         </button>
       );
     } else if (decision.kind === 'pile' && decision.allowed.includes(id)) {

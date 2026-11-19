@@ -46,6 +46,8 @@ export interface TurnState {
   actions: number;
   buys: number;
   coins: number;
+  /** Eliksiry (druga waluta, Wieża Alchemika). */
+  potions: number;
   boughtSomething: boolean;
   gained: string[];
 }

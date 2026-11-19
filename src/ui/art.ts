@@ -61,7 +61,9 @@ export function cardArt(c: CardDef): Art {
   );
   // Skarbiec Smoka: tło ze smoczych łusek zamiast kratki
   const scales = (c.symbol ?? c.set) === 'hoard';
-  const lattice = scales ? 3 : r.int(3);
+  // Wieża Alchemika: siatka sześciokątów (jak wzory cząsteczek)
+  const hexes = (c.symbol ?? c.set) === 'tower';
+  const lattice = scales ? 3 : hexes ? 4 : r.int(3);
   const step = 8 + r.int(5);
   let grid = '';
   if (lattice === 0) {
@@ -69,6 +71,19 @@ export function cardArt(c: CardDef): Art {
   } else if (lattice === 1) {
     for (let x = step / 2; x < W; x += step) grid += `M${f(x)} 0V${H}`;
     for (let y = step / 2; y < H; y += step) grid += `M0 ${f(y)}H${W}`;
+  } else if (lattice === 4) {
+    const hr = 6;
+    const hw = Math.sqrt(3) * hr;
+    for (let row = 0, y = 0; y < H + hr * 2; row++, y += hr * 1.5) {
+      for (let x = row % 2 ? hw / 2 : 0; x < W + hw; x += hw) {
+        for (let k = 0; k < 6; k++) {
+          const a0 = (Math.PI / 3) * k - Math.PI / 2;
+          const a1 = a0 + Math.PI / 3;
+          if (k > 2) continue; // każda krawędź raz: trzy boki na komórkę
+          grid += `M${f(x + Math.cos(a0) * hr)} ${f(y + Math.sin(a0) * hr)}L${f(x + Math.cos(a1) * hr)} ${f(y + Math.sin(a1) * hr)}`;
+        }
+      }
+    }
   } else if (lattice === 3) {
     const sw = 9;
     for (let row = 0, y = -2; y < H + sw; row++, y += sw / 2) {
@@ -80,7 +95,7 @@ export function cardArt(c: CardDef): Art {
       for (let x = 0; x <= W; x += step) grid += `Q${f(x + step / 2)} ${f(y + (r.next() > 0.5 ? 2 : -2))} ${f(x + step)} ${f(y)}`;
     }
   }
-  parts.push(`<path d="${grid}" stroke="${scales ? accent : line}" stroke-opacity="${scales ? '.2' : '.13'}" stroke-width=".5" fill="none"/>`);
+  parts.push(`<path d="${grid}" stroke="${scales || hexes ? accent : line}" stroke-opacity="${scales ? '.2' : hexes ? '.18' : '.13'}" stroke-width=".5" fill="none"/>`);
   const R = 26;
   parts.push(`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${accent}" stroke-opacity=".22" stroke-width=".5"/>`);
   parts.push(
@@ -122,7 +137,14 @@ const DRAGON_HEAD =
   'M14.6 11.6L21.4 13.8';
 const DRAGON_EYE = 'M15.8 13.2Q18.8 12.8 20.8 15Q18 16.2 15.8 13.2Z';
 
+// buteleczka eliksiru (kontur): korek, szyjka, okrągły brzuszek z poziomem płynu
+const POTION_BOTTLE = 'M12.5 2.5h7v4h-7zM14 6.5v5Q6 14.5 6 21.5a10 10 0 0 0 20 0Q26 14.5 18 11.5v-5M8.6 20q3.7 -2.4 7.4 0t7.4 0';
+
 const SET_SYMBOLS: Record<string, string> = {
+  tower:
+    '<svg viewBox="0 0 32 32" aria-hidden="true">' +
+    `<path d="${POTION_BOTTLE}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>` +
+    '<circle cx="13.5" cy="25" r="1.6" fill="currentColor"/><circle cx="19" cy="24" r="1.2" fill="currentColor"/></svg>',
   keep:
     '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 14V5H5V3H7V5H9V3H11V5H13V14ZM7 14V10.5a1 1 0 0 1 2 0V14" fill="currentColor" fill-rule="evenodd"/></svg>',
   hoard:

@@ -1,6 +1,6 @@
 // Boty: łatwy, średni, trudny. Bot dostaje decyzję i stan gry, zwraca odpowiedź.
 // Odpowiedzi botów są zapisywane jak odpowiedzi człowieka, więc mogą używać Math.random.
-import { isType } from './card';
+import { isType, potionCost } from './card';
 import type { CardDef } from './card';
 import { card } from './cards';
 import type { Game } from './game';
@@ -152,6 +152,11 @@ export function chooseBuy(
   }
   if (coins >= 5 && citadels <= 5 && can('manor')) return 'manor';
 
+  // Eliksir: gdy w Królestwie jest mocna karta z Eliksirem w koszcie, kup jeden wcześnie
+  if (coins >= 4 && coins <= 5 && can('elixir') && !(s.counts.get('elixir') ?? 0) && p.turns <= 10) {
+    const strong = g.kingdom.some((id) => potionCost(c(id)) > 0 && c(id).ai.value >= 6);
+    if (strong) return 'elixir';
+  }
   const act = bestAction(g, p, s, coins, allowed, 0);
   if (act) {
     const v = c(act).ai.value;
@@ -225,7 +230,7 @@ function bestAction(
   if (!candidates.length) return null;
   const val = (id: string) => {
     const d = c(id);
-    let v = d.ai.value + d.cost * 0.3;
+    let v = d.ai.value + d.cost * 0.3 + potionCost(d) * 2;
     if (d.ai.role === 'trash' && p.turns <= 2) v += 1;
     if (d.ai.role === 'gain' && g.isGameOver()) v -= 5;
     return v;
