@@ -262,6 +262,7 @@ export class Game {
       if (c.plus.actions) t.actions += c.plus.actions;
       if (c.plus.buys) t.buys += c.plus.buys;
       if (c.plus.coins) t.coins += c.plus.coins;
+      if (c.plus.potions) t.potions += c.plus.potions;
     }
     if (c.play) yield* c.play(this, p);
   }

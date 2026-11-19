@@ -82,9 +82,20 @@ export function Coin({ n, small }: { n: number | string; small?: boolean }) {
 }
 
 /** Eliksir – fioletowa buteleczka (druga waluta). Z liczbą, gdy podana. */
-export function Flask({ n, small }: { n?: number; small?: boolean }) {
+/** W tekście karty `{P}` oznacza ikonkę Eliksiru. */
+function withIcons(text: string): React.ReactNode {
+  if (!text.includes('{P}')) return text;
+  return text.split('{P}').map((part, i) => (
+    <span key={i}>
+      {i > 0 && <Flask inline />}
+      {part}
+    </span>
+  ));
+}
+
+export function Flask({ n, small, big, inline }: { n?: number; small?: boolean; big?: boolean; inline?: boolean }) {
   return (
-    <span className={'flask' + (small ? ' small' : '')} title="Elixir">
+    <span className={'flask' + (small ? ' small' : '') + (big ? ' big' : '') + (inline ? ' inline' : '')} title="Elixir">
       <svg viewBox="0 0 16 20" aria-hidden="true">
         <path d="M6 1.5h4M6.6 1.5v5L2.6 13.2a3.6 3.6 0 0 0 3.1 5.3h4.6a3.6 3.6 0 0 0 3.1-5.3L9.4 6.5v-5" />
         <path className="fill" d="M4 11.2h8l1.3 2.4a2.6 2.6 0 0 1 -2.3 3.9H5a2.6 2.6 0 0 1 -2.3 -3.9z" />
@@ -119,11 +130,18 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
   const c = card(id);
   const press = usePress(onTap, onLong, onDouble);
   const plus = c.plus ?? {};
-  const lines: string[] = [];
+  const lines: React.ReactNode[] = [];
   if (plus.cards) lines.push(tr(lang, 'plus.cards', { n: plus.cards }));
   if (plus.actions) lines.push(tr(lang, 'plus.actions', { n: plus.actions }));
   if (plus.buys) lines.push(tr(lang, 'plus.buys', { n: plus.buys }));
   if (plus.coins) lines.push(tr(lang, 'plus.coins', { n: plus.coins }));
+  if (plus.potions)
+    lines.push(
+      <span className="plus-flask">
+        +{plus.potions > 1 ? plus.potions : ''}
+        <Flask />
+      </span>,
+    );
   const text = c.text[lang];
   return (
     <div className={`card t-${typeKey(c)} ${className}`} {...press} role="button" aria-label={c.name[lang]}>
@@ -135,14 +153,19 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
       <div className="c-body">
         {lines.length > 0 && (
           <div className="c-plus">
-            {lines.map((l) => (
-              <div key={l}>{l}</div>
+            {lines.map((l, i) => (
+              <div key={i}>{l}</div>
             ))}
           </div>
         )}
-        {c.coins !== undefined && <div className="c-big"><Coin n={c.coins} /></div>}
+        {(c.coins !== undefined || c.potions) && (
+          <div className="c-big">
+            {c.coins !== undefined && <Coin n={c.coins} />}
+            {c.potions ? <Flask big /> : null}
+          </div>
+        )}
         {c.vp !== undefined && <div className={'c-big vp' + (c.vp < 0 ? ' neg' : '')}>{c.vp > 0 ? c.vp : c.vp}<small>{tr(lang, 'vp')}</small></div>}
-        {text && <div className={'c-text' + (text.length > 90 ? ' long' : '')}>{text}</div>}
+        {text && <div className={'c-text' + (text.length > 90 ? ' long' : '')}>{withIcons(text)}</div>}
       </div>
       <div className="c-foot">
         <Cost id={id} small />

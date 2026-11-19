@@ -15,7 +15,7 @@ export const TOWER_BASICS: CardDef[] = [
     set: 'basic',
     symbol: 'tower',
     name: t('Elixir', 'Eliksir'),
-    text: t('+1 Elixir.', '+1 Eliksir.'),
+    text: t('', ''),
     types: ['treasure'],
     cost: 4,
     potions: 1,
@@ -152,8 +152,8 @@ export const TOWER: CardDef[] = [
     set: 'tower',
     name: t('Alembic', 'Alembik'),
     text: t(
-      'You may trash a card from your hand. If you do, +1 Elixir.',
-      'Możesz spalić kartę z ręki. Jeśli to zrobisz: +1 Eliksir.',
+      'You may trash a card from your hand. If you do, +{P}.',
+      'Możesz spalić kartę z ręki. Jeśli to zrobisz: +{P}.',
     ),
     types: ['action'],
     cost: 5,
@@ -176,13 +176,10 @@ export const TOWER: CardDef[] = [
     id: 'cauldron',
     set: 'tower',
     name: t('Bubbling Cauldron', 'Kipiący Kocioł'),
-    text: t('+1 Elixir.', '+1 Eliksir.'),
+    text: t('', ''),
     types: ['action'],
     cost: 5,
-    plus: { actions: 2 },
-    *play(g) {
-      g.turn.potions += 1;
-    },
+    plus: { actions: 2, potions: 1 },
     ai: { value: 5, role: 'village' },
   },
 

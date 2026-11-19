@@ -116,10 +116,10 @@ export function cardArt(c: CardDef): Art {
     svg =
       `<svg viewBox="-6 -3 60 54" preserveAspectRatio="xMidYMid meet" aria-hidden="true">` +
       `<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.35">` +
-      `<path d="${m.m}" stroke="${line}"/>` +
-      (m.a ? `<path d="${m.a}" stroke="${accent}"/>` : '') +
+      `<path d="${m.m}" stroke="${m.colors?.m ?? line}"/>` +
+      (m.a ? `<path d="${m.a}" stroke="${m.colors?.a ?? accent}"/>` : '') +
       `</g>` +
-      (m.f ? `<path d="${m.f}" fill="${accent}"/>` : '') +
+      (m.f ? `<path d="${m.f}" fill="${m.colors?.f ?? accent}" fill-opacity="${m.colors?.fOpacity ?? 1}"/>` : '') +
       `</svg>`;
   }
   const art = { bg: `url("data:image/svg+xml,${encodeURIComponent(bgSvg)}")`, svg };

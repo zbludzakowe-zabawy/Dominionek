@@ -10,6 +10,7 @@ export interface Plus {
   actions?: number;
   buys?: number;
   coins?: number;
+  potions?: number;
 }
 
 export interface CardDef {

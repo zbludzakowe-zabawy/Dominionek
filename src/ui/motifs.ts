@@ -5,6 +5,8 @@ export interface Motif {
   m: string;
   a?: string;
   f?: string;
+  /** Własne kolory zamiast palety typu karty (np. fioletowy Eliksir). */
+  colors?: { m?: string; a?: string; f?: string; fOpacity?: number };
 }
 
 /** Okrąg jako ścieżka. */
@@ -26,6 +28,25 @@ const star = (x: number, y: number, r: number) => {
 };
 const ground = 'M2 44H46';
 const waves = (y: number) => `M2 ${y}q3 -2.5 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0`;
+
+const ELIXIR_BODY = 'M19.6 4.8h8.8M20.92 4.8v11.0L12.12 30.54a7.92 7.92 0 0 0 6.82 11.66h10.12a7.92 7.92 0 0 0 6.82 -11.66L27.08 15.8v-11.0';
+const ELIXIR_LIQUID = 'M15.2 26.14h17.6l2.86 5.28a5.72 5.72 0 0 1 -5.06 8.58H17.4a5.72 5.72 0 0 1 -5.06 -8.58z';
+const ELIXIR_VARIANTS: Record<'purple' | 'gold', Motif> = {
+  // fioletowa, jak ikonka kosztu
+  purple: {
+    m: ELIXIR_BODY,
+    a: spark(40, 10, 3) + spark(8, 14, 2),
+    f: ELIXIR_LIQUID,
+    colors: { m: '#b9a3f2', a: '#d9cfae', f: '#7b5fd6', fOpacity: 0.9 },
+  },
+  // kształt jak ikonka, kolorystyka złota (skarb)
+  gold: {
+    m: ELIXIR_BODY,
+    a: 'M15.2 26.14h17.6' + spark(40, 10, 3) + spark(8, 14, 2),
+    f: c(21, 34, 1.4) + c(27, 32, 1.1) + c(24, 38, 0.9),
+  },
+};
+export let ELIXIR_STYLE: 'purple' | 'gold' = 'purple';
 
 export const MOTIFS: Record<string, Motif> = {
   // ---------- skarby ----------
@@ -272,11 +293,8 @@ export const MOTIFS: Record<string, Motif> = {
   },
 
   // ---------- Wieża Alchemika ----------
-  elixir: {
-    m: 'M19 2h10v5h-10zM21 7v9Q10 21 10 30a14 14 0 0 0 28 0Q38 21 27 16V7',
-    a: 'M12 30q6 -3 12 0t12 0',
-    f: c(20, 35, 1.6) + c(27, 33, 1.2) + c(24, 39, 1),
-  },
+  // Eliksir: ta sama buteleczka co w ikonce kosztu (ELIXIR_STYLE wybiera wariant)
+  elixir: ELIXIR_VARIANTS[ELIXIR_STYLE],
   apprentice: {
     m: 'M6 32h36M6 38h36M8 32v12M40 32v12M13 14v22a2.5 2.5 0 0 0 5 0V14M21.5 10v26a2.5 2.5 0 0 0 5 0V10M30 16v20a2.5 2.5 0 0 0 5 0V16',
     a: 'M13 26h5M21.5 22h5M30 29h5M12 14h7M20.5 10h7M29 16h7',
