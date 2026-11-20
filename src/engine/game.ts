@@ -68,6 +68,13 @@ export class Game {
   over = false;
   /** Zmienia się po każdej zmianie stanu (dla UI). */
   version = 0;
+  /**
+   * Cofanie ruchów: odpowiedzi o indeksach < undoFloor są nieodwracalne. Próg przesuwa się,
+   * gdy zmienia się tura, ktoś inny (bot) coś wybiera albo odkrywa się nowe karty (dobranie,
+   * odkrycie z talii, tasowanie) – wtedy cofnięcie ujawniłoby ukrytą informację.
+   */
+  undoFloor = 0;
+  private reveals = 0;
   private gen: Step;
 
   constructor(setup: GameSetup) {
@@ -144,8 +151,18 @@ export class Game {
     const d = this.pending;
     if (!d) throw new Error('Brak oczekującej decyzji');
     if (!validAnswer(d, a)) throw new Error(`Nieprawidłowa odpowiedź ${JSON.stringify(a)} na ${d.kind}`);
+    const turnBefore = this.turn;
+    const revealsBefore = this.reveals;
     this.answers.push(a);
     this.advance(a);
+    if (this.players[d.player].bot || this.turn !== turnBefore || this.reveals !== revealsBefore) {
+      this.undoFloor = this.answers.length;
+    }
+  }
+
+  /** Ile ostatnich odpowiedzi można cofnąć (0 = nic). */
+  undoable(): number {
+    return this.answers.length - this.undoFloor;
   }
 
   private advance(a: Answer | undefined): void {
@@ -272,6 +289,7 @@ export class Game {
   /** Zapewnia, że talia ma co najmniej n kart (tasuje odrzucone, jeśli trzeba). */
   private ensureDeck(p: PlayerState, n: number): void {
     if (p.deck.length >= n || p.discard.length === 0) return;
+    this.reveals++;
     const shuffled = this.rng.shuffle(p.discard.splice(0));
     p.deck.push(...shuffled);
     this.logMsg(p.id, 'log.shuffle');
@@ -285,6 +303,7 @@ export class Game {
       if (!id) break;
       drawn.push(id);
     }
+    if (drawn.length) this.reveals++;
     p.hand.push(...drawn);
     sortCards(p.hand);
     return drawn;
@@ -299,6 +318,7 @@ export class Game {
       if (!id) break;
       out.push(id);
     }
+    if (out.length) this.reveals++;
     return out;
   }
 

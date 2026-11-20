@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { decide, type Plan } from '../engine/bot';
 import { isType } from '../engine/card';
 import { card } from '../engine/cards';
@@ -58,13 +58,20 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const lang = settings.lang;
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
 
-  const game = useMemo(() => {
+  const [game, setGame] = useState(() => {
     try {
       return Game.replay(saved.setup, saved.answers);
     } catch {
       return new Game(saved.setup);
     }
-  }, [saved]);
+  });
+  // liczba odpowiedzi przed każdym ruchem gracza (jeden ruch w UI może wysłać kilka odpowiedzi,
+  // np. kupno = koniec akcji + zagranie skarbów + zakup) – „Cofnij” cofa cały ruch
+  const marks = useRef<number[]>([]);
+  const mark = () => {
+    const n = game.answers.length;
+    if (marks.current[marks.current.length - 1] !== n) marks.current.push(n);
+  };
   const [plans, setPlans] = useState<Record<number, Plan> | null>(() => {
     const need = game.players.filter((p) => p.bot === 'hard' && !saved.plans[p.id]);
     return need.length ? null : saved.plans;
@@ -78,12 +85,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const landscape = useMedia(LANDSCAPE_PHONE);
   const names = game.players.map((p) => p.name);
 
-  const persist = (pl: Record<number, Plan> | null = plans) =>
-    saveGame(game.over ? null : { v: 2, setup: game.setup, answers: game.answers, plans: pl ?? {} });
+  const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
+    saveGame(g.over ? null : { v: 2, setup: g.setup, answers: g.answers, plans: pl ?? {} });
 
   const refresh = () => setTick((x) => x + 1);
 
   const submit = (a: Answer) => {
+    mark();
     game.submit(a);
     setSel([]);
     setDetail(null);
@@ -118,6 +126,26 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   });
 
   const d = game.pending;
+  const canUndo = !!d && d.player === HUMAN && game.turn.player === HUMAN && game.undoable() > 0;
+  const undo = () => {
+    if (!canUndo) return;
+    const floor = game.undoFloor;
+    let to = game.answers.length - 1;
+    while (marks.current.length) {
+      const m = marks.current.pop()!;
+      if (m < game.answers.length) {
+        to = m;
+        break;
+      }
+    }
+    to = Math.max(floor, to);
+    marks.current = marks.current.filter((m) => m < to);
+    const g = Game.replay(game.setup, game.answers.slice(0, to));
+    setGame(g);
+    setSel([]);
+    setDetail(null);
+    persist(plans, g);
+  };
   const botTurn = !!d && d.player !== HUMAN;
 
   // automatyczne kończenie tury (opcja w menu): tylko gdy nie zostały już żadne zakupy.
@@ -126,7 +154,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     if (!settings.autoEnd || !plans || !d || d.player !== HUMAN || d.kind !== 'buy' || game.turn.buys > 0) return;
     const id = window.setTimeout(() => {
       if (game.pending === d) submit({ t: 'end' });
-    }, 450);
+    }, canUndo ? 1500 : 450);
     return () => window.clearTimeout(id);
   });
 
@@ -232,6 +260,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
 
   const buy = (id: string) => {
     if (!canBuyNow) return;
+    mark();
     if (game.pending?.kind === 'action') game.submit({ t: 'end' });
     const before = game.pending;
     if (before?.kind === 'buy' && !game.canAfford(id) && before.treasures.length) {
@@ -465,7 +494,14 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             )}{' '}
             {prompt}
           </div>
-          <div className="prompt-buttons">{buttons}</div>
+          <div className="prompt-buttons">
+            {myDecision && turn.player === HUMAN && (
+              <button className="btn undo" onClick={undo} disabled={!canUndo} aria-label={t('undo')} title={t('undo')}>
+                ↶ {t('undo')}
+              </button>
+            )}
+            {buttons}
+          </div>
         </div>
       </section>
 
