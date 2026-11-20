@@ -23,9 +23,14 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 
 ## Plan
 
-1. Pakiet Court Whispers (Szepty Dworu).
-2. Gra online dla 2 osób przez link-pokój (WebRTC).
-3. Statystyki gier.
+1. **Przegląd działania kart** (najbliższy krok): przemyśleć, co karty mają robić – obecne efekty
+   prawdopodobnie wymagają zmian (kontynuacja rozmowy z innego wątku).
+2. **Gra online dla 2–4 osób** przez link-pokój (WebRTC) – nadal ważne.
+3. **Skrót działania karty na stosach w Królestwie**: przemyśleć inny widok dostępnych kart, gdzie
+   stos na stole pokazuje ikonkami w skrócie, co robi karta – np. torba zakupowa = +zakup,
+   moneta = +monety, karta = +karty (podobnie akcje, palenie, atak). Najpierw podgląd do akceptacji.
+4. Pakiet Court Whispers (Szepty Dworu).
+5. Statystyki gier.
 
 ## Aplikacja na telefon
 

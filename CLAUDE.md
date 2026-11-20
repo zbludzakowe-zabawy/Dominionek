@@ -23,7 +23,12 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 | `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 13 kart + Eliksir (skarb za 4, daje 1 Eliksir) |
 | `court` | Court Whispers | Szepty Dworu | plan: karty wielotypowe, „jedno z” |
 
-Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/PeerJS, host pilnuje zasad).
+Dalej w planie (kolejność jak w README → Plan):
+1. Przegląd działania kart – użytkownik uważa, że efekty kart wymagają zmian (temat z innego wątku).
+2. Gra online dla 2–4 osób przez link-pokój (WebRTC/PeerJS, host pilnuje zasad) – nadal ważne.
+3. Skrót działania karty na stosach Królestwa ikonkami (torba zakupowa = +zakup, moneta = +monety,
+   karta = +karty itd.), żeby bez otwierania karty było widać, co robi. Przed wdrożeniem podgląd.
+4. Szepty Dworu, statystyki gier.
 
 ## Architektura
 
@@ -42,6 +47,9 @@ Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/Peer
   - Eliksir (druga waluta): `CardDef.potionCost` (koszt) i `potions` (ile daje skarb), `TurnState.potions`,
     `Game.canAfford(id)`. `choosePile` ma `maxPotion` (domyślnie 0 – karty z Eliksirem w koszcie są poza
     zasięgiem „zdobądź kartę do X”). Stos `elixir` dochodzi sam, gdy karta Królestwa ma `potionCost`.
+  - Cofanie: `Game.undoFloor` / `undoable()` – odpowiedzi przed progiem są nieodwracalne (próg przesuwa
+    zmiana tury, odpowiedź bota, dobranie/odkrycie kart, tasowanie). UI cofa przez `Game.replay` bez
+    końcówki `answers`; `marks` w `GameScreen` grupują odpowiedzi jednego ruchu (np. kupno).
   - Ręka jest zawsze posortowana (`sortCards`), indeksy w decyzjach dotyczą tej kolejności.
   - Przy 0 zakupach silnik i tak pyta o koniec tury (UI kończy ją sam, jeśli opcja `autoEnd`).
   - `bot.ts` – heurystyki (easy/medium); `plan.ts` – trudny bot na starcie rozgrywa w pamięci gry
@@ -80,7 +88,7 @@ Dalej w planie: statystyki gier, potem gra online przez link-pokój (WebRTC/Peer
 - Skarby na karcie: duża moneta z wartością (najważniejsza informacja).
 - Królestwo: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
 - Liczba kart na stosie: kwadracik w lewym górnym rogu. Licznik monet: tylko zagrane monety.
-  Faza zakupów: „Faza zakupów: (monety) Zakupy N”. „Koniec tury” – niebieski przycisk.
+  Faza zakupów: „Faza zakupów: (monety) Zakupy N”. „Koniec tury” – niebieski przycisk, obok „↶ Cofnij”.
 - Dwuklik: kupno/zdobycie stosu, zatwierdzenie wyboru kart. Przytrzymanie: podgląd karty.
 
 ## Polecenia

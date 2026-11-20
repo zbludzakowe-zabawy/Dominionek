@@ -85,6 +85,32 @@ describe('silnik', () => {
     expect(copy.turn).toEqual(g.turn);
   });
 
+  it('cofanie: ruchy w turze gracza da się cofnąć, koniec tury i ruchy botów już nie', () => {
+    const setup: GameSetup = {
+      seed: 5,
+      kingdom: makeSetup(5, 2).kingdom,
+      players: [{ name: 'Ja', bot: null }, { name: 'Bot', bot: 'medium' }],
+    };
+    const g = new Game(setup);
+    const r = new Rng(3);
+    while (g.pending && g.pending.player !== 0) g.submit(decide(g, g.pending, 'medium', () => r.next()));
+    expect(g.undoable()).toBe(0);
+    const start = g.answers.length;
+    if (g.pending?.kind === 'action') g.submit({ t: 'end' });
+    g.submit({ t: 'playAll' });
+    const coins = g.turn.coins;
+    g.submit({ t: 'buy', pile: 'copper' });
+    expect(g.undoable()).toBe(g.answers.length - start);
+    // cofnięcie = odtworzenie bez ostatniej odpowiedzi
+    const back = Game.replay(setup, g.answers.slice(0, -1));
+    expect(back.turn.coins).toBe(coins);
+    expect(back.pending?.kind).toBe('buy');
+    expect(back.undoFloor).toBe(g.undoFloor);
+    // koniec tury dobiera nowe karty – tego już nie cofniemy
+    g.submit({ t: 'end' });
+    expect(g.undoable()).toBe(0);
+  });
+
   it('odrzuca nieprawidłowe odpowiedzi', () => {
     const g = new Game(makeSetup(3, 2));
     expect(() => g.submit({ t: 'buy', pile: 'citadel' })).toThrow();
