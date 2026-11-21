@@ -372,6 +372,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .sheet-prompt { margin: 0; line-height: 1.35; }
 .sheet-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; width: 100%; position: sticky; bottom: 0; background: var(--bg2); padding-top: 4px; }
 .sheet-actions .muted { margin-right: auto; }
+.sheet-actions .peek-btn { margin-right: auto; }
+.sheet-actions .peek-btn + .muted { margin-right: 0; }
 .list-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding-top: 10px; }
 .list-cards .card { width: 120px; }
 .options { display: flex; flex-direction: column; gap: 8px; }
