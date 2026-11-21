@@ -82,6 +82,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const [panel, setPanel] = useState<'log' | 'menu' | 'deck' | null>(null);
   const [ff, setFf] = useState(false); // przewijanie do tury gracza
   const [showEnd, setShowEnd] = useState(true);
+  // okienko wyboru (odkryte karty / opcje) schowane na chwilę, żeby zobaczyć rękę i stół
+  const [peek, setPeek] = useState(false);
   const landscape = useMedia(LANDSCAPE_PHONE);
   const names = game.players.map((p) => p.name);
 
@@ -126,6 +128,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   });
 
   const d = game.pending;
+  useEffect(() => setPeek(false), [d]);
   const canUndo = !!d && d.player === HUMAN && game.turn.player === HUMAN && game.undoable() > 0;
   const undo = () => {
     if (!canUndo) return;
@@ -349,6 +352,15 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     }
   }
 
+  const sheetChoice = !!myDecision && ((myDecision.kind === 'cards' && myDecision.zone === 'list') || myDecision.kind === 'options');
+  if (sheetChoice && peek) {
+    buttons = (
+      <button className="btn primary" onClick={() => setPeek(false)}>
+        {t('backToChoice')}
+      </button>
+    );
+  }
+
   const attacked = myDecision && myDecision.source && turn.player !== HUMAN;
   // pasek fazy: zwinięty = jedna linijka (liczniki + przyciski), bez podpowiedzi;
   // podpowiedzi do wyborów (atak, palenie…) pokazujemy zawsze
@@ -531,7 +543,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       </footer>
 
       {/* wybór z listy (odkryte karty, odrzucone) */}
-      {myDecision?.kind === 'cards' && myDecision.zone === 'list' && (
+      {myDecision?.kind === 'cards' && myDecision.zone === 'list' && !peek && (
         <div className="sheet-backdrop">
           <div className="sheet">
             <p className="sheet-prompt">
@@ -552,6 +564,9 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               ))}
             </div>
             <div className="sheet-actions">
+              <button className="btn ghost peek-btn" onClick={() => setPeek(true)}>
+                {t('peekHand')}
+              </button>
               <span className="muted small">{t('selected', { n: sel.length })}</span>
               <button
                 className="btn primary"
@@ -565,7 +580,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         </div>
       )}
 
-      {myDecision?.kind === 'options' && (
+      {myDecision?.kind === 'options' && !peek && (
         <div className="sheet-backdrop">
           <div className="sheet">
             <p className="sheet-prompt">{msg(lang, myDecision.prompt)}</p>
@@ -575,6 +590,11 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                   {msg(lang, o)}
                 </button>
               ))}
+            </div>
+            <div className="sheet-actions">
+              <button className="btn ghost peek-btn" onClick={() => setPeek(true)}>
+                {t('peekHand')}
+              </button>
             </div>
           </div>
         </div>

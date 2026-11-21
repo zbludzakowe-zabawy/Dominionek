@@ -90,6 +90,8 @@ Dalej w planie (kolejność jak w README → Plan):
 - Liczba kart na stosie: kwadracik w lewym górnym rogu. Licznik monet: tylko zagrane monety.
   Faza zakupów: „Faza zakupów: (monety) Zakupy N”. „Koniec tury” – niebieski przycisk, obok „↶ Cofnij”.
 - Dwuklik: kupno/zdobycie stosu, zatwierdzenie wyboru kart. Przytrzymanie: podgląd karty.
+- Okienko wyboru (odkryte karty, opcje) ma „Pokaż rękę” – chowa je (`peek`), na pasku fazy pojawia się
+  „Wróć do wyboru”.
 
 ## Polecenia
 
