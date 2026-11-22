@@ -266,7 +266,6 @@ export function PlayedCard({ id, n, lang, onTap }: { id: string; n: number; lang
 
 /* ---------- symbole działania karty (zestaw „kontur”) ---------- */
 const ICONS: Record<string, React.ReactNode> = {
-  coin: <circle cx="10" cy="10" r="6.6" />,
   card: (
     <>
       <rect x="5" y="2.5" width="10" height="15" rx="1.6" />
@@ -325,10 +324,12 @@ function SymItem({ s, lang }: { s: Sym; lang: Lang }) {
   const num = s.n !== undefined && !(s.n === 1 && (s.k === 'trash' || s.k === 'discard')) ? s.n : undefined;
   const label = tr(lang, `sym.${s.k}`) + (s.n !== undefined ? ` ${s.plus ? '+' : ''}${s.n}` : '');
   let icon: React.ReactNode;
-  if (s.k === 'potion') icon = <Flask small />;
+  // moneta: płaska złota moneta jak w grze, bez cyfry
+  if (s.k === 'coin') icon = <span className="coin sym-coin" />;
+  else if (s.k === 'potion') icon = <Flask small />;
   else if (s.k === 'act') icon = <span className="sym-a">A</span>;
   else icon = <SymIcon k={s.k} lang={lang} />;
-  // liczba z plusem przed symbolem (moneta to samo kółko – nie myli się z kosztem)
+  // liczba z plusem przed symbolem (moneta bez cyfry w środku – nie myli się z kosztem)
   const prefix = s.k === 'potion' ? (s.plus ? `+${s.n && s.n > 1 ? s.n : ''}` : '') : num !== undefined ? `${s.plus ? '+' : ''}${num}` : '';
   return (
     <span className={'sym-it s-' + s.k} title={label}>
