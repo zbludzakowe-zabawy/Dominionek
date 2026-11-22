@@ -84,7 +84,7 @@ Dalej w planie (kolejność jak w README → Plan):
   `min-width: 900px` i `min-height: 521px`.
 - Widok stosów Królestwa (`settings.pileView`, domyślnie `'art'`, zapamiętany na urządzeniu; przełącznik
   w ustawieniach i w menu gry): „Obraz” albo „Symbole” – niski pasek obrazu, nazwa, pod nią skrót działania
-  karty ikonkami (zestaw „kontur”: +N karta, +N A = akcja, torba = zakup, moneta, tarcza PZ, kosz = spal,
+  karty ikonkami (zestaw „kontur”: +N karta, +N A = akcja, torba = zakup, kółko = moneta (bez cyfry w środku, liczba przed nim), tarcza PZ, kosz = spal,
   karty ze strzałką = odrzuć, prostokąt z 3 kropkami = dłuższy opis). Symbole: `src/ui/symbols.ts` – bonusy
   z `plus`/`coins`, resztę opisuje `EXTRA` (test pilnuje wpisu dla każdej karty Królestwa). Na niskim ekranie
   i poziomo bez obrazka, licznik i koszt w górnym pasku. Stałe stosy bez zmian.

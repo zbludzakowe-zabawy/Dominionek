@@ -247,7 +247,6 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   font-family: Georgia, serif; font-weight: 700; font-size: .66rem; letter-spacing: -.03em;
 }
 .sym-it b { font-weight: 700; }
-.sym-it .coin.small { width: 16px; height: 16px; font-size: .64rem; }
 .sym-it .flask.small svg { width: 11px; height: 14px; }
 .sym-a { font-family: Georgia, serif; font-weight: 700; font-size: .85rem; width: 12px; text-align: center; }
 .sym-ic { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; flex: none; }
@@ -472,7 +471,6 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .game .tile-syms { gap: 4px 6px; }
   .game .sym-it { font-size: .74rem; }
   .game .sym-ic { width: 17px; height: 17px; }
-  .game .sym-it .coin.small { width: 18px; height: 18px; font-size: .7rem; }
   .game .play-cards { flex-wrap: wrap; overflow: visible; }
   /* panel gracza (zagrane, faza, ręka) zaczyna się tam, gdzie Królestwo;
      miejsce pod kolumnami stałych stosów zostaje wolne na później */
