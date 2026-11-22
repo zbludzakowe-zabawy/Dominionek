@@ -282,6 +282,17 @@ describe('silnik', () => {
     expect(p.hand).not.toContain('silver');
   });
 
+  it('Homunkulus: karta z Eliksirem w koszcie wymienia się też na kartę bez Eliksiru', () => {
+    const g = new Game({ ...makeSetup(16, 2), kingdom: ['homunculus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+    const p = g.players[0];
+    p.hand = ['golem', 'copper']; // Golem: 4 + Eliksir
+    const it = g.resolve(p, 'homunculus');
+    it.next();
+    const d = it.next({ t: 'cards', is: [p.hand.indexOf('golem')] }).value as { allowed: string[] };
+    expect(d.allowed).toEqual(expect.arrayContaining(['silver', 'inn', 'golem', 'retort', 'brewer', 'elixir']));
+    expect(d.allowed).not.toContain('alembic'); // 5 monet – za drogi
+  });
+
   it('Homunkulus na ręce chroni przed atakiem za odrzucenie karty', () => {
     const g = new Game({ ...makeSetup(17, 2), kingdom: ['homunculus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
     const [a, v] = g.players;

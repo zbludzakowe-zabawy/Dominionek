@@ -146,6 +146,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .c-plus { font-weight: 800; font-size: 9.5cqw; line-height: 1.15; }
 .c-text { font-size: 7cqw; line-height: 1.22; }
 .c-text.long { font-size: 6.3cqw; }
+.c-text.xlong { font-size: 5.7cqw; }
+.c-part.sep { margin-top: 3cqw; padding-top: 3cqw; border-top: 1px solid color-mix(in srgb, currentColor 35%, transparent); }
 .c-big { font-size: 20cqw; font-weight: 800; font-family: Georgia, serif; display: flex; align-items: baseline; gap: 2cqw; }
 .c-big small { font-size: 9cqw; }
 .c-big.vp { color: #3f5a2e; }

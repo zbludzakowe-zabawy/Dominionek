@@ -251,8 +251,8 @@ export const TOWER: CardDef[] = [
     set: 'tower',
     name: t('Homunculus', 'Homunkulus'),
     text: t(
-      'You may return a card from your hand to the Supply and gain a card costing up to the same into your hand. When another player plays an Attack, you may reveal this from your hand and discard a card to be unaffected.',
-      'Możesz oddać kartę z ręki do zasobów i zdobyć na rękę kartę o tym samym lub niższym koszcie. Gdy inny gracz zagrywa Atak, możesz pokazać tę kartę z ręki i odrzucić 1 kartę – atak cię nie dotyczy.',
+      'You may return a card from your hand to the Supply and gain a card costing up to the same into your hand.\n\nWhen someone plays an Attack: you may reveal this and discard a card to be unaffected.',
+      'Możesz oddać kartę z ręki do zasobów i zdobyć na rękę kartę kosztującą tyle samo lub mniej.\n\nGdy ktoś zagrywa Atak: możesz pokazać tę kartę z ręki i odrzucić 1 kartę – atak cię nie dotyczy.',
     ),
     types: ['action', 'reaction'],
     cost: 3,
