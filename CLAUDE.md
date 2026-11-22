@@ -90,6 +90,7 @@ Dalej w planie (kolejność jak w README → Plan):
   i poziomo bez obrazka, licznik i koszt w górnym pasku. Stałe stosy bez zmian.
 - Pasek fazy można zwinąć do jednej linijki (strzałka; `settings.barCollapsed`, null = auto: zwinięty
   w poziomie). Podpowiedzi do wyborów (atak, palenie) widać zawsze.
+- Bonus monet na karcie (`plus.coins`): „+N” i złota moneta bez cyfry (`.plus-coin`), nie napis „+N monety”.
 - Skarby na karcie: duża moneta z wartością (najważniejsza informacja). Moneta (`.coin`) jest **płaska**:
   jednolite pole i podniesiony rant (jasny u góry, ciemny u dołu), cyfra szeryfowa – bez wypukłego środka.
 - Królestwo: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).

@@ -189,6 +189,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .flask.inline svg { width: 1em; height: 1.25em; vertical-align: -.25em; stroke: var(--flask-line-paper); stroke-width: 1.6; }
 .flask.inline { display: inline; }
 .flask.inline svg { display: inline-block; }
+.plus-coin { display: inline-flex; align-items: center; gap: .15em; }
+.plus-coin .coin { font-size: inherit; width: .95em; height: .95em; }
 .plus-flask { display: inline-flex; align-items: center; gap: 1px; }
 .plus-flask .flask svg { width: 1em; height: 1.25em; stroke: var(--flask-line-paper); stroke-width: 1.6; }
 .tile .cost { position: absolute; left: 4px; bottom: 3px; }

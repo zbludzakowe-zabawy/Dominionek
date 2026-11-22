@@ -135,7 +135,13 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
   if (plus.cards) lines.push(tr(lang, 'plus.cards', { n: plus.cards }));
   if (plus.actions) lines.push(tr(lang, 'plus.actions', { n: plus.actions }));
   if (plus.buys) lines.push(tr(lang, 'plus.buys', { n: plus.buys }));
-  if (plus.coins) lines.push(tr(lang, 'plus.coins', { n: plus.coins }));
+  if (plus.coins)
+    lines.push(
+      <span className="plus-coin" title={tr(lang, 'plus.coins', { n: plus.coins })}>
+        +{plus.coins}
+        <span className="coin" />
+      </span>,
+    );
   if (plus.potions)
     lines.push(
       <span className="plus-flask">
