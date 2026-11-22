@@ -76,9 +76,13 @@ export const EXTRA: Record<string, Sym[]> = {
   transmute: [trash(), more],
   retort: [],
   herbgarden: [vp(), more],
+  // Homunkulus: wymiana karty + obrona przed atakiem
   homunculus: [more],
   golem: [],
-  magnumopus: [vp(2, true), more],
+  // Wielkie Dzieło: Skarb za 3 (moneta z definicji) + zdobywa Złoto i Zagrodę
+  magnumopus: [more],
+  // Warzelnik: bonusy z definicji + odłożenie na talię na koniec tury
+  brewer: [more],
 };
 
 export function cardSymbols(id: string): Sym[] {

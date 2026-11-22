@@ -157,7 +157,7 @@ export const TOWER: CardDef[] = [
     ),
     types: ['action'],
     cost: 5,
-    plus: { cards: 2 },
+    plus: { cards: 2, actions: 1 },
     *play(g, p) {
       const is = yield* g.chooseFromHand(p, {
         prompt: { k: 'prompt.trashUpTo', p: { n: 1 } },
@@ -170,7 +170,7 @@ export const TOWER: CardDef[] = [
       g.trashCards(p, g.takeFromHand(p, is));
       g.turn.potions += 1;
     },
-    ai: { value: 5, role: 'trash' },
+    ai: { value: 6, role: 'trash' },
   },
   {
     id: 'cauldron',
@@ -229,7 +229,7 @@ export const TOWER: CardDef[] = [
     types: ['action'],
     cost: 2,
     potionCost: 1,
-    plus: { cards: 2, actions: 1 },
+    plus: { cards: 2, actions: 1, buys: 1 },
     ai: { value: 7, role: 'cantrip' },
   },
   {
@@ -250,17 +250,71 @@ export const TOWER: CardDef[] = [
     id: 'homunculus',
     set: 'tower',
     name: t('Homunculus', 'Homunkulus'),
-    text: t('Each other player gains a Hex.', 'Każdy inny gracz zdobywa Urok.'),
-    types: ['action', 'attack'],
+    text: t(
+      'You may return a card from your hand to the Supply and gain a card costing up to the same into your hand.\n\nWhen someone plays an Attack: you may reveal this and discard a card to be unaffected.',
+      'Możesz oddać kartę z ręki do zasobów i zdobyć na rękę kartę kosztującą tyle samo lub mniej.\n\nGdy ktoś zagrywa Atak: możesz pokazać tę kartę z ręki i odrzucić 1 kartę – atak cię nie dotyczy.',
+    ),
+    types: ['action', 'reaction'],
     cost: 3,
     potionCost: 1,
-    plus: { cards: 2 },
     *play(g, p) {
-      yield* g.attack(p, function* (v) {
-        g.gain(v, 'hex');
+      const is = yield* g.chooseFromHand(p, {
+        prompt: { k: 'prompt.exchange' },
+        min: 0,
+        max: 1,
+        purpose: 'trash',
+        source: 'homunculus',
       });
+      if (!is.length) return;
+      const [id] = g.takeFromHand(p, is);
+      g.supply[id] = (g.supply[id] ?? 0) + 1;
+      g.logMsg(p.id, 'log.returnToSupply', { card: '@' + id });
+      const c = card(id);
+      const pick = yield* g.choosePile(p, {
+        prompt: { k: 'prompt.gainToHandUpTo', p: { n: c.cost } },
+        maxCost: c.cost,
+        maxPotion: potionCost(c),
+        source: 'homunculus',
+      });
+      if (pick) g.gain(p, pick, 'hand');
     },
-    ai: { value: 8, role: 'attack' },
+    *onAttack(g, v) {
+      if (!(yield* g.yesNo(v, { k: 'prompt.homunculusReact' }, 'homunculus', true))) return false;
+      g.logMsg(v.id, 'log.reveal', { card: '@homunculus' });
+      const is = yield* g.chooseFromHand(v, {
+        prompt: { k: 'prompt.discardN', p: { n: 1 } },
+        min: 1,
+        max: 1,
+        purpose: 'discard',
+        source: 'homunculus',
+      });
+      g.discardCards(v, g.takeFromHand(v, is));
+      return true;
+    },
+    ai: { value: 5, role: 'trash' },
+  },
+  {
+    id: 'brewer',
+    set: 'tower',
+    name: t('Brewer', 'Warzelnik'),
+    text: t(
+      'At the end of your turn, if you have an Elixir in play, you may put this card on top of your deck.',
+      'Na koniec tury, jeśli masz w grze Eliksir, możesz odłożyć tę kartę na wierzch swojej talii.',
+    ),
+    types: ['action'],
+    cost: 3,
+    potionCost: 1,
+    plus: { cards: 2, actions: 1, coins: 1 },
+    *onCleanup(g, p) {
+      if (!p.play.includes('elixir')) return;
+      if (!(yield* g.yesNo(p, { k: 'prompt.brewerTop' }, 'brewer', true))) return;
+      const i = p.play.indexOf('brewer');
+      if (i < 0) return;
+      p.play.splice(i, 1);
+      p.deck.unshift('brewer');
+      g.logMsg(p.id, 'log.topdeck', { card: '@brewer' });
+    },
+    ai: { value: 7, role: 'cantrip' },
   },
   {
     id: 'golem',
@@ -277,14 +331,15 @@ export const TOWER: CardDef[] = [
     id: 'magnumopus',
     set: 'tower',
     name: t('Magnum Opus', 'Wielkie Dzieło'),
-    text: t('Gain a Gold. +2 VP tokens.', 'Zdobądź Złoto. +2 żetony PZ.'),
-    types: ['action'],
+    text: t('Gain a Gold and a Homestead.', 'Zdobądź Złoto i Zagrodę.'),
+    types: ['treasure'],
     cost: 6,
     potionCost: 1,
+    coins: 3,
     *play(g, p) {
       g.gain(p, 'gold');
-      g.addVp(p, 2);
+      g.gain(p, 'homestead');
     },
-    ai: { value: 7, role: 'gain' },
+    ai: { value: 7, role: 'money' },
   },
 ];

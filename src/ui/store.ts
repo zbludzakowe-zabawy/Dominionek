@@ -26,11 +26,19 @@ export interface SavedGame {
   setup: GameSetup;
   answers: Answer[];
   plans: Record<number, Plan>;
-  /** 1: partia rozpoczęta po przeglądzie kart Skarbca (Rachmistrz, Pradawna Moneta, Smocza Mama…). */
-  hoardRev?: 1;
+  /**
+   * Wersja działania kart, z którą zaczęto partię. Po zmianie działania kart stare partie z nimi
+   * nie odtworzą się poprawnie, więc ich nie wczytujemy. 1: przegląd Skarbca, 2: przegląd Wieży.
+   */
+  hoardRev?: number;
 }
 
-const HOARD_CHANGED = ['clerk', 'gildedscale', 'ancientcoin', 'altar', 'map', 'hoardkey'];
+export const CARDS_REV = 2;
+/** Karty, które zmieniły działanie w danej wersji. */
+const CHANGED_IN: Record<number, string[]> = {
+  1: ['clerk', 'gildedscale', 'ancientcoin', 'altar', 'map', 'hoardkey'],
+  2: ['retort', 'homunculus', 'alembic', 'magnumopus'],
+};
 
 const SETTINGS_KEY = 'crownforge-settings';
 const SAVE_KEY = 'crownforge-save';
@@ -68,8 +76,10 @@ export function loadGame(): SavedGame | null {
     if (!raw) return null;
     const s = JSON.parse(raw) as SavedGame;
     if (s.v !== 2) return null;
-    // karty Skarbca zmieniły działanie – stare partie z nimi nie odtworzą się poprawnie
-    if (!s.hoardRev && s.setup.kingdom.some((id) => HOARD_CHANGED.includes(id))) return null;
+    const rev = s.hoardRev ?? 0;
+    for (let r = rev + 1; r <= CARDS_REV; r++) {
+      if (s.setup.kingdom.some((id) => CHANGED_IN[r]?.includes(id))) return null;
+    }
     return s;
   } catch {
     return null;

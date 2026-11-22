@@ -15,6 +15,7 @@ describe('symbole kart', () => {
       { k: 'act', n: 2, plus: true },
     ]);
     expect(cardSymbols('hedgewitch').map((s) => s.k)).toEqual(['act', 'trash']);
-    expect(cardSymbols('magnumopus')).toEqual([{ k: 'vp', n: 2, plus: true }, { k: 'more' }]);
+    expect(cardSymbols('magnumopus')).toEqual([{ k: 'coin', n: 3 }, { k: 'more' }]);
+    expect(cardSymbols('retort').map((s) => s.k)).toEqual(['card', 'act', 'buy']);
   });
 });

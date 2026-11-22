@@ -1,4 +1,4 @@
-import type { CardType, PlayerState, Step, Text } from './types';
+import type { Ask, CardType, PlayerState, Step, Text } from './types';
 import type { Game } from './game';
 
 export type SetId = 'basic' | 'keep' | 'hoard' | 'tower' | 'court';
@@ -35,8 +35,12 @@ export interface CardDef {
   vpFn?: (cards: string[]) => number;
   plus?: Plus;
   play?: (g: Game, p: PlayerState) => Step;
+  /** Na koniec tury, zanim karty z gry trafią na stos odrzuconych (raz na każdy egzemplarz w grze). */
+  onCleanup?: (g: Game, p: PlayerState) => Step;
   /** Reakcja chroniąca przed atakami, gdy karta jest na ręce. */
   blocksAttacks?: boolean;
+  /** Reakcja z wyborem: gdy inny gracz zagrywa Atak, a karta jest na ręce. Zwraca true = atak cię nie dotyczy. */
+  onAttack?: (g: Game, v: PlayerState) => Ask<boolean>;
   /** Wskazówki dla botów. value ~ siła karty (0–10), role ~ do czego służy. */
   ai: { value: number; role: AiRole; terminal?: boolean };
 }
