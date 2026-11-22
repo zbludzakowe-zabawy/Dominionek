@@ -41,7 +41,8 @@ Dalej w planie (kolejność jak w README → Plan):
     botom), `pile`, `options`, `yesno`. Decyzja może mieć `hint` (podpowiedź karty dla botów).
   - Karty: `cards/basic.ts`, `cards/keep.ts`, `cards/hoard.ts`, `cards/tower.ts`, rejestr w `cards/index.ts` (`SETS`
     – flaga `available`). Karta = `CardDef` (`card.ts`): `plus` (standardowe bonusy, rysowane przez UI),
-    `play` (generator efektu), `onCleanup` (na koniec tury, np. Warzelnik), `coins`, `vp`/`vpFn`, `blocksAttacks`,
+    `play` (generator efektu), `onCleanup` (na koniec tury, np. Warzelnik), `coins`, `vp`/`vpFn`, `blocksAttacks`
+    (Runa – chroni zawsze), `onAttack` (reakcja z wyborem, np. Homunkulus: pokaż i odrzuć 1 kartę),
     `symbol`, `ai` (value/role).
     Pomocnicze metody `Game`: `draw`, `takeTop`, `gain(p,id,'discard'|'hand'|'deck')`, `trashCards`,
     `discardCards`, `addVp`, `attack(p, fn)`, `chooseFromHand/chooseFromList/choosePile/chooseOptions/yesNo`.

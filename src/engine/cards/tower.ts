@@ -250,16 +250,48 @@ export const TOWER: CardDef[] = [
     id: 'homunculus',
     set: 'tower',
     name: t('Homunculus', 'Homunkulus'),
-    text: t('Gain a Gold and a Homestead.', 'Zdobądź Złoto i Zagrodę.'),
-    types: ['treasure'],
-    cost: 6,
+    text: t(
+      'You may return a card from your hand to the Supply and gain a card costing up to the same into your hand. When another player plays an Attack, you may reveal this from your hand and discard a card to be unaffected.',
+      'Możesz oddać kartę z ręki do zasobów i zdobyć na rękę kartę o tym samym lub niższym koszcie. Gdy inny gracz zagrywa Atak, możesz pokazać tę kartę z ręki i odrzucić 1 kartę – atak cię nie dotyczy.',
+    ),
+    types: ['action', 'reaction'],
+    cost: 3,
     potionCost: 1,
-    coins: 3,
     *play(g, p) {
-      g.gain(p, 'gold');
-      g.gain(p, 'homestead');
+      const is = yield* g.chooseFromHand(p, {
+        prompt: { k: 'prompt.exchange' },
+        min: 0,
+        max: 1,
+        purpose: 'trash',
+        source: 'homunculus',
+      });
+      if (!is.length) return;
+      const [id] = g.takeFromHand(p, is);
+      g.supply[id] = (g.supply[id] ?? 0) + 1;
+      g.logMsg(p.id, 'log.returnToSupply', { card: '@' + id });
+      const c = card(id);
+      const pick = yield* g.choosePile(p, {
+        prompt: { k: 'prompt.gainToHandUpTo', p: { n: c.cost } },
+        maxCost: c.cost,
+        maxPotion: potionCost(c),
+        source: 'homunculus',
+      });
+      if (pick) g.gain(p, pick, 'hand');
     },
-    ai: { value: 7, role: 'money' },
+    *onAttack(g, v) {
+      if (!(yield* g.yesNo(v, { k: 'prompt.homunculusReact' }, 'homunculus', true))) return false;
+      g.logMsg(v.id, 'log.reveal', { card: '@homunculus' });
+      const is = yield* g.chooseFromHand(v, {
+        prompt: { k: 'prompt.discardN', p: { n: 1 } },
+        min: 1,
+        max: 1,
+        purpose: 'discard',
+        source: 'homunculus',
+      });
+      g.discardCards(v, g.takeFromHand(v, is));
+      return true;
+    },
+    ai: { value: 5, role: 'trash' },
   },
   {
     id: 'brewer',
@@ -299,14 +331,15 @@ export const TOWER: CardDef[] = [
     id: 'magnumopus',
     set: 'tower',
     name: t('Magnum Opus', 'Wielkie Dzieło'),
-    text: t('Gain a Gold. +2 VP tokens.', 'Zdobądź Złoto. +2 żetony PZ.'),
-    types: ['action'],
+    text: t('Gain a Gold and a Homestead.', 'Zdobądź Złoto i Zagrodę.'),
+    types: ['treasure'],
     cost: 6,
     potionCost: 1,
+    coins: 3,
     *play(g, p) {
       g.gain(p, 'gold');
-      g.addVp(p, 2);
+      g.gain(p, 'homestead');
     },
-    ai: { value: 7, role: 'gain' },
+    ai: { value: 7, role: 'money' },
   },
 ];

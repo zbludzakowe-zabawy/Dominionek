@@ -35,7 +35,7 @@ export const CARDS_REV = 2;
 /** Karty, które zmieniły działanie w danej wersji. */
 const CHANGED_IN: Record<number, string[]> = {
   1: ['clerk', 'gildedscale', 'ancientcoin', 'altar', 'map', 'hoardkey'],
-  2: ['retort', 'homunculus', 'alembic'],
+  2: ['retort', 'homunculus', 'alembic', 'magnumopus'],
 };
 
 const SETTINGS_KEY = 'crownforge-settings';

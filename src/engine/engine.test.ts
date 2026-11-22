@@ -252,19 +252,61 @@ describe('silnik', () => {
     expect(g.turn.potions).toBe(2);
   });
 
-  it('Homunkulus: Skarb za 3, zdobywa Złoto i Zagrodę', () => {
-    const g = new Game({ ...makeSetup(14, 2), kingdom: ['homunculus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+  it('Wielkie Dzieło: Skarb za 3, zdobywa Złoto i Zagrodę', () => {
+    const g = new Game({ ...makeSetup(14, 2), kingdom: ['magnumopus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
     const p = g.players[0];
     const gold = g.supply.gold;
     g.turn.coins = 0;
-    g.resolve(p, 'homunculus').next();
+    g.resolve(p, 'magnumopus').next();
     expect(g.turn.coins).toBe(3);
     expect(g.supply.gold).toBe(gold - 1);
     expect(p.discard).toEqual(expect.arrayContaining(['gold', 'homestead']));
   });
 
+  it('Homunkulus: wymiana karty z ręki na tańszą lub równą (na rękę)', () => {
+    const g = new Game({ ...makeSetup(16, 2), kingdom: ['homunculus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+    const p = g.players[0];
+    p.hand = ['copper', 'silver', 'homestead'];
+    const silvers = g.supply.silver;
+    const it = g.resolve(p, 'homunculus');
+    const d1 = it.next().value as { kind: string };
+    expect(d1.kind).toBe('cards');
+    const d2 = it.next({ t: 'cards', is: [p.hand.indexOf('silver')] }).value as { kind: string; allowed: string[] };
+    expect(g.supply.silver).toBe(silvers + 1);
+    expect(d2.kind).toBe('pile');
+    expect(d2.allowed).toContain('silver');
+    expect(d2.allowed).not.toContain('gold');
+    expect(d2.allowed).not.toContain('retort'); // Eliksir w koszcie – poza zasięgiem
+    expect(it.next({ t: 'pile', pile: 'inn' }).done).toBe(true);
+    expect(p.hand).toContain('inn');
+    expect(p.hand).not.toContain('silver');
+  });
+
+  it('Homunkulus na ręce chroni przed atakiem za odrzucenie karty', () => {
+    const g = new Game({ ...makeSetup(17, 2), kingdom: ['homunculus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+    const [a, v] = g.players;
+    v.hand = ['homunculus', 'copper', 'homestead'];
+    let hit = false;
+    const it = g.attack(a, function* () {
+      hit = true;
+    });
+    expect(it.next().value).toMatchObject({ kind: 'yesno', player: v.id });
+    expect(it.next({ t: 'yes', v: true }).value).toMatchObject({ kind: 'cards', player: v.id });
+    expect(it.next({ t: 'cards', is: [v.hand.indexOf('homestead')] }).done).toBe(true);
+    expect(hit).toBe(false);
+    expect(v.discard).toContain('homestead');
+    // bez reakcji atak działa
+    v.hand = ['homunculus', 'copper'];
+    const it2 = g.attack(a, function* () {
+      hit = true;
+    });
+    it2.next();
+    expect(it2.next({ t: 'yes', v: false }).done).toBe(true);
+    expect(hit).toBe(true);
+  });
+
   it('Warzelnik: +2 karty, +1 akcja, +1 moneta; na koniec tury może wrócić na talię (z Eliksirem)', () => {
-    const g = new Game({ ...makeSetup(15, 2), kingdom: ['brewer', 'homunculus', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+    const g = new Game({ ...makeSetup(15, 2), kingdom: ['brewer', 'magnumopus', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
     const p = g.players[0];
     const hand = p.hand.length;
     const t0 = { ...g.turn };
