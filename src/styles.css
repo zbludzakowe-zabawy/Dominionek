@@ -171,9 +171,10 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .coin {
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #f6e3a4, #c99a35 60%, #8d6a20);
-  color: #3a2a08; font-weight: 800; font-size: .9rem; flex: none;
-  box-shadow: inset 0 0 0 1px rgba(80, 55, 10, .5);
+  /* płaska moneta: jednolite pole, podniesiony rant (jasny u góry, ciemny u dołu) – bez „kopczyka” */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='r' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f4dc93'/%3E%3Cstop offset='.5' stop-color='%23c39434'/%3E%3Cstop offset='1' stop-color='%237d5c18'/%3E%3C/linearGradient%3E%3ClinearGradient id='i' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%238a661c'/%3E%3Cstop offset='1' stop-color='%23f1d88c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='48' fill='url%28%23r%29'/%3E%3Ccircle cx='50' cy='50' r='39' fill='%23d6a944' stroke='url%28%23i%29' stroke-width='3'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  color: #3a2a08; font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-size: .9rem; flex: none;
+  line-height: 1; font-variant-numeric: lining-nums;
 }
 .coin.small { width: 18px; height: 18px; font-size: .7rem; }
 /* Eliksir: fioletowa buteleczka */
