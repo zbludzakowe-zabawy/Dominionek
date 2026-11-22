@@ -181,7 +181,16 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
         {c.vp !== undefined && c.coins === undefined && !c.potions && (
           <div className={'c-big vp' + (c.vp < 0 ? ' neg' : '')}>{c.vp > 0 ? c.vp : c.vp}<small>{tr(lang, 'vp')}</small></div>
         )}
-        {text && <div className={'c-text' + (text.length > 90 ? ' long' : '')}>{withIcons(text)}</div>}
+        {text && (
+          <div className={'c-text' + (text.length > 150 ? ' long xlong' : text.length > 90 ? ' long' : '')}>
+            {/* akapity oddzielone pustą linią – np. działanie karty i jej reakcja (kreska między nimi) */}
+            {text.split('\n\n').map((part, i) => (
+              <div key={i} className={i > 0 ? 'c-part sep' : 'c-part'}>
+                {withIcons(part)}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className="c-foot">
         <Cost id={id} small />

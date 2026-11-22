@@ -249,6 +249,10 @@ export class Game {
 
     // Porządki
     t.phase = 'cleanup';
+    for (const id of [...p.play]) {
+      const c = card(id);
+      if (c.onCleanup && p.play.includes(id)) yield* c.onCleanup(this, p);
+    }
     p.discard.push(...p.play, ...p.hand);
     p.play = [];
     p.hand = [];
@@ -373,6 +377,11 @@ export class Game {
       const blocker = v.hand.find((id) => card(id).blocksAttacks);
       if (blocker) {
         this.logMsg(v.id, 'log.blocked', { card: '@' + blocker });
+        continue;
+      }
+      const reactor = v.hand.find((id) => card(id).onAttack);
+      if (reactor && (yield* card(reactor).onAttack!(this, v))) {
+        this.logMsg(v.id, 'log.blocked', { card: '@' + reactor });
         continue;
       }
       yield* fn(v);

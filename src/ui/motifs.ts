@@ -357,6 +357,12 @@ export const MOTIFS: Record<string, Motif> = {
     a: 'M24 26v8M24 29l-5 -3M24 29l5 -3M24 34l-3 6M24 34l3 6',
     f: c(22.5, 21.5, 0.8) + c(25.5, 21.5, 0.8),
   },
+  brewer: {
+    // warzelnik: drewniana kadź z obręczami, długie wiosło do mieszania, para
+    m: 'M10 22h28l-3 22h-22zM11 29h26M12 37h24M30 25L41 4M38 3l6 3',
+    a: 'M17 19q-3 -4 0 -7q3 -3 0 -6M24 18q-3 -4 0 -7q3 -3 0 -6',
+    f: c(16, 25, 1.1) + c(22, 26, 0.9),
+  },
   golem: {
     m: 'M18 4h12v10h-12zM13 15h22v17h-22zM13 16l-5 14M35 16l5 14M17 32v12M31 32v12M14 44h6M28 44h6',
     a: 'M20 8h2M26 8h2M17 21l4 4M31 20l-3 6M22 28h5',
