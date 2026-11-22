@@ -191,10 +191,50 @@ describe('silnik', () => {
     const g = new Game(makeSetup(10, 2));
     const p = g.players[0];
     const before = g.scoreOf(p).vp;
-    g.resolve(p, 'ancientcoin').next();
-    g.resolve(p, 'altar').next();
-    expect(p.vpTokens).toBe(2);
+    g.addVp(p, 2);
     expect(g.scoreOf(p).vp).toBe(before + 2);
+  });
+
+  it('Pradawna Moneta: Skarb za 2 i 1 PZ, stos jak karty punktów', () => {
+    const g = new Game({ ...makeSetup(10, 2), kingdom: ['ancientcoin', 'hoardrat', 'clerk', 'gildedscale', 'map', 'hoardkey', 'dragonpurse', 'altar', 'strongroom', 'mint'] });
+    const p = g.players[0];
+    expect(g.supply.ancientcoin).toBe(8);
+    const before = g.scoreOf(p).vp;
+    p.discard.push('ancientcoin');
+    expect(g.scoreOf(p).vp).toBe(before + 1);
+    g.turn.coins = 0;
+    g.resolve(p, 'ancientcoin').next();
+    expect(g.turn.coins).toBe(2);
+  });
+
+  it('Smocza Sakwa liczy wszystkie Skarby w grze', () => {
+    const g = new Game(makeSetup(12, 2));
+    const p = g.players[0];
+    p.play = ['copper', 'copper', 'silver', 'dragonpurse'];
+    g.turn.coins = 0;
+    g.resolve(p, 'dragonpurse').next();
+    expect(g.turn.coins).toBe(4);
+  });
+
+  it('Smocza Mama: +2 karty, +2 akcje, +2 zakupy, +2 monety, odrzuć 2', () => {
+    const g = new Game(makeSetup(13, 2));
+    const p = g.players[0];
+    p.hand = ['copper', 'homestead', 'silver'];
+    p.deck = ['gold', 'homestead', 'copper'];
+    const t0 = { ...g.turn };
+    const it = g.resolve(p, 'altar');
+    const r = it.next();
+    expect(p.hand.length).toBe(5);
+    expect(g.turn.actions).toBe(t0.actions + 2);
+    expect(g.turn.buys).toBe(t0.buys + 2);
+    expect(g.turn.coins).toBe(t0.coins + 2);
+    expect(r.done).toBe(false);
+    const d = r.value as Extract<import('./types').Decision, { kind: 'cards' }>;
+    expect(d.min).toBe(2);
+    const homesteads = p.hand.flatMap((id, i) => (id === 'homestead' ? [i] : []));
+    expect(it.next({ t: 'cards', is: homesteads }).done).toBe(true);
+    expect(p.hand.length).toBe(3);
+    expect(p.hand).not.toContain('homestead');
   });
 
   it('Wieża Alchemika: stos Eliksiru, koszt w Eliksirach', () => {

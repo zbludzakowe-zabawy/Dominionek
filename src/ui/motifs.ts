@@ -265,8 +265,11 @@ export const MOTIFS: Record<string, Motif> = {
     a: c(24, 36, 4) + spark(41, 22, 3) + spark(7, 24, 2.5),
   },
   altar: {
-    m: 'M12 33h24v11h-24zM9 29h30v4h-30zM6 44h36',
-    a: 'M24 27q-8 -6 -1 -14q1 5 4 5q-1 -6 3 -10q1 7 3 10q3 7 -9 9z',
+    // Smocza Mama (id dawnego Ołtarza): smoczyca pochylona nad gniazdem z jajami
+    m:
+      'M3 44Q5 31 13 27Q19 24 21 16Q23 8 30 7Q35 7 37 11L42 13L37 16Q34 17 31 15Q28 14 27 19Q26 27 20 33Q16 38 17 44M30 7l-2 -5l5 4M13 27L5 13L11 17L11 9L18 22M2 44H46',
+    a: 'M23 41Q31 45 45 41M24 42q-2 -3 1 -4M44 41q2 -3 -1 -4',
+    f: c(32.5, 10.5, 1) + e(29, 37.5, 3, 4) + e(36.5, 38, 2.6, 3.5),
   },
   map: {
     m: 'M8 9h28q4 0 4 4v27q0 4 -4 4h-28q4 0 4 -4v-27q0 -4 -4 -4z',
@@ -280,6 +283,13 @@ export const MOTIFS: Record<string, Motif> = {
   hoardkey: {
     m: c(13, 24, 7) + c(13, 24, 3) + 'M20 24H43M37 24v7M41 24v6',
     a: 'M13 15v-3M13 36v-3M4 24h3M22 20l4 4l-4 4',
+  },
+  dragonpurse: {
+    // sakiewka ze smoczej skóry, monety się z niej sypią
+    m: 'M18 15Q8 23 9 33Q10 43 23 43Q35 43 36 33Q37 23 28 15ZM18 15Q23 18 28 15M17 11l4 4M29 11l-4 4M2 44H46',
+    // moneta wyszyta na sakiewce + stosik monet obok
+    a: c(23, 31, 5) + 'M21.3 29.3h3.4v3.4h-3.4z' + e(41, 42, 4.5, 1.6) + e(41, 39, 4.5, 1.6),
+    f: c(44, 31, 1.6) + c(39, 26, 1.2),
   },
   goldsmith: {
     m: e(18, 33, 11, 6.5) + e(18, 33, 7, 3.6) + 'M4 44h40',

@@ -88,7 +88,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
-    saveGame(g.over ? null : { v: 2, setup: g.setup, answers: g.answers, plans: pl ?? {} });
+    saveGame(g.over ? null : { v: 2, hoardRev: 1, setup: g.setup, answers: g.answers, plans: pl ?? {} });
 
   const refresh = () => setTick((x) => x + 1);
 

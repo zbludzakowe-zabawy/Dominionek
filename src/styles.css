@@ -151,6 +151,9 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .c-big.vp { color: #3f5a2e; }
 .c-big.neg { color: #6a3d78; }
 .c-big .coin { width: 40cqw; height: 40cqw; font-size: 26cqw; }
+.c-big.dual { align-items: center; gap: 5cqw; font-size: 16cqw; }
+.c-big.dual .coin { width: 30cqw; height: 30cqw; font-size: 20cqw; }
+.c-big.dual .vp { color: #3f5a2e; }
 .c-foot { display: flex; align-items: center; gap: 3cqw; padding: 2cqw 5cqw 4cqw; font-size: 6.6cqw; color: #5a5245; }
 .c-foot .coin.small { width: 13cqw; height: 13cqw; font-size: 8cqw; }
 .c-foot .flask.small svg { width: 9cqw; height: 11cqw; }
@@ -315,7 +318,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 }
 .ticker { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.status { flex: none; padding: 6px 10px; background: var(--bg2); border-top: 1px solid var(--line); position: relative; }
+.status { flex: none; padding: 6px 10px 14px; background: var(--bg2); border-top: 1px solid var(--line); position: relative; }
 .bar-toggle {
   position: absolute; right: 8px; top: -13px; z-index: 3; width: 34px; height: 22px; padding: 0;
   border-radius: 999px; border: 1px solid var(--line); background: var(--bg2); color: var(--muted); font-size: .8rem; line-height: 1;
@@ -334,10 +337,11 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 }
 .counter b { color: var(--ink); font-size: 1rem; font-variant-numeric: tabular-nums; }
 .coins-counter { padding-right: 3px; }
-.prompt-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; min-height: 40px; }
-.prompt { flex: 1; font-size: .85rem; line-height: 1.3; }
+.prompt-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 6px; min-height: 40px; }
+/* przy wielu przyciskach podpowiedź przechodzi do własnej linii zamiast ściskać się do słowa na wiersz */
+.prompt { flex: 1 1 150px; font-size: .85rem; line-height: 1.3; }
 .attack-tag { color: var(--danger); }
-.prompt-buttons { display: flex; gap: 6px; align-items: center; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+.prompt-buttons { display: flex; gap: 6px; align-items: center; flex: none; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
 @media (max-width: 340px) {
   .prompt-row { flex-wrap: wrap; }
   .prompt { flex: 1 1 100%; }

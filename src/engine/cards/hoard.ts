@@ -62,13 +62,10 @@ export const HOARD: CardDef[] = [
     id: 'clerk',
     set: 'hoard',
     name: t('Tally Clerk', 'Rachmistrz'),
-    text: t('+1 VP token.', '+1 żeton PZ.'),
+    text: t('', ''),
     types: ['action'],
-    cost: 3,
-    plus: { buys: 1, coins: 1 },
-    *play(g, p) {
-      g.addVp(p, 1);
-    },
+    cost: 2,
+    plus: { buys: 1, coins: 2 },
     ai: { value: 4, role: 'money' },
   },
   {
@@ -109,7 +106,7 @@ export const HOARD: CardDef[] = [
     name: t('Gilded Scale', 'Złota Łuska'),
     text: t('', ''),
     types: ['treasure'],
-    cost: 4,
+    cost: 3,
     coins: 1,
     plus: { buys: 1 },
     ai: { value: 4, role: 'money' },
@@ -196,13 +193,11 @@ export const HOARD: CardDef[] = [
     id: 'ancientcoin',
     set: 'hoard',
     name: t('Ancient Coin', 'Pradawna Moneta'),
-    text: t('+1 VP token.', '+1 żeton PZ.'),
-    types: ['treasure'],
+    text: t('', ''),
+    types: ['treasure', 'victory'],
     cost: 5,
-    coins: 1,
-    *play(g, p) {
-      g.addVp(p, 1);
-    },
+    coins: 2,
+    vp: 1,
     ai: { value: 5, role: 'money' },
   },
   {
@@ -257,15 +252,24 @@ export const HOARD: CardDef[] = [
   {
     id: 'altar',
     set: 'hoard',
-    name: t('Dragon Altar', 'Smoczy Ołtarz'),
-    text: t('+1 VP token.', '+1 żeton PZ.'),
+    name: t('Dragon Mother', 'Smocza Mama'),
+    text: t('Discard 2 cards.', 'Odrzuć 2 karty.'),
     types: ['action'],
     cost: 5,
-    plus: { cards: 1, actions: 1 },
+    plus: { cards: 2, actions: 2, buys: 2, coins: 2 },
     *play(g, p) {
-      g.addVp(p, 1);
+      const n = Math.min(2, p.hand.length);
+      if (!n) return;
+      const is = yield* g.chooseFromHand(p, {
+        prompt: { k: 'prompt.discardN', p: { n } },
+        min: n,
+        max: n,
+        purpose: 'discard',
+        source: 'altar',
+      });
+      g.discardCards(p, g.takeFromHand(p, is));
     },
-    ai: { value: 6, role: 'cantrip' },
+    ai: { value: 7, role: 'village' },
   },
   {
     id: 'map',
@@ -276,7 +280,7 @@ export const HOARD: CardDef[] = [
       'Odkrywaj karty z talii, aż trafisz na Skarb. Pozostałe odrzuć, a ten Skarb zagraj.',
     ),
     types: ['treasure'],
-    cost: 5,
+    cost: 4,
     coins: 1,
     *play(g, p) {
       const other: string[] = [];
@@ -321,11 +325,26 @@ export const HOARD: CardDef[] = [
       'Wart 1 monetę za każdy inny rodzaj Skarbu, który masz w grze (licząc ten).',
     ),
     types: ['treasure'],
-    cost: 6,
+    cost: 5,
     *play(g, p) {
       g.turn.coins += new Set(p.play.filter(isTreasure)).size;
     },
     ai: { value: 6, role: 'money' },
+  },
+  {
+    id: 'dragonpurse',
+    set: 'hoard',
+    name: t("Dragon's Purse", 'Smocza Sakwa'),
+    text: t(
+      'Worth 1 coin for each Treasure you have in play (counting this).',
+      'Warta 1 monetę za każdy Skarb, który masz w grze (licząc tę).',
+    ),
+    types: ['treasure'],
+    cost: 7,
+    *play(g, p) {
+      g.turn.coins += p.play.filter(isTreasure).length;
+    },
+    ai: { value: 7, role: 'money' },
   },
   {
     id: 'goldsmith',
