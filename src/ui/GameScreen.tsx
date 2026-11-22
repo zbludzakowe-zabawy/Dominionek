@@ -8,7 +8,7 @@ import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
 import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard } from './CardView';
 import { typeKey } from './art';
-import { saveGame, type SavedGame, type Settings } from './store';
+import { saveGame, type SavedGame, type Settings, CARDS_REV } from './store';
 
 const HUMAN = 0;
 /** Telefon trzymany poziomo – osobny, niski układ. */
@@ -88,7 +88,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
-    saveGame(g.over ? null : { v: 2, hoardRev: 1, setup: g.setup, answers: g.answers, plans: pl ?? {} });
+    saveGame(g.over ? null : { v: 2, hoardRev: CARDS_REV, setup: g.setup, answers: g.answers, plans: pl ?? {} });
 
   const refresh = () => setTick((x) => x + 1);
 

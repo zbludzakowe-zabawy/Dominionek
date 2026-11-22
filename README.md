@@ -12,7 +12,7 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 - **Pakiet „Dragon's Hoard” / „Skarbiec Smoka”**: 17 kart Królestwa: skarby z efektami,
   skarb z punktami (Pradawna Moneta), smocze ataki. Gdy w Królestwie są karty Skarbca, do gry mogą dojść
   Smocze Złoto (5 monet) i Pałac (10 PZ); wyczerpanie Pałaców kończy grę.
-- **Pakiet „Alchemist's Tower” / „Wieża Alchemika”**: 13 kart Królestwa ze świata alchemików
+- **Pakiet „Alchemist's Tower” / „Wieża Alchemika”**: 14 kart Królestwa ze świata alchemików
   i laboratorium oraz druga waluta, Eliksir: część kart kosztuje monety i Eliksir. Stos Eliksiru
   (skarb za 4) dochodzi do gry sam, gdy w Królestwie są takie karty.
 - **Gra solo** przeciwko 1–3 botom, każdy na poziomie łatwym, średnim lub trudnym.

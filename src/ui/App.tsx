@@ -7,7 +7,7 @@ import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
 import { CardFace, ConfirmButton, Cost, PileTile } from './CardView';
 import { GameScreen } from './GameScreen';
-import { loadGame, loadSettings, saveGame, saveSettings, type SavedGame, type Settings } from './store';
+import { loadGame, loadSettings, saveGame, saveSettings, type SavedGame, type Settings, CARDS_REV } from './store';
 
 export const BOT_NAMES = ['Aldric', 'Brenna', 'Corvin'];
 const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
@@ -43,7 +43,7 @@ export function App() {
         ...settings.bots.map((bot, i) => ({ name: BOT_NAMES[i], bot })),
       ],
     };
-    const s: SavedGame = { v: 2, hoardRev: 1, setup, answers: [], plans: {} };
+    const s: SavedGame = { v: 2, hoardRev: CARDS_REV, setup, answers: [], plans: {} };
     saveGame(s);
     setSaved(s);
     setScreen('game');

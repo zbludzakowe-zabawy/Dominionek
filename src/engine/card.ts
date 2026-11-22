@@ -35,6 +35,8 @@ export interface CardDef {
   vpFn?: (cards: string[]) => number;
   plus?: Plus;
   play?: (g: Game, p: PlayerState) => Step;
+  /** Na koniec tury, zanim karty z gry trafią na stos odrzuconych (raz na każdy egzemplarz w grze). */
+  onCleanup?: (g: Game, p: PlayerState) => Step;
   /** Reakcja chroniąca przed atakami, gdy karta jest na ręce. */
   blocksAttacks?: boolean;
   /** Wskazówki dla botów. value ~ siła karty (0–10), role ~ do czego służy. */

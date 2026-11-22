@@ -4,7 +4,7 @@ import { decide } from './bot';
 import { Rng } from './rng';
 import { randomKingdom, rerollOne, rollHoardExtras } from './setup';
 import type { SetId } from './card';
-import { kingdomCards } from './cards';
+import { card, kingdomCards } from './cards';
 import type { BotLevel, GameSetup } from './types';
 
 const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
@@ -250,6 +250,38 @@ describe('silnik', () => {
     const p = g.players[g.turn.player];
     g.resolve(p, 'elixir').next();
     expect(g.turn.potions).toBe(2);
+  });
+
+  it('Homunkulus: Skarb za 3, zdobywa Złoto i Zagrodę', () => {
+    const g = new Game({ ...makeSetup(14, 2), kingdom: ['homunculus', 'brewer', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+    const p = g.players[0];
+    const gold = g.supply.gold;
+    g.turn.coins = 0;
+    g.resolve(p, 'homunculus').next();
+    expect(g.turn.coins).toBe(3);
+    expect(g.supply.gold).toBe(gold - 1);
+    expect(p.discard).toEqual(expect.arrayContaining(['gold', 'homestead']));
+  });
+
+  it('Warzelnik: +2 karty, +1 akcja, +1 moneta; na koniec tury może wrócić na talię (z Eliksirem)', () => {
+    const g = new Game({ ...makeSetup(15, 2), kingdom: ['brewer', 'homunculus', 'retort', 'alembic', 'golem', 'inn', 'ranger', 'tinker', 'guard', 'lantern'], extras: [] });
+    const p = g.players[0];
+    const hand = p.hand.length;
+    const t0 = { ...g.turn };
+    g.resolve(p, 'brewer').next();
+    expect(p.hand.length).toBe(hand + 2);
+    expect(g.turn.actions).toBe(t0.actions + 1);
+    expect(g.turn.coins).toBe(t0.coins + 1);
+    // bez Eliksiru w grze – brak pytania
+    p.play = ['brewer'];
+    expect(card('brewer').onCleanup!(g, p).next().done).toBe(true);
+    // z Eliksirem – pytanie, po „tak” karta na wierzchu talii
+    p.play = ['brewer', 'elixir'];
+    const it = card('brewer').onCleanup!(g, p);
+    expect(it.next().value).toMatchObject({ kind: 'yesno' });
+    expect(it.next({ t: 'yes', v: true }).done).toBe(true);
+    expect(p.deck[0]).toBe('brewer');
+    expect(p.play).toEqual(['elixir']);
   });
 
   it('bez kart z Eliksirem nie ma stosu Eliksiru', () => {

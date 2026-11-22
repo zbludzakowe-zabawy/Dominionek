@@ -20,7 +20,7 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 |---|---|---|---|
 | `keep` | The Crossroads Keep | Twierdza na Rozstajach | gotowy, 25 kart |
 | `hoard` | Dragon's Hoard | Skarbiec Smoka | gotowy, 17 kart (po przeglądzie z 22.11) + Smocze Złoto (9→5 monet) i Pałac (11→10 PZ) |
-| `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 13 kart + Eliksir (skarb za 4, daje 1 Eliksir) |
+| `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 14 kart (po przeglądzie z 22.11) + Eliksir (skarb za 4, daje 1 Eliksir) |
 | `court` | Court Whispers | Szepty Dworu | plan: karty wielotypowe, „jedno z” |
 
 Dalej w planie (kolejność jak w README → Plan):
@@ -41,7 +41,8 @@ Dalej w planie (kolejność jak w README → Plan):
     botom), `pile`, `options`, `yesno`. Decyzja może mieć `hint` (podpowiedź karty dla botów).
   - Karty: `cards/basic.ts`, `cards/keep.ts`, `cards/hoard.ts`, `cards/tower.ts`, rejestr w `cards/index.ts` (`SETS`
     – flaga `available`). Karta = `CardDef` (`card.ts`): `plus` (standardowe bonusy, rysowane przez UI),
-    `play` (generator efektu), `coins`, `vp`/`vpFn`, `blocksAttacks`, `symbol`, `ai` (value/role).
+    `play` (generator efektu), `onCleanup` (na koniec tury, np. Warzelnik), `coins`, `vp`/`vpFn`, `blocksAttacks`,
+    `symbol`, `ai` (value/role).
     Pomocnicze metody `Game`: `draw`, `takeTop`, `gain(p,id,'discard'|'hand'|'deck')`, `trashCards`,
     `discardCards`, `addVp`, `attack(p, fn)`, `chooseFromHand/chooseFromList/choosePile/chooseOptions/yesNo`.
   - Eliksir (druga waluta): `CardDef.potionCost` (koszt) i `potions` (ile daje skarb), `TurnState.potions`,
@@ -58,7 +59,7 @@ Dalej w planie (kolejność jak w README → Plan):
 - `src/ui/` – React.
   - `App.tsx` – ekrany: start, ustawienia, Królestwo (losowe/ręczne, przełącznik Smocze Złoto+Pałac), zasady.
   - `GameScreen.tsx` – plansza, pętla botów, autozapis (`store.ts`, localStorage, `SavedGame.v = 2`;
-    zmiana przebiegu tury wymaga podbicia wersji).
+    zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
   - `motifs.ts` – rysunki kart (pole 48×48, ziemia ~y=44; `m` linie, `a` akcent, `f` wypełnienia).

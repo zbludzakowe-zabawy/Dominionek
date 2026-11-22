@@ -157,7 +157,7 @@ export const TOWER: CardDef[] = [
     ),
     types: ['action'],
     cost: 5,
-    plus: { cards: 2 },
+    plus: { cards: 2, actions: 1 },
     *play(g, p) {
       const is = yield* g.chooseFromHand(p, {
         prompt: { k: 'prompt.trashUpTo', p: { n: 1 } },
@@ -170,7 +170,7 @@ export const TOWER: CardDef[] = [
       g.trashCards(p, g.takeFromHand(p, is));
       g.turn.potions += 1;
     },
-    ai: { value: 5, role: 'trash' },
+    ai: { value: 6, role: 'trash' },
   },
   {
     id: 'cauldron',
@@ -229,7 +229,7 @@ export const TOWER: CardDef[] = [
     types: ['action'],
     cost: 2,
     potionCost: 1,
-    plus: { cards: 2, actions: 1 },
+    plus: { cards: 2, actions: 1, buys: 1 },
     ai: { value: 7, role: 'cantrip' },
   },
   {
@@ -250,17 +250,39 @@ export const TOWER: CardDef[] = [
     id: 'homunculus',
     set: 'tower',
     name: t('Homunculus', 'Homunkulus'),
-    text: t('Each other player gains a Hex.', 'Każdy inny gracz zdobywa Urok.'),
-    types: ['action', 'attack'],
+    text: t('Gain a Gold and a Homestead.', 'Zdobądź Złoto i Zagrodę.'),
+    types: ['treasure'],
+    cost: 6,
+    potionCost: 1,
+    coins: 3,
+    *play(g, p) {
+      g.gain(p, 'gold');
+      g.gain(p, 'homestead');
+    },
+    ai: { value: 7, role: 'money' },
+  },
+  {
+    id: 'brewer',
+    set: 'tower',
+    name: t('Brewer', 'Warzelnik'),
+    text: t(
+      'At the end of your turn, if you have an Elixir in play, you may put this card on top of your deck.',
+      'Na koniec tury, jeśli masz w grze Eliksir, możesz odłożyć tę kartę na wierzch swojej talii.',
+    ),
+    types: ['action'],
     cost: 3,
     potionCost: 1,
-    plus: { cards: 2 },
-    *play(g, p) {
-      yield* g.attack(p, function* (v) {
-        g.gain(v, 'hex');
-      });
+    plus: { cards: 2, actions: 1, coins: 1 },
+    *onCleanup(g, p) {
+      if (!p.play.includes('elixir')) return;
+      if (!(yield* g.yesNo(p, { k: 'prompt.brewerTop' }, 'brewer', true))) return;
+      const i = p.play.indexOf('brewer');
+      if (i < 0) return;
+      p.play.splice(i, 1);
+      p.deck.unshift('brewer');
+      g.logMsg(p.id, 'log.topdeck', { card: '@brewer' });
     },
-    ai: { value: 8, role: 'attack' },
+    ai: { value: 7, role: 'cantrip' },
   },
   {
     id: 'golem',

@@ -249,6 +249,10 @@ export class Game {
 
     // Porządki
     t.phase = 'cleanup';
+    for (const id of [...p.play]) {
+      const c = card(id);
+      if (c.onCleanup && p.play.includes(id)) yield* c.onCleanup(this, p);
+    }
     p.discard.push(...p.play, ...p.hand);
     p.play = [];
     p.hand = [];
