@@ -447,6 +447,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               onDouble={() => doublePile(id)}
               onLong={() => setDetail({ id, from: 'other' })}
               style={{ ['--ko' as string]: kingdomAscending.indexOf(id) }}
+              symbols={settings.pileView === 'symbols'}
             />
           ))}
         </div>
@@ -663,6 +664,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 {(['slow', 'normal', 'fast'] as const).map((s) => (
                   <button key={s} className={settings.speed === s ? 'on' : ''} onClick={() => onSettings({ speed: s })}>
                     {t(`speed.${s}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="menu-row">
+              <span>{t('pileView')}</span>
+              <div className="seg">
+                {(['art', 'symbols'] as const).map((v) => (
+                  <button key={v} className={settings.pileView === v ? 'on' : ''} onClick={() => onSettings({ pileView: v })}>
+                    {t(`pileView.${v}`)}
                   </button>
                 ))}
               </div>

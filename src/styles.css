@@ -235,6 +235,27 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .tile.dim, .tile.empty { opacity: .45; }
 .tile:active { transform: scale(.97); }
 
+/* ---------- widok stosów „Symbole”: mały obrazek, pod nazwą skrót działania ---------- */
+.tile.sym .tile-art { height: 26px; }
+.tile.sym .tile-name { font-size: .66rem; }
+.tile-syms {
+  display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 3px 4px;
+  margin: 0 3px; padding: 4px 0 0; border-top: 1px solid color-mix(in srgb, var(--tc) 35%, transparent);
+}
+.sym-it {
+  display: inline-flex; align-items: center; color: #2c3440; line-height: 1;
+  font-family: Georgia, serif; font-weight: 700; font-size: .66rem; letter-spacing: -.03em;
+}
+.sym-it b { font-weight: 700; }
+.sym-it .coin.small { width: 16px; height: 16px; font-size: .64rem; }
+.sym-it .flask.small svg { width: 11px; height: 14px; }
+.sym-a { font-family: Georgia, serif; font-weight: 700; font-size: .85rem; width: 12px; text-align: center; }
+.sym-ic { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; flex: none; }
+.sym-ic.i-discard { width: 16px; }
+.sym-ic .paper { fill: var(--paper); }
+.sym-ic .dot { fill: currentColor; stroke: none; }
+.sym-ic text { font: 700 5.6px system-ui, sans-serif; fill: currentColor; stroke: none; letter-spacing: -.2px; }
+
 /* ---------- zagrane karty: jedna karta danego rodzaju + licznik ---------- */
 .played {
   position: relative; flex: none; width: 58px; padding: 0; border: 2px solid var(--tc); border-radius: 4px;
@@ -414,6 +435,11 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .hand { grid-template-columns: repeat(var(--n), minmax(0, 112px)); }
 }
 @media (max-height: 700px) {
+  /* niski ekran: w widoku Symbole bez obrazka; licznik i koszt w górnym pasku, pod nimi nazwa */
+  .tile.sym { padding: 20px 0 4px; gap: 2px; }
+  .tile.sym .tile-art { display: none; }
+  .tile.sym .cost { top: 1px; bottom: auto; left: 25px; }
+  .tile.sym .tile-set { top: 2px; width: 14px; height: 14px; color: color-mix(in srgb, var(--tc) 60%, #000); filter: none; }
   .tile-art { height: 40px; }
   .supply-basic .tile-art { height: 24px; }
   .play-area { min-height: 0; padding-top: 2px; padding-bottom: 2px; }
@@ -441,6 +467,12 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .game .supply-basic .tile .cost { bottom: 4px; }
   .game .supply-kingdom { flex: 1; min-width: 0; grid-template-columns: repeat(5, minmax(0, 140px)); justify-content: start; }
   .game .supply-kingdom .tile-art { height: 56px; }
+  .game .supply-kingdom .tile.sym .tile-art { height: 30px; }
+  .game .supply-kingdom .tile.sym .tile-name { font-size: .72rem; }
+  .game .tile-syms { gap: 4px 6px; }
+  .game .sym-it { font-size: .74rem; }
+  .game .sym-ic { width: 17px; height: 17px; }
+  .game .sym-it .coin.small { width: 18px; height: 18px; font-size: .7rem; }
   .game .play-cards { flex-wrap: wrap; overflow: visible; }
   /* panel gracza (zagrane, faza, ręka) zaczyna się tam, gdzie Królestwo;
      miejsce pod kolumnami stałych stosów zostaje wolne na później */
@@ -474,6 +506,12 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .supply-kingdom .tile-art { height: 32px; }
   .supply-kingdom .tile .cost { bottom: auto; top: 16px; left: 2px; }
   .tile-name { font-size: .6rem; min-height: 2.16em; }
+  /* Symbole: bez obrazka, nazwa obok licznika, koszt na dole */
+  .supply-kingdom .tile.sym { padding: 20px 0 4px; gap: 2px; }
+  .supply-kingdom .tile.sym .tile-art { display: none; }
+  .supply-kingdom .tile.sym .cost { top: 1px; bottom: auto; left: 25px; }
+  .supply-kingdom .tile.sym .tile-set { top: 2px; width: 14px; height: 14px; color: color-mix(in srgb, var(--tc) 60%, #000); filter: none; }
+  .tile-syms { gap: 2px 3px; padding-top: 2px; }
   .play-area { min-height: 0; padding: 0 10px; }
   .play-label { display: none; }
   .play-cards { padding: 4px 6px 2px 0; min-height: 0; }

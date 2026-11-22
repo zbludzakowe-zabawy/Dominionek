@@ -13,6 +13,8 @@ export interface Settings {
   autoEnd: boolean;
   /** Pasek fazy zwinięty do jednej linijki; null = automatycznie (zwinięty przy telefonie poziomo). */
   barCollapsed: boolean | null;
+  /** Wygląd stosów Królestwa: obraz (domyślnie) albo symbole działania karty. */
+  pileView: 'art' | 'symbols';
   bots: BotLevel[];
   sets: SetId[];
   mode: 'random' | 'manual';
@@ -42,7 +44,7 @@ const defaultLang = (): Lang => {
 };
 
 export function loadSettings(): Settings {
-  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, barCollapsed: null, bots: ['medium'], sets: ['keep'], mode: 'random' };
+  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, barCollapsed: null, pileView: 'art', bots: ['medium'], sets: ['keep'], mode: 'random' };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) return { ...base, ...JSON.parse(raw) };
