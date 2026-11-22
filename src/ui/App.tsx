@@ -43,7 +43,7 @@ export function App() {
         ...settings.bots.map((bot, i) => ({ name: BOT_NAMES[i], bot })),
       ],
     };
-    const s: SavedGame = { v: 2, setup, answers: [], plans: {} };
+    const s: SavedGame = { v: 2, hoardRev: 1, setup, answers: [], plans: {} };
     saveGame(s);
     setSaved(s);
     setScreen('game');

@@ -159,12 +159,21 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
           </div>
         )}
         {(c.coins !== undefined || c.potions) && (
-          <div className="c-big">
+          <div className={'c-big' + (c.vp !== undefined ? ' dual' : '')}>
             {c.coins !== undefined && <Coin n={c.coins} />}
             {c.potions ? <Flask big /> : null}
+            {/* Skarb z punktami (Pradawna Moneta): moneta i PZ w jednym rzędzie */}
+            {c.vp !== undefined && (
+              <span className="vp">
+                {c.vp}
+                <small>{tr(lang, 'vp')}</small>
+              </span>
+            )}
           </div>
         )}
-        {c.vp !== undefined && <div className={'c-big vp' + (c.vp < 0 ? ' neg' : '')}>{c.vp > 0 ? c.vp : c.vp}<small>{tr(lang, 'vp')}</small></div>}
+        {c.vp !== undefined && c.coins === undefined && !c.potions && (
+          <div className={'c-big vp' + (c.vp < 0 ? ' neg' : '')}>{c.vp > 0 ? c.vp : c.vp}<small>{tr(lang, 'vp')}</small></div>
+        )}
         {text && <div className={'c-text' + (text.length > 90 ? ' long' : '')}>{withIcons(text)}</div>}
       </div>
       <div className="c-foot">

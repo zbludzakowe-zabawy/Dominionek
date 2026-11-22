@@ -9,8 +9,8 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
   (wyczerpane Cytadele albo 3 puste stosy), remisy rozstrzyga mniejsza liczba tur.
 - **Pakiet „The Crossroads Keep” / „Twierdza na Rozstajach”**: 25 kart Królestwa
   (akcje, ataki, reakcja, palenie kart, zdobywanie, karta punktów).
-- **Pakiet „Dragon's Hoard” / „Skarbiec Smoka”**: 16 kart Królestwa: skarby z efektami,
-  żetony Punktów Zwycięstwa, smocze ataki. Gdy w Królestwie są karty Skarbca, do gry mogą dojść
+- **Pakiet „Dragon's Hoard” / „Skarbiec Smoka”**: 17 kart Królestwa: skarby z efektami,
+  skarb z punktami (Pradawna Moneta), smocze ataki. Gdy w Królestwie są karty Skarbca, do gry mogą dojść
   Smocze Złoto (5 monet) i Pałac (10 PZ); wyczerpanie Pałaców kończy grę.
 - **Pakiet „Alchemist's Tower” / „Wieża Alchemika”**: 13 kart Królestwa ze świata alchemików
   i laboratorium oraz druga waluta, Eliksir: część kart kosztuje monety i Eliksir. Stos Eliksiru

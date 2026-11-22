@@ -24,7 +24,11 @@ export interface SavedGame {
   setup: GameSetup;
   answers: Answer[];
   plans: Record<number, Plan>;
+  /** 1: partia rozpoczęta po przeglądzie kart Skarbca (Rachmistrz, Pradawna Moneta, Smocza Mama…). */
+  hoardRev?: 1;
 }
+
+const HOARD_CHANGED = ['clerk', 'gildedscale', 'ancientcoin', 'altar', 'map', 'hoardkey'];
 
 const SETTINGS_KEY = 'crownforge-settings';
 const SAVE_KEY = 'crownforge-save';
@@ -61,7 +65,10 @@ export function loadGame(): SavedGame | null {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as SavedGame;
-    return s.v === 2 ? s : null;
+    if (s.v !== 2) return null;
+    // karty Skarbca zmieniły działanie – stare partie z nimi nie odtworzą się poprawnie
+    if (!s.hoardRev && s.setup.kingdom.some((id) => HOARD_CHANGED.includes(id))) return null;
+    return s;
   } catch {
     return null;
   }

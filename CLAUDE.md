@@ -19,7 +19,7 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 | id | EN | PL | stan |
 |---|---|---|---|
 | `keep` | The Crossroads Keep | Twierdza na Rozstajach | gotowy, 25 kart |
-| `hoard` | Dragon's Hoard | Skarbiec Smoka | gotowy, 16 kart + Smocze Złoto (9→5 monet) i Pałac (11→10 PZ) |
+| `hoard` | Dragon's Hoard | Skarbiec Smoka | gotowy, 17 kart (po przeglądzie z 22.11) + Smocze Złoto (9→5 monet) i Pałac (11→10 PZ) |
 | `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 13 kart + Eliksir (skarb za 4, daje 1 Eliksir) |
 | `court` | Court Whispers | Szepty Dworu | plan: karty wielotypowe, „jedno z” |
 
