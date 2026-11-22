@@ -277,6 +277,17 @@ function SetupScreen(props: {
           </div>
         </section>
 
+        <section>
+          <h2>{t('pileView')}</h2>
+          <div className="seg wide">
+            {(['art', 'symbols'] as const).map((v) => (
+              <button key={v} className={settings.pileView === v ? 'on' : ''} onClick={() => update({ pileView: v })}>
+                {t(`pileView.${v}`)}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <button className="btn primary big" onClick={props.onNext}>
           {t('kingdom')} →
         </button>

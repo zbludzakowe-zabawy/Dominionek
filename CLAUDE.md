@@ -26,8 +26,7 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 Dalej w planie (kolejność jak w README → Plan):
 1. Przegląd działania kart – użytkownik uważa, że efekty kart wymagają zmian (temat z innego wątku).
 2. Gra online dla 2–4 osób przez link-pokój (WebRTC/PeerJS, host pilnuje zasad) – nadal ważne.
-3. Skrót działania karty na stosach Królestwa ikonkami (torba zakupowa = +zakup, moneta = +monety,
-   karta = +karty itd.), żeby bez otwierania karty było widać, co robi. Przed wdrożeniem podgląd.
+3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Szepty Dworu, statystyki gier.
 
 ## Architektura
@@ -83,6 +82,12 @@ Dalej w planie (kolejność jak w README → Plan):
   stałe stosy w jednym niskim rzędzie bez obrazków, Królestwo w jednym rzędzie 10 kart (od najtańszej
   z lewej, CSS `order: var(--ko)`), zagrane karty jako same nazwy. Układ komputerowy działa tylko przy
   `min-width: 900px` i `min-height: 521px`.
+- Widok stosów Królestwa (`settings.pileView`, domyślnie `'art'`, zapamiętany na urządzeniu; przełącznik
+  w ustawieniach i w menu gry): „Obraz” albo „Symbole” – niski pasek obrazu, nazwa, pod nią skrót działania
+  karty ikonkami (zestaw „kontur”: +N karta, +N A = akcja, torba = zakup, płaska złota moneta bez cyfry (liczba przed nią), tarcza PZ, kosz = spal,
+  karty ze strzałką = odrzuć, prostokąt z 3 kropkami = dłuższy opis). Symbole: `src/ui/symbols.ts` – bonusy
+  z `plus`/`coins`, resztę opisuje `EXTRA` (test pilnuje wpisu dla każdej karty Królestwa). Na niskim ekranie
+  i poziomo bez obrazka, licznik i koszt w górnym pasku. Stałe stosy bez zmian.
 - Pasek fazy można zwinąć do jednej linijki (strzałka; `settings.barCollapsed`, null = auto: zwinięty
   w poziomie). Podpowiedzi do wyborów (atak, palenie) widać zawsze.
 - Skarby na karcie: duża moneta z wartością (najważniejsza informacja). Moneta (`.coin`) jest **płaska**:
