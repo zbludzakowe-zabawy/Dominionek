@@ -387,16 +387,14 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .hand.n8, .hand.n9, .hand.n10, .hand.n11, .hand.n12 { grid-template-columns: repeat(var(--n), minmax(0, 80px)); gap: 3px; }
 
 /* zgrupowane takie same karty w ręce (powyżej 6 kart): stosik z licznikiem */
-.hand-group { position: relative; transition: transform .15s; }
-.hand-group::before {
-  content: ''; position: absolute; inset: 0; transform: translate(3px, -3px);
-  background: var(--paper); border: 2px solid var(--tc); border-radius: 4px; box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
-}
+.hand-group { position: relative; padding: 16% 16% 0 0; transition: transform .15s; }
 .hand-group > .card { width: 100%; }
+/* druga karta pod spodem, przesunięta w prawo i do góry – wyraźny stosik */
+.hand-group > .card.under { position: absolute; top: 0; right: 0; width: 84%; pointer-events: none; filter: brightness(.72); }
 .hand-group.has-sel { transform: translateY(-10%); }
 .hand-group.has-sel > .card { transform: none; }
 .hand-count {
-  position: absolute; right: -8px; top: -12px; z-index: 1; pointer-events: none;
+  position: absolute; right: -6px; top: -10px; z-index: 1; pointer-events: none;
   background: var(--gold); color: #1d1a12; font-weight: 800; font-size: .8rem; line-height: 1.2;
   border-radius: 999px; padding: 1px 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
 }

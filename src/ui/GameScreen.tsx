@@ -576,7 +576,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             }
             const picked = is.filter((i) => sel.includes(i)).length;
             return (
-              <div key={is[0] + id} className={'hand-group t-' + typeKey(card(id)) + (picked ? ' has-sel' : '')}>
+              <div key={is[0] + id} className={'hand-group' + (picked ? ' has-sel' : '')}>
+                <CardFace id={id} lang={lang} className="under" />
                 <CardFace
                   id={id}
                   lang={lang}
