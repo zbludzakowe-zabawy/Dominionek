@@ -53,7 +53,11 @@ interface Props {
 }
 
 /** Od tylu kart w ręce (wyłącznie) takie same karty są grupowane z licznikiem. */
-const HAND_GROUP_FROM = 6;
+const HAND_GROUP_FROM = 5;
+/** Od ilu miejsc w ręce (karty i stosiki) ręka przewija się w bok: telefon pionowo 5, poziomo i komputer 8. */
+const HAND_SCROLL_NARROW = 5;
+const HAND_SCROLL_WIDE = 8;
+const WIDE_SCREEN = '(min-width: 900px) and (min-height: 521px)';
 
 type Detail = { id: string; from: 'supply' | 'hand' | 'other'; index?: number };
 
@@ -88,6 +92,9 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   // okienko wyboru (odkryte karty / opcje) schowane na chwilę, żeby zobaczyć rękę i stół
   const [peek, setPeek] = useState(false);
   const landscape = useMedia(LANDSCAPE_PHONE);
+  const wide = useMedia(WIDE_SCREEN);
+  const handRef = useRef<HTMLDivElement>(null);
+  const [handEdge, setHandEdge] = useState({ l: false, r: false });
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
@@ -272,6 +279,24 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     if (grouped && last && last.id === id) last.is.push(i);
     else handGroups.push({ id, is: [i] });
   });
+
+  const handLimit = landscape || wide ? HAND_SCROLL_WIDE : HAND_SCROLL_NARROW;
+  const handScroll = handGroups.length > handLimit;
+  /** Czy da się jeszcze przewinąć rękę w lewo / w prawo (strzałki i wygaszone brzegi). */
+  const updHandEdge = () => {
+    const el = handRef.current;
+    const next = el && handScroll ? { l: el.scrollLeft > 2, r: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 } : { l: false, r: false };
+    if (next.l !== handEdge.l || next.r !== handEdge.r) setHandEdge(next);
+  };
+  useEffect(updHandEdge);
+  useEffect(() => {
+    window.addEventListener('resize', updHandEdge);
+    return () => window.removeEventListener('resize', updHandEdge);
+  });
+  const scrollHand = (dir: number) => {
+    const el = handRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' });
+  };
 
   /** Stuknięcie w grupę: zagraj / zaznacz kolejną kartę z grupy; gdy więcej się nie da – odznacz jedną. */
   const tapGroup = (is: number[]) => {
@@ -558,7 +583,23 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             {t('discardPile')} {me.discard.length}
           </span>
         </button>
-        <div className={'hand n' + Math.min(handGroups.length, 12)} style={{ ['--n' as string]: grouped ? handGroups.length : Math.max(me.hand.length, 5) }}>
+        <div className={'hand-wrap' + (handEdge.l ? ' more-l' : '') + (handEdge.r ? ' more-r' : '')}>
+        {handEdge.l && (
+          <button className="hand-arrow l" aria-label="◀" onClick={() => scrollHand(-1)}>
+            ‹
+          </button>
+        )}
+        {handEdge.r && (
+          <button className="hand-arrow r" aria-label="▶" onClick={() => scrollHand(1)}>
+            ›
+          </button>
+        )}
+        <div
+          ref={handRef}
+          onScroll={updHandEdge}
+          className={'hand n' + Math.min(handGroups.length, 12) + (handScroll ? ' scroll' : '')}
+          style={{ ['--n' as string]: grouped ? handGroups.length : Math.max(me.hand.length, 5), ['--lim' as string]: handLimit }}
+        >
           {handGroups.map(({ id, is }) => {
             if (is.length === 1) {
               const i = is[0];
@@ -576,7 +617,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             }
             const picked = is.filter((i) => sel.includes(i)).length;
             return (
-              <div key={is[0] + id} className={'hand-group' + (picked ? ' has-sel' : '')}>
+              <div key={is[0] + id} className={'hand-group' + (picked ? ' has-sel' : handState(is[0]) === 'dim' ? ' dim' : '')}>
+                <div className="hand-stack">
                 <CardFace id={id} lang={lang} className="under" />
                 <CardFace
                   id={id}
@@ -586,11 +628,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                   onDouble={() => doubleSel(is.find((i) => !sel.includes(i)) ?? is[0])}
                   onLong={() => setDetail({ id, from: 'hand', index: is[0] })}
                 />
+                </div>
                 <span className="hand-count">{picked ? `${picked}/${is.length}` : `×${is.length}`}</span>
               </div>
             );
           })}
           {!me.hand.length && <span className="muted">{t('noCards')}</span>}
+        </div>
         </div>
       </footer>
 
