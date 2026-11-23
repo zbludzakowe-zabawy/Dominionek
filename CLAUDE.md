@@ -85,7 +85,7 @@ Dalej w planie (kolejność jak w README → Plan):
   z lewej, CSS `order: var(--ko)`), zagrane karty jako same nazwy. Układ komputerowy działa tylko przy
   `min-width: 900px` i `min-height: 521px`.
 - Widok stosów Królestwa (`settings.pileView`, domyślnie `'art'`, zapamiętany na urządzeniu; przełącznik
-  w ustawieniach i w menu gry): „Obraz” albo „Symbole” – niski pasek obrazu, nazwa, pod nią skrót działania
+  w ustawieniach, w menu gry i na ekranie Królestwa – losowe i ręczny wybór; tam kafelki też w wybranym widoku): „Obraz” albo „Symbole” – niski pasek obrazu, nazwa, pod nią skrót działania
   karty ikonkami (zestaw „kontur”: +N karta, +N A = akcja, torba = zakup, płaska złota moneta bez cyfry (liczba przed nią), tarcza PZ, kosz = spal,
   karty ze strzałką = odrzuć, prostokąt z 3 kropkami = dłuższy opis). Symbole: `src/ui/symbols.ts` – bonusy
   z `plus`/`coins`, resztę opisuje `EXTRA` (test pilnuje wpisu dla każdej karty Królestwa; przy zmianie

@@ -124,6 +124,8 @@ export function App() {
         mode={settings.mode}
         kingdom={kingdom}
         setKingdom={setKingdom}
+        pileView={settings.pileView}
+        onPileView={(v) => update({ pileView: v })}
         langToggle={langToggle}
         onBack={() => setScreen('setup')}
         onStart={(ex) => startGame(kingdom, ex)}
@@ -303,12 +305,15 @@ function KingdomScreen(props: {
   sets: SetId[];
   mode: 'random' | 'manual';
   kingdom: string[];
+  pileView: Settings['pileView'];
+  onPileView: (v: Settings['pileView']) => void;
   setKingdom: (k: string[]) => void;
   langToggle: React.ReactNode;
   onBack: () => void;
   onStart: (extras: boolean) => void;
 }) {
   const { lang, sets, kingdom, setKingdom } = props;
+  const symbols = props.pileView === 'symbols';
   // Smocze Złoto i Pałac – losowane, gdy w Królestwie są karty Skarbca; można zmienić ręcznie
   const hoardIn = hasHoardCards(kingdom);
   const [extras, setExtras] = useState(false);
@@ -349,12 +354,23 @@ function KingdomScreen(props: {
           </button>
         </div>
 
+        <div className="view-row">
+          <span className="muted small">{t('pileView')}</span>
+          <div className="seg">
+            {(['art', 'symbols'] as const).map((v) => (
+              <button key={v} className={props.pileView === v ? 'on' : ''} onClick={() => props.onPileView(v)}>
+                {t(`pileView.${v}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {!manual && (
           <>
             <div className="kingdom-list">
               {sorted.map((id) => (
                 <div className="k-row" key={id}>
-                  <PileTile id={id} lang={lang} count={10} onTap={() => setDetail(id)} onLong={() => setDetail(id)} />
+                  <PileTile id={id} lang={lang} count={10} symbols={symbols} onTap={() => setDetail(id)} onLong={() => setDetail(id)} />
                   <button
                     className="icon-btn"
                     aria-label={t('reroll')}
@@ -383,6 +399,7 @@ function KingdomScreen(props: {
                   lang={lang}
                   count={kingdom.includes(id) ? 1 : 0}
                   state={kingdom.includes(id) ? 'pickable' : kingdom.length >= KINGDOM_SIZE ? 'dim' : ''}
+                  symbols={symbols}
                   onTap={() => toggle(id)}
                   onLong={() => setDetail(id)}
                 />
