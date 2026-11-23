@@ -103,6 +103,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .rules p { line-height: 1.5; margin: 0 0 8px; }
 
 .kingdom { display: flex; flex-direction: column; gap: 14px; }
+.view-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.view-row .seg button { padding: 5px 12px; font-size: .85rem; }
 .kingdom-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .k-row { display: flex; align-items: center; gap: 6px; }
 .k-row .tile { flex: 1; }
