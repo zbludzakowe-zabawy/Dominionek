@@ -386,6 +386,22 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 }
 .hand.n8, .hand.n9, .hand.n10, .hand.n11, .hand.n12 { grid-template-columns: repeat(var(--n), minmax(0, 80px)); gap: 3px; }
 
+/* zgrupowane takie same karty w ręce (powyżej 6 kart): stosik z licznikiem */
+.hand-group { position: relative; transition: transform .15s; }
+.hand-group::before {
+  content: ''; position: absolute; inset: 0; transform: translate(3px, -3px);
+  background: var(--paper); border: 2px solid var(--tc); border-radius: 4px; box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
+.hand-group > .card { width: 100%; }
+.hand-group.has-sel { transform: translateY(-10%); }
+.hand-group.has-sel > .card { transform: none; }
+.hand-count {
+  position: absolute; right: -8px; top: -12px; z-index: 1; pointer-events: none;
+  background: var(--gold); color: #1d1a12; font-weight: 800; font-size: .8rem; line-height: 1.2;
+  border-radius: 999px; padding: 1px 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+}
+.pill-hand { color: var(--ink, #eee); font-weight: 700; }
+
 /* ---------- arkusze (modale) ---------- */
 .sheet-backdrop {
   position: fixed; inset: 0; z-index: 100; background: rgba(8, 10, 14, .62);

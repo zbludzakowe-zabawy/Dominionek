@@ -52,6 +52,9 @@ interface Props {
   onRematch: (kingdom: string[], extras: boolean) => void;
 }
 
+/** Od tylu kart w ręce (wyłącznie) takie same karty są grupowane z licznikiem. */
+const HAND_GROUP_FROM = 6;
+
 type Detail = { id: string; from: 'supply' | 'hand' | 'other'; index?: number };
 
 export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNewGame, onRematch }: Props) {
@@ -259,6 +262,29 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     if (myDecision.kind === 'buy' && myDecision.treasures.includes(i)) return submit({ t: 'play', i });
     if (myDecision.kind === 'cards' && myDecision.zone === 'hand') return toggleSel(i, myDecision);
     setDetail({ id: me.hand[i], from: 'hand', index: i });
+  };
+
+  /** Powyżej 6 kart w ręce takie same karty są zgrupowane (ręka jest posortowana, więc leżą obok siebie). */
+  const grouped = me.hand.length > HAND_GROUP_FROM;
+  const handGroups: { id: string; is: number[] }[] = [];
+  me.hand.forEach((id, i) => {
+    const last = handGroups[handGroups.length - 1];
+    if (grouped && last && last.id === id) last.is.push(i);
+    else handGroups.push({ id, is: [i] });
+  });
+
+  /** Stuknięcie w grupę: zagraj / zaznacz kolejną kartę z grupy; gdy więcej się nie da – odznacz jedną. */
+  const tapGroup = (is: number[]) => {
+    const dec = myDecision;
+    if (dec?.kind === 'cards' && dec.zone === 'hand') {
+      const free = is.find((i) => !sel.includes(i) && dec.allowed.includes(i));
+      const picked = is.filter((i) => sel.includes(i));
+      if (free !== undefined && (dec.max === 1 ? !picked.length : sel.length < dec.max)) return toggleSel(free, dec);
+      if (picked.length) return setSel(sel.filter((x) => x !== picked[picked.length - 1]));
+      if (free !== undefined) return toggleSel(free, dec);
+      return;
+    }
+    tapHand(is[0]);
   };
 
   const buy = (id: string) => {
@@ -520,6 +546,11 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
 
       <footer className="hand-area">
         <button className="deck-pill" onClick={() => setPanel('deck')}>
+          {grouped && (
+            <span className="pill-hand">
+              {t('hand')} {me.hand.length}
+            </span>
+          )}
           <span>
             {t('deck')} {me.deck.length}
           </span>
@@ -527,18 +558,37 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             {t('discardPile')} {me.discard.length}
           </span>
         </button>
-        <div className={'hand n' + Math.min(me.hand.length, 12)} style={{ ['--n' as string]: Math.max(me.hand.length, 5) }}>
-          {me.hand.map((id, i) => (
-            <CardFace
-              key={i + id}
-              id={id}
-              lang={lang}
-              className={handState(i)}
-              onTap={() => tapHand(i)}
-              onDouble={() => doubleSel(i)}
-              onLong={() => setDetail({ id, from: 'hand', index: i })}
-            />
-          ))}
+        <div className={'hand n' + Math.min(handGroups.length, 12)} style={{ ['--n' as string]: grouped ? handGroups.length : Math.max(me.hand.length, 5) }}>
+          {handGroups.map(({ id, is }) => {
+            if (is.length === 1) {
+              const i = is[0];
+              return (
+                <CardFace
+                  key={i + id}
+                  id={id}
+                  lang={lang}
+                  className={handState(i)}
+                  onTap={() => tapHand(i)}
+                  onDouble={() => doubleSel(i)}
+                  onLong={() => setDetail({ id, from: 'hand', index: i })}
+                />
+              );
+            }
+            const picked = is.filter((i) => sel.includes(i)).length;
+            return (
+              <div key={is[0] + id} className={'hand-group t-' + typeKey(card(id)) + (picked ? ' has-sel' : '')}>
+                <CardFace
+                  id={id}
+                  lang={lang}
+                  className={picked ? 'selected' : handState(is[0])}
+                  onTap={() => tapGroup(is)}
+                  onDouble={() => doubleSel(is.find((i) => !sel.includes(i)) ?? is[0])}
+                  onLong={() => setDetail({ id, from: 'hand', index: is[0] })}
+                />
+                <span className="hand-count">{picked ? `${picked}/${is.length}` : `×${is.length}`}</span>
+              </div>
+            );
+          })}
           {!me.hand.length && <span className="muted">{t('noCards')}</span>}
         </div>
       </footer>
