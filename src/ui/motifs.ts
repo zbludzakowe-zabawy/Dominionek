@@ -452,7 +452,7 @@ export const MOTIFS: Record<string, Motif> = {
     a: 'M24 44q-4 -2 -8 0M24 44q4 -2 8 0' + e(24, 10, 1.6, 2) + 'M21.5 14q2.5 -2.5 5 0' + e(11, 20.2, 1.4, 1.8) + 'M8.8 23.4q2.2 -2 4.4 0' + e(37, 16.2, 1.4, 1.8) + 'M34.8 19.4q2.2 -2 4.4 0',
   },
   letter: {
-    // koperta z lakową pieczęcią i woń perfum
+    // liścik: koperta z serduszkiem i woń perfum
     m: 'M6 16h36v24H6zM6 16l18 13l18 -13M6 40l13 -11M42 40l-13 -11',
     a: 'M30 12q-2 -3 1 -5q3 -2 1 -5M36 13q-2 -3 1 -5q3 -2 1 -5',
     f: 'M24 33l-3.6 -3.6a2 2 0 0 1 3.6 -2.6a2 2 0 0 1 3.6 2.6z',
@@ -464,7 +464,7 @@ export const MOTIFS: Record<string, Motif> = {
     f: c(16, 3.8, 1.4),
   },
   dowry: {
-    // skrzynia posagowa z kokardą i monetami
+    // posag: skrzynia z kokardą i monetami
     m: 'M7 24h34v18H7zM7 24q0 -9 17 -9q17 0 17 9M7 31h34M21.5 29h5v6h-5z',
     a: 'M24 15l-5 -5q-2 3 5 5q7 -2 5 -5zM24 15v9',
     f: c(10, 45, 1.4) + c(14, 45.2, 1.2) + c(40, 45, 1.3),

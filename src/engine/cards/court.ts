@@ -66,7 +66,7 @@ export const COURT: CardDef[] = [
   {
     id: 'lacefan',
     set: 'court',
-    name: t('Lace Fan', 'Koronkowy Wachlarz'),
+    name: t('Fan', 'Wachlarz'),
     text: t(
       'While this is in your hand, Attacks do not affect you.',
       'Gdy masz tę kartę na ręce, Ataki cię nie dotyczą.',
@@ -190,7 +190,7 @@ export const COURT: CardDef[] = [
   {
     id: 'letter',
     set: 'court',
-    name: t('Perfumed Letter', 'Perfumowany List'),
+    name: t('Billet-doux', 'Liścik'),
     text: t(
       'Choose one: +1 coin; or look at the top 2 cards of your deck, put one into your hand and discard the other.',
       'Wybierz jedno: +1 moneta; albo obejrzyj 2 wierzchnie karty talii, jedną weź na rękę, drugą odrzuć.',
@@ -258,7 +258,7 @@ export const COURT: CardDef[] = [
   {
     id: 'dowry',
     set: 'court',
-    name: t('Dowry Chest', 'Skrzynia Posagowa'),
+    name: t('Dowry', 'Posag'),
     text: t('Choose one: +1 coin; or +1 Buy.', 'Wybierz jedno: +1 moneta; albo +1 zakup.'),
     types: ['treasure', 'victory'],
     cost: 4,

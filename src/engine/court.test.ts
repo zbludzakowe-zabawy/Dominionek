@@ -55,16 +55,16 @@ describe('Szepty Dworu', () => {
     expect(() => new Game(setup()).submit({ t: 'opts', is: [0, 0] })).toThrow();
   });
 
-  it('Galeria Portretów i Skrzynia Posagowa liczą się do punktów, Drzewo Rodowe za karty o dwóch typach', () => {
+  it('Galeria Portretów i Posag liczą się do punktów, Drzewo Rodowe za karty o dwóch typach', () => {
     const g = new Game(setup());
     const p = g.players[0];
     const base = g.scoreOf(p).vp; // 3 Zagrody
     p.discard.push('gallery', 'dowry', 'lacefan', 'familytree');
-    // 3 karty o dwóch typach → Drzewo Rodowe 1 PZ; Galeria 1, Skrzynia 1
+    // 3 karty o dwóch typach → Drzewo Rodowe 1 PZ; Galeria 1, Posag 1
     expect(g.scoreOf(p).vp).toBe(base + 3);
   });
 
-  it('Koronkowy Wachlarz na ręce chroni przed Skandalem; bez niego ofiara wybiera Urok albo odrzucenie', () => {
+  it('Wachlarz na ręce chroni przed Skandalem; bez niego ofiara wybiera Urok albo odrzucenie', () => {
     const g = new Game(setup(3));
     const p = g.players[g.turn.player];
     const v = g.players[(p.id + 1) % 2];
@@ -96,7 +96,7 @@ describe('Szepty Dworu', () => {
     expect(v.deck).toEqual(['copper']);
   });
 
-  it('Skrzynia Posagowa: +1 moneta albo +1 zakup', () => {
+  it('Posag: +1 moneta albo +1 zakup', () => {
     const g = new Game(setup(5));
     const p = g.players[g.turn.player];
     const t0 = { ...g.turn };
