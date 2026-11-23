@@ -15,6 +15,8 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 - **Pakiet „Alchemist's Tower” / „Wieża Alchemika”**: 14 kart Królestwa ze świata alchemików
   i laboratorium oraz druga waluta, Eliksir: część kart kosztuje monety i Eliksir. Stos Eliksiru
   (skarb za 4) dochodzi do gry sam, gdy w Królestwie są takie karty.
+- **Pakiet „Court Whispers” / „Szepty Dworu”**: 16 kart Królestwa z dworu książęcego – bale, damy
+  i służba; karty wielotypowe (Akcja–Zwycięstwo, Skarb–Reakcja, Skarb–Zwycięstwo) i karty „wybierz jedno”.
 - **Gra solo** przeciwko 1–3 botom, każdy na poziomie łatwym, średnim lub trudnym.
   Trudny bot na starcie partii rozgrywa w pamięci gry próbne i wybiera plan pod wylosowane Królestwo.
 - **Królestwo**: losowanie 10 kart, ponowne losowanie pojedynczej karty albo ręczny wybór.
@@ -29,7 +31,7 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 3. **Skrót działania karty na stosach w Królestwie**: przemyśleć inny widok dostępnych kart, gdzie
    stos na stole pokazuje ikonkami w skrócie, co robi karta – np. torba zakupowa = +zakup,
    moneta = +monety, karta = +karty (podobnie akcje, palenie, atak). Najpierw podgląd do akceptacji.
-4. Pakiet Court Whispers (Szepty Dworu).
+4. Pakiet Court Whispers (Szepty Dworu) – zrobione (16 kart, do oceny przez użytkownika).
 5. Statystyki gier.
 
 ## Aplikacja na telefon
@@ -61,7 +63,7 @@ pushu na `main` (jednorazowo: Settings → Pages → Source: GitHub Actions).
 - `src/engine/`: silnik bez interfejsu
   - `game.ts`: przebieg gry jako generator decyzji. Stan gry = ustawienia + ziarno + lista odpowiedzi,
     dzięki czemu zapis i odtworzenie są deterministyczne (podstawa pod przyszły tryb online).
-  - `cards/`: definicje kart (`basic.ts`, `keep.ts`, `hoard.ts`, `tower.ts`)
+  - `cards/`: definicje kart (`basic.ts`, `keep.ts`, `hoard.ts`, `tower.ts`, `court.ts`)
   - `bot.ts`, `plan.ts`: boty i planowanie trudnego bota
   - `setup.ts`: losowanie Królestwa
 - `src/ui/`: interfejs (React): ekrany, karty, rysunki kart (`motifs.ts`), tła i symbole pakietów (`art.ts`), zapis (`store.ts`)

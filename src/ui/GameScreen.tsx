@@ -635,10 +635,22 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       {myDecision?.kind === 'options' && !peek && (
         <div className="sheet-backdrop">
           <div className="sheet">
-            <p className="sheet-prompt">{msg(lang, myDecision.prompt)}</p>
+            <p className="sheet-prompt">
+              {myDecision.source && <b>{card(myDecision.source).name[lang]}: </b>}
+              {msg(lang, myDecision.prompt)}
+            </p>
             <div className="options">
               {myDecision.options.map((o, i) => (
-                <button key={i} className="btn" onClick={() => submit({ t: 'opts', is: [i] })}>
+                <button
+                  key={i}
+                  className={'btn' + (sel.includes(i) ? ' picked' : '')}
+                  onClick={() => {
+                    // „wybierz dwa”: zaznaczanie, potem Zatwierdź; „wybierz jedno”: od razu
+                    if (myDecision.count <= 1) submit({ t: 'opts', is: [i] });
+                    else if (sel.includes(i)) setSel(sel.filter((j) => j !== i));
+                    else if (sel.length < myDecision.count) setSel([...sel, i]);
+                  }}
+                >
                   {msg(lang, o)}
                 </button>
               ))}
@@ -647,6 +659,15 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               <button className="btn ghost peek-btn" onClick={() => setPeek(true)}>
                 {t('peekHand')}
               </button>
+              {myDecision.count > 1 && (
+                <button
+                  className="btn primary"
+                  disabled={sel.length !== Math.min(myDecision.count, myDecision.options.length)}
+                  onClick={() => submit({ t: 'opts', is: sel })}
+                >
+                  {t('confirm')}
+                </button>
+              )}
             </div>
           </div>
         </div>

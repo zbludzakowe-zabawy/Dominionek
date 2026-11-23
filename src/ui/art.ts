@@ -16,10 +16,24 @@ function hash(s: string): number {
 export function typeKey(c: CardDef): string {
   if (c.types.includes('curse')) return 'curse';
   if (c.types.includes('attack')) return 'attack';
-  if (c.types.includes('reaction')) return 'reaction';
+  if (c.types.includes('reaction') && !c.types.includes('treasure')) return 'reaction';
   if (c.types.includes('treasure')) return 'treasure';
   if (c.types.includes('victory') && !c.types.includes('action')) return 'victory';
   return 'action';
+}
+
+/** Drugi typ karty wielotypowej (do dwukolorowej ramki), np. Akcja–Zwycięstwo. */
+export function typeKey2(c: CardDef): string | null {
+  const k = typeKey(c);
+  if (c.types.includes('victory') && k !== 'victory') return 'victory';
+  if (c.types.includes('reaction') && k !== 'reaction') return 'reaction';
+  return null;
+}
+
+/** Klasy koloru ramki: `t-<typ>` i dla kart wielotypowych `dual d2-<drugi typ>`. */
+export function typeClass(c: CardDef): string {
+  const k2 = typeKey2(c);
+  return `t-${typeKey(c)}` + (k2 ? ` dual d2-${k2}` : '');
 }
 
 const PALETTE: Record<string, [string, string, string]> = {
@@ -63,7 +77,9 @@ export function cardArt(c: CardDef): Art {
   const scales = (c.symbol ?? c.set) === 'hoard';
   // Wieża Alchemika: siatka sześciokątów (jak wzory cząsteczek)
   const hexes = (c.symbol ?? c.set) === 'tower';
-  const lattice = scales ? 3 : hexes ? 4 : r.int(3);
+  // Szepty Dworu: arlekinowe romby (co drugi lekko wypełniony) – jak na kostiumie z balu maskowego
+  const harlequin = (c.symbol ?? c.set) === 'court';
+  const lattice = scales ? 3 : hexes ? 4 : harlequin ? 5 : r.int(3);
   const step = 8 + r.int(5);
   let grid = '';
   if (lattice === 0) {
@@ -84,6 +100,18 @@ export function cardArt(c: CardDef): Art {
         }
       }
     }
+  } else if (lattice === 5) {
+    const dw = 10;
+    const dh = 14;
+    let fill = '';
+    for (let row = 0, y = 0; y < H + dh; row++, y += dh / 2) {
+      for (let x = row % 2 ? dw / 2 : 0; x < W + dw; x += dw) {
+        const d = `M${f(x)} ${f(y - dh / 2)}L${f(x + dw / 2)} ${f(y)}L${f(x)} ${f(y + dh / 2)}L${f(x - dw / 2)} ${f(y)}Z`;
+        grid += d;
+        if ((Math.round(x / dw) + row) % 2 === 0) fill += d;
+      }
+    }
+    parts.push(`<path d="${fill}" fill="${accent}" fill-opacity=".06"/>`);
   } else if (lattice === 3) {
     const sw = 9;
     for (let row = 0, y = -2; y < H + sw; row++, y += sw / 2) {
@@ -95,7 +123,9 @@ export function cardArt(c: CardDef): Art {
       for (let x = 0; x <= W; x += step) grid += `Q${f(x + step / 2)} ${f(y + (r.next() > 0.5 ? 2 : -2))} ${f(x + step)} ${f(y)}`;
     }
   }
-  parts.push(`<path d="${grid}" stroke="${scales || hexes ? accent : line}" stroke-opacity="${scales ? '.2' : hexes ? '.18' : '.13'}" stroke-width=".5" fill="none"/>`);
+  parts.push(
+    `<path d="${grid}" stroke="${scales || hexes || harlequin ? accent : line}" stroke-opacity="${scales ? '.2' : hexes || harlequin ? '.16' : '.13'}" stroke-width=".5" fill="none"/>`,
+  );
   const R = 26;
   parts.push(`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${accent}" stroke-opacity=".22" stroke-width=".5"/>`);
   parts.push(
@@ -140,7 +170,18 @@ const DRAGON_EYE = 'M15.8 13.2Q18.8 12.8 20.8 15Q18 16.2 15.8 13.2Z';
 // buteleczka eliksiru (kontur): korek, szyjka, okrągły brzuszek z poziomem płynu
 const POTION_BOTTLE = 'M12.5 2.5h7v4h-7zM14 6.5v5Q6 14.5 6 21.5a10 10 0 0 0 20 0Q26 14.5 18 11.5v-5M8.6 20q3.7 -2.4 7.4 0t7.4 0';
 
+// maska karnawałowa (kontur): zakrywa tylko okolice oczu, kształt jak położona ósemka,
+// końce lekko uniesione; dwa migdałowe otwory na oczy
+const MASK =
+  'M16 12.2C12.6 9.6 6.6 8.6 2 9.6C2.4 15 4.6 21.6 10 21.6C13 21.6 14.6 19.8 16 18.2' +
+  'C17.4 19.8 19 21.6 22 21.6C27.4 21.6 29.6 15 30 9.6C25.4 8.6 19.4 9.6 16 12.2Z';
+const MASK_EYES = 'M5.6 15.4Q9.4 11.6 13.2 15.2Q9.4 18 5.6 15.4ZM26.4 15.4Q22.6 11.6 18.8 15.2Q22.6 18 26.4 15.4Z';
+
 const SET_SYMBOLS: Record<string, string> = {
+  court:
+    '<svg viewBox="0 0 32 32" aria-hidden="true">' +
+    `<path d="${MASK}" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/>` +
+    `<path d="${MASK_EYES}" fill="currentColor"/></svg>`,
   tower:
     '<svg viewBox="0 0 32 32" aria-hidden="true">' +
     `<path d="${POTION_BOTTLE}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>` +

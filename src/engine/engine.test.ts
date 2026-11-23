@@ -12,8 +12,8 @@ const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
 function makeSetup(seed: number, n: number): GameSetup {
   const r = new Rng(seed ^ 0x9e3779b9);
   const sets: SetId[] = (
-    [['keep'], ['hoard'], ['tower'], ['keep', 'hoard'], ['keep', 'tower'], ['hoard', 'tower', 'keep']] as SetId[][]
-  )[seed % 6];
+    [['keep'], ['hoard'], ['tower'], ['court'], ['keep', 'hoard'], ['keep', 'tower'], ['court', 'keep'], ['hoard', 'tower', 'keep', 'court']] as SetId[][]
+  )[seed % 8];
   const kingdom = randomKingdom(sets, () => r.next());
   return {
     seed,
@@ -155,7 +155,7 @@ describe('silnik', () => {
   });
 
   it('Skarbiec: Smocze Złoto i Pałac w zasobach, wyczerpanie Pałaców kończy grę', () => {
-    const g = new Game({ ...makeSetup(7, 2), extras: ['dragongold', 'palace'] });
+    const g = new Game({ ...makeSetup(9, 2), extras: ['dragongold', 'palace'] });
     expect(g.basics).toEqual(['copper', 'silver', 'gold', 'dragongold', 'homestead', 'manor', 'citadel', 'palace', 'hex']);
     expect(g.supply.palace).toBe(8);
     expect(g.supply.dragongold).toBe(12);
