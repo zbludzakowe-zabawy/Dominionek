@@ -456,10 +456,12 @@ export const MOTIFS: Record<string, Motif> = {
     f: e(41.4, 8.6, 0.7, 1.6),
   },
   familytree: {
-    // drzewo genealogiczne: para przodków, troje dzieci, dwoje wnucząt – linie pod kątem prostym
-    m: e(15, 8, 4.4, 5.2) + e(33, 8, 4.4, 5.2) + e(9, 27, 3.8, 4.6) + e(24, 27, 3.8, 4.6) + e(39, 27, 3.8, 4.6) + c(17, 42, 3) + c(31, 42, 3),
-    a: 'M19.4 8H28.6M24 8V17M9 17H39M9 17v5.4M24 17v5.4M39 17v5.4M24 31.6V35M17 35H31M17 35v4M31 35v4',
-    f: c(15, 7, 1.1) + c(33, 7, 1.1) + c(9, 26, 0.9) + c(24, 26, 0.9) + c(39, 26, 0.9) + c(17, 41.6, 0.7) + c(31, 41.6, 0.7),
+    // drzewo rodów: pień z korzeniami, gałęzie zakończone tarczami herbowymi
+    m:
+      'M21 44q2 -7 1 -17M27 44q-2 -7 -1 -17M21 44q-4 0 -8 1.5M27 44q4 0 8 1.5M24 44v-2' +
+      'M24 27V8M24 22L12 14M24 18L36 10M24 25L37 21M24 24L11 24M12 14L8 9M36 10L40 6',
+    a: [[12, 14], [36, 10], [24, 8], [37, 21], [11, 24]].map(([x, y]) => `M${x - 3} ${y - 3}h6v3q0 3 -3 4.4q-3 -1.4 -3 -4.4z`).join(''),
+    f: c(8, 9, 1.2) + c(40, 6, 1.2),
   },
   letter: {
     // liścik: koperta z serduszkiem i woń perfum

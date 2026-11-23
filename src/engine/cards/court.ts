@@ -179,8 +179,8 @@ export const COURT: CardDef[] = [
     set: 'court',
     name: t('Family Tree', 'Drzewo Rodowe'),
     text: t(
-      'Worth 1 VP for every 3 cards with two types you have (round down).',
-      'Warte 1 PZ za każde 3 karty o dwóch typach w twojej talii (zaokrąglając w dół).',
+      '1 VP for every 3 of your cards with two types (e.g. Action–Attack).',
+      '1 PZ za każde 3 twoje karty o dwóch typach (np. Akcja–Atak).',
     ),
     types: ['victory'],
     cost: 4,
