@@ -255,7 +255,7 @@ export const TOWER: CardDef[] = [
       'Możesz oddać kartę z ręki do zasobów i zdobyć na rękę kartę kosztującą tyle samo lub mniej.\n\nGdy ktoś zagrywa Atak: możesz pokazać tę kartę z ręki i odrzucić 1 kartę – atak cię nie dotyczy.',
     ),
     types: ['action', 'reaction'],
-    cost: 3,
+    cost: 2,
     potionCost: 1,
     *play(g, p) {
       const is = yield* g.chooseFromHand(p, {

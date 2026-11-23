@@ -28,16 +28,17 @@ export interface SavedGame {
   plans: Record<number, Plan>;
   /**
    * Wersja działania kart, z którą zaczęto partię. Po zmianie działania kart stare partie z nimi
-   * nie odtworzą się poprawnie, więc ich nie wczytujemy. 1: przegląd Skarbca, 2: przegląd Wieży.
+   * nie odtworzą się poprawnie, więc ich nie wczytujemy. 1: przegląd Skarbca, 2: przegląd Wieży, 3: Homunkulus za 2.
    */
   hoardRev?: number;
 }
 
-export const CARDS_REV = 2;
+export const CARDS_REV = 3;
 /** Karty, które zmieniły działanie w danej wersji. */
 const CHANGED_IN: Record<number, string[]> = {
   1: ['clerk', 'gildedscale', 'ancientcoin', 'altar', 'map', 'hoardkey'],
   2: ['retort', 'homunculus', 'alembic', 'magnumopus'],
+  3: ['homunculus'],
 };
 
 const SETTINGS_KEY = 'crownforge-settings';
