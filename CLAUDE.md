@@ -65,7 +65,7 @@ Dalej w planie (kolejność jak w README → Plan):
   - `motifs.ts` – rysunki kart (pole 48×48, ziemia ~y=44; `m` linie, `a` akcent, `f` wypełnienia).
   - `art.ts` – tło karty (kratka / łuski dla Skarbca / sześciokąty dla Wieży), symbole pakietów
     (Twierdza: wieża; Skarbiec: konturowy łeb smoka z otwartą paszczą, patrzy w lewo, bez płomienia,
-    bez tła; Wieża: konturowa buteleczka eliksiru; Dwór: konturowa maska karnawałowa z wypełnionymi oczami,
+    bez tła; Wieża: konturowa buteleczka eliksiru; Dwór: konturowa maska karnawałowa z wypełnionymi oczami, przechylona, z falującymi sznureczkami,
     tło w arlekinowe romby). Karty wielotypowe (bez Ataku) mają ramkę po skosie w dwóch kolorach
     (`typeClass`, `--tc2`).
   - Koszt z Eliksirem: komponent `Cost` (moneta + fioletowa buteleczka `Flask`); licznik Eliksirów

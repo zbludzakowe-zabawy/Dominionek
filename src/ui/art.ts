@@ -175,13 +175,17 @@ const POTION_BOTTLE = 'M12.5 2.5h7v4h-7zM14 6.5v5Q6 14.5 6 21.5a10 10 0 0 0 20 0
 const MASK =
   'M16 12.2C12.6 9.6 6.6 8.6 2 9.6C2.4 15 4.6 21.6 10 21.6C13 21.6 14.6 19.8 16 18.2' +
   'C17.4 19.8 19 21.6 22 21.6C27.4 21.6 29.6 15 30 9.6C25.4 8.6 19.4 9.6 16 12.2Z';
+// cienkie, falujące sznureczki zwisające z obu końców maski
+// (poza obrotem – zwisają pionowo od końców przechylonej maski)
+const MASK_STRINGS = 'M3.3 13.6c-1.8 1 -2.2 2.8 -1.6 4.6s-.2 3.4 -1 5M26.1 7.9c2 .8 2.6 2.8 2.2 4.6s.6 3.6 1.6 5.2';
 const MASK_EYES = 'M5.6 15.4Q9.4 11.6 13.2 15.2Q9.4 18 5.6 15.4ZM26.4 15.4Q22.6 11.6 18.8 15.2Q22.6 18 26.4 15.4Z';
 
 const SET_SYMBOLS: Record<string, string> = {
   court:
-    '<svg viewBox="0 0 32 32" aria-hidden="true">' +
-    `<path d="${MASK}" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/>` +
-    `<path d="${MASK_EYES}" fill="currentColor"/></svg>`,
+    '<svg viewBox="0 0 32 32" aria-hidden="true"><g transform="translate(16 16) rotate(-14) scale(.84) translate(-16 -16)">' +
+    `<path d="${MASK}" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>` +
+    `<path d="${MASK_EYES}" fill="currentColor"/>` +
+    `</g><path d="${MASK_STRINGS}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
   tower:
     '<svg viewBox="0 0 32 32" aria-hidden="true">' +
     `<path d="${POTION_BOTTLE}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>` +

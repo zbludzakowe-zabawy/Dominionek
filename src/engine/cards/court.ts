@@ -331,7 +331,7 @@ export const COURT: CardDef[] = [
   {
     id: 'margravine',
     set: 'court',
-    name: t('Margravine', 'Margrabina'),
+    name: t('Contessa', 'Hrabianka'),
     text: t(
       'Choose one: +2 Cards; or each other player discards down to 3 cards in hand.',
       'Wybierz jedno: +2 karty; albo każdy inny gracz odrzuca karty, aż zostaną mu 3 na ręce.',

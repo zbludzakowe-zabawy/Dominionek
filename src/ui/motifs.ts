@@ -53,6 +53,13 @@ const FAN = fan(24, 40, 19, 9, 8);
 const flame = (x: number, y: number) => `M${x} ${y}q-2 -2.5 0 -5.5q2 3 0 5.5`;
 /** Kryształowa kropla żyrandola. */
 const drop = (x: number, y: number) => `M${x} ${y}l-1.3 2.4l1.3 2.4l1.3 -2.4z`;
+/** Elipsa obrócona o `deg` stopni (łuki z obrotem osi). */
+const er = (x: number, y: number, rx: number, ry: number, deg: number) => {
+  const a = (deg * Math.PI) / 180;
+  const dx = Math.cos(a) * rx;
+  const dy = Math.sin(a) * rx;
+  return `M${(x - dx).toFixed(2)} ${(y - dy).toFixed(2)}a${rx} ${ry} ${deg} 1 0 ${(2 * dx).toFixed(2)} ${(2 * dy).toFixed(2)}a${rx} ${ry} ${deg} 1 0 ${(-2 * dx).toFixed(2)} ${(-2 * dy).toFixed(2)}`;
+};
 const ground = 'M2 44H46';
 const waves = (y: number) => `M2 ${y}q3 -2.5 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0`;
 
@@ -403,7 +410,9 @@ export const MOTIFS: Record<string, Motif> = {
   // ---------- Szepty Dworu ----------
   chambermaid: {
     // miotełka z piór i iskierki czystości
-    m: 'M11 44L22.5 25M22.5 25Q16 16 17 5M22.5 25Q22 13 28 5M22.5 25Q27 15 37 10M22.5 25Q14 20 9 12M22.5 25Q31 21 40 21',
+    m:
+      'M11 44L22.5 25M22.5 25Q16 16 17 5M22.5 25Q22 13 28 5M22.5 25Q27 15 37 10M22.5 25Q14 20 9 12M22.5 25Q31 21 40 21' +
+      'M22.5 25Q18.5 13 12.5 7M22.5 25Q19.5 11 22.5 3.5M22.5 25Q25 12 33 6.5M22.5 25Q29 18 39.5 15.5M22.5 25Q15 23 7 17.5M22.5 25Q31 24 39 26',
     a: 'M20 25.6l4.6 2.6M19.2 27l4.6 2.6' + spark(40, 35, 3) + spark(31, 40, 1.8),
   },
   lacefan: {
@@ -447,9 +456,10 @@ export const MOTIFS: Record<string, Motif> = {
     f: e(41.4, 8.6, 0.7, 1.6),
   },
   familytree: {
-    // drzewo z medalionami przodków
-    m: 'M24 44V22M24 34L13 25M24 30L35 21M24 22V16M6 44h36' + c(24, 11, 5) + c(11, 21, 4.5) + c(37, 17, 4.5),
-    a: 'M24 44q-4 -2 -8 0M24 44q4 -2 8 0' + e(24, 10, 1.6, 2) + 'M21.5 14q2.5 -2.5 5 0' + e(11, 20.2, 1.4, 1.8) + 'M8.8 23.4q2.2 -2 4.4 0' + e(37, 16.2, 1.4, 1.8) + 'M34.8 19.4q2.2 -2 4.4 0',
+    // drzewo genealogiczne: para przodków, troje dzieci, dwoje wnucząt – linie pod kątem prostym
+    m: e(15, 8, 4.4, 5.2) + e(33, 8, 4.4, 5.2) + e(9, 27, 3.8, 4.6) + e(24, 27, 3.8, 4.6) + e(39, 27, 3.8, 4.6) + c(17, 42, 3) + c(31, 42, 3),
+    a: 'M19.4 8H28.6M24 8V17M9 17H39M9 17v5.4M24 17v5.4M39 17v5.4M24 31.6V35M17 35H31M17 35v4M31 35v4',
+    f: c(15, 7, 1.1) + c(33, 7, 1.1) + c(9, 26, 0.9) + c(24, 26, 0.9) + c(39, 26, 0.9) + c(17, 41.6, 0.7) + c(31, 41.6, 0.7),
   },
   letter: {
     // liścik: koperta z serduszkiem i woń perfum
@@ -476,15 +486,15 @@ export const MOTIFS: Record<string, Motif> = {
   },
   scandal: {
     // pęknięte lusterko
-    m: e(19, 18, 12, 14) + e(19, 18, 9, 11) + 'M27 29L39 43l3 -2.5L30 26.5',
-    a: 'M19 18l-6 -7M19 18l5 -8M19 18l-7 4M19 18l3 9M19 18l8 2M14 20l-2 4M23 12l3 1',
-    f: c(19, 18, 1),
+    m: er(17, 17, 13, 9.5, 28) + er(17, 17, 10, 7, 28) + 'M27.7 24.6L40.9 31.6Q43.7 31.2 42.5 28.6L29.3 21.6',
+    a: 'M15 15.5l-7.0 -3.5M15 15.5l-2.0 -6.0M15 15.5l5.0 -5.5M15 15.5l8.5 1.0M15 15.5l3.0 6.0M15 15.5l-5.0 4.5' + 'M8 13.5l-2 -1.5M21 21.5l1 2.5',
+    f: c(15, 15.5, 1),
   },
   margravine: {
-    // diadem z perłami i klejnotem
-    m: 'M8 36h32M8 36L5 17l10 9l9 -15l9 15l10 -9l-3 19M8 40h32v-4',
-    a: 'M24 21l3 4l-3 4l-3 -4z',
-    f: c(5, 15.5, 1.6) + c(24, 9.5, 1.8) + c(43, 15.5, 1.6) + c(15, 24.5, 1.1) + c(33, 24.5, 1.1) + c(12, 38, 0.8) + c(18, 38, 0.8) + c(24, 38, 0.8) + c(30, 38, 0.8) + c(36, 38, 0.8),
+    // delikatny diadem: cienka obręcz, niskie ażurowe łuki, mały klejnot pośrodku
+    m: 'M5 36Q24 29 43 36M5 36Q24 32.4 43 36M9 33.6Q12 27.5 16 30.4Q19.5 23 24 19.5Q28.5 23 32 30.4Q36 27.5 39 33.6',
+    a: 'M24 23.6l1.9 2.6l-1.9 2.6l-1.9 -2.6zM16 30.4q2 -3 4.2 -1.2M31.8 30.4q-2 -3 -4.2 -1.2M12.4 31.4q1.4 -1.8 3 -1',
+    f: c(24, 18, 1.3) + c(16, 29.2, 0.8) + c(32, 29.2, 0.8) + c(9, 33, 0.7) + c(39, 33, 0.7) + c(14, 33.2, 0.6) + c(19, 32.4, 0.6) + c(29, 32.4, 0.6) + c(34, 33.2, 0.6),
   },
   grandball: {
     // kryształowy żyrandol
