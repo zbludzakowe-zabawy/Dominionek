@@ -83,6 +83,23 @@ export const EXTRA: Record<string, Sym[]> = {
   magnumopus: [more],
   // Warzelnik: bonusy z definicji + odłożenie na talię na koniec tury
   brewer: [more],
+  // Szepty Dworu – karty „wybierz jedno” mają opis w „…”
+  chambermaid: [more],
+  lacefan: [more],
+  gallery: [],
+  minuet: [more],
+  rumor: [more],
+  cupbearer: [more],
+  seamstress: [more],
+  familytree: [vp(), more],
+  letter: [more],
+  chamberlain: [more],
+  dowry: [more],
+  majordomo: [more],
+  scandal: [more],
+  margravine: [more],
+  grandball: [more],
+  ballroom: [],
 };
 
 export function cardSymbols(id: string): Sym[] {

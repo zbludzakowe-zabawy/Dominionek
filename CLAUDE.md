@@ -21,13 +21,13 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 | `keep` | The Crossroads Keep | Twierdza na Rozstajach | gotowy, 25 kart |
 | `hoard` | Dragon's Hoard | Skarbiec Smoka | gotowy, 17 kart (po przeglądzie z 22.11) + Smocze Złoto (9→5 monet) i Pałac (11→10 PZ) |
 | `tower` | Alchemist's Tower | Wieża Alchemika | gotowy, 14 kart (po przeglądzie z 22.11) + Eliksir (skarb za 4, daje 1 Eliksir) |
-| `court` | Court Whispers | Szepty Dworu | plan: karty wielotypowe, „jedno z” |
+| `court` | Court Whispers | Szepty Dworu | nowy (23.11), 16 kart: karty wielotypowe (Akcja–Zwycięstwo, Skarb–Reakcja, Skarb–Zwycięstwo), „wybierz jedno/dwa” |
 
 Dalej w planie (kolejność jak w README → Plan):
 1. Przegląd działania kart – użytkownik uważa, że efekty kart wymagają zmian (temat z innego wątku).
 2. Gra online dla 2–4 osób przez link-pokój (WebRTC/PeerJS, host pilnuje zasad) – nadal ważne.
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
-4. Szepty Dworu, statystyki gier.
+4. Statystyki gier.
 
 ## Architektura
 
@@ -37,8 +37,8 @@ Dalej w planie (kolejność jak w README → Plan):
     `Game.replay(setup, answers)` odtwarza grę (zapis gry, przyszły multiplayer). Odpowiedzi botów też
     są zapisywane, więc boty mogą używać `Math.random`.
   - Rodzaje decyzji (`types.ts`): `action`, `buy`, `cards` (z ręki albo z listy, `purpose` podpowiada
-    botom), `pile`, `options`, `yesno`. Decyzja może mieć `hint` (podpowiedź karty dla botów).
-  - Karty: `cards/basic.ts`, `cards/keep.ts`, `cards/hoard.ts`, `cards/tower.ts`, rejestr w `cards/index.ts` (`SETS`
+    botom), `pile`, `options` (`count` > 1 = „wybierz dwa”, UI z zaznaczaniem i Zatwierdź), `yesno`. Decyzja może mieć `hint` (podpowiedź karty dla botów).
+  - Karty: `cards/basic.ts`, `cards/keep.ts`, `cards/hoard.ts`, `cards/tower.ts`, `cards/court.ts`, rejestr w `cards/index.ts` (`SETS`
     – flaga `available`). Karta = `CardDef` (`card.ts`): `plus` (standardowe bonusy, rysowane przez UI),
     `play` (generator efektu), `onCleanup` (na koniec tury, np. Warzelnik), `coins`, `vp`/`vpFn`, `blocksAttacks`
     (Runa – chroni zawsze), `onAttack` (reakcja z wyborem, np. Homunkulus: pokaż i odrzuć 1 kartę),
@@ -65,7 +65,9 @@ Dalej w planie (kolejność jak w README → Plan):
   - `motifs.ts` – rysunki kart (pole 48×48, ziemia ~y=44; `m` linie, `a` akcent, `f` wypełnienia).
   - `art.ts` – tło karty (kratka / łuski dla Skarbca / sześciokąty dla Wieży), symbole pakietów
     (Twierdza: wieża; Skarbiec: konturowy łeb smoka z otwartą paszczą, patrzy w lewo, bez płomienia,
-    bez tła; Wieża: konturowa buteleczka eliksiru).
+    bez tła; Wieża: konturowa buteleczka eliksiru; Dwór: konturowa maska karnawałowa z wypełnionymi oczami, przechylona, z falującymi sznureczkami,
+    tło w arlekinowe romby). Karty wielotypowe (bez Ataku) mają ramkę po skosie w dwóch kolorach
+    (`typeClass`, `--tc2`).
   - Koszt z Eliksirem: komponent `Cost` (moneta + fioletowa buteleczka `Flask`); licznik Eliksirów
     na pasku fazy, gdy stos Eliksiru jest w grze.
 - `src/i18n.ts` – wszystkie teksty UI/podpowiedzi/dziennika EN+PL (`tr`, liczba mnoga PL).

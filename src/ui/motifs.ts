@@ -26,6 +26,40 @@ const star = (x: number, y: number, r: number) => {
   }
   return d + 'Z';
 };
+
+/** Rozłożony wachlarz: oś w (x, y), promień r, n żeberek. */
+const fan = (x: number, y: number, r: number, ri: number, n: number) => {
+  const pt = (rr: number, a: number) => `${(x + Math.cos(a) * rr).toFixed(1)} ${(y + Math.sin(a) * rr).toFixed(1)}`;
+  const a0 = (-165 * Math.PI) / 180;
+  const a1 = (-15 * Math.PI) / 180;
+  let ribs = '';
+  let lace = '';
+  for (let i = 0; i <= n; i++) {
+    const a = a0 + ((a1 - a0) * i) / n;
+    ribs += `M${x} ${y}L${pt(r, a)}`;
+    if (i < n) {
+      const b = a0 + ((a1 - a0) * (i + 0.5)) / n;
+      lace += `M${pt(r, a)}Q${pt(r + 3.2, b)} ${pt(r, a0 + ((a1 - a0) * (i + 1)) / n)}`;
+    }
+  }
+  return {
+    ribs: ribs + `M${pt(r, a0)}A${r} ${r} 0 0 1 ${pt(r, a1)}`,
+    inner: `M${pt(ri, a0)}A${ri} ${ri} 0 0 1 ${pt(ri, a1)}`,
+    lace,
+  };
+};
+const FAN = fan(24, 40, 19, 9, 8);
+/** Płomyk świecy. */
+const flame = (x: number, y: number) => `M${x} ${y}q-2 -2.5 0 -5.5q2 3 0 5.5`;
+/** Kryształowa kropla żyrandola. */
+const drop = (x: number, y: number) => `M${x} ${y}l-1.3 2.4l1.3 2.4l1.3 -2.4z`;
+/** Elipsa obrócona o `deg` stopni (łuki z obrotem osi). */
+const er = (x: number, y: number, rx: number, ry: number, deg: number) => {
+  const a = (deg * Math.PI) / 180;
+  const dx = Math.cos(a) * rx;
+  const dy = Math.sin(a) * rx;
+  return `M${(x - dx).toFixed(2)} ${(y - dy).toFixed(2)}a${rx} ${ry} ${deg} 1 0 ${(2 * dx).toFixed(2)} ${(2 * dy).toFixed(2)}a${rx} ${ry} ${deg} 1 0 ${(-2 * dx).toFixed(2)} ${(-2 * dy).toFixed(2)}`;
+};
 const ground = 'M2 44H46';
 const waves = (y: number) => `M2 ${y}q3 -2.5 6 0t6 0t6 0t6 0t6 0t6 0t6 0t6 0`;
 
@@ -371,5 +405,108 @@ export const MOTIFS: Record<string, Motif> = {
     m: c(24, 24, 9) + 'M24 4v6M24 38v6M4 24h6M38 24h6M10 10l4 4M34 34l4 4M38 10l-4 4M10 38l4 -4',
     a: star(24, 24, 5),
     f: c(24, 24, 1.4),
+  },
+
+  // ---------- Szepty Dworu ----------
+  chambermaid: {
+    // miotełka z piór i iskierki czystości
+    m:
+      'M11 44L22.5 25M22.5 25Q16 16 17 5M22.5 25Q22 13 28 5M22.5 25Q27 15 37 10M22.5 25Q14 20 9 12M22.5 25Q31 21 40 21' +
+      'M22.5 25Q18.5 13 12.5 7M22.5 25Q19.5 11 22.5 3.5M22.5 25Q25 12 33 6.5M22.5 25Q29 18 39.5 15.5M22.5 25Q15 23 7 17.5M22.5 25Q31 24 39 26',
+    a: 'M20 25.6l4.6 2.6M19.2 27l4.6 2.6' + spark(40, 35, 3) + spark(31, 40, 1.8),
+  },
+  lacefan: {
+    m: FAN.ribs + FAN.inner,
+    a: FAN.lace + 'M24 40l-3 5M24 40l3 5',
+    f: c(24, 40, 1.6),
+  },
+  gallery: {
+    // dwa portrety w ramach na ścianie
+    m: 'M5 7h17v25H5zM8 10h11v19H8zM27 11h16v21H27zM30 14h10v15H30zM2 40H46',
+    a: e(13.5, 17, 2.6, 3.2) + 'M9.5 29q4 -7 8 0' + e(35, 19.5, 2.4, 2.9) + 'M31 29q4 -6 8 0M13.5 7l0 -3M35 11l0 -3',
+    f: c(13.5, 3.4, 0.9) + c(35, 7.4, 0.9),
+  },
+  minuet: {
+    // dama w balowej sukni i kawaler – trzymają się za ręce
+    m:
+      c(15, 9, 3) + 'M13 13h4l1 9l7 19h-20l7 -19zM5 41q10 3 20 0' +
+      c(33, 9, 3) + 'M33 12v15M33 27l-3 16M33 27l3 16M30 43h-3M36 43h3M30 15h6',
+    a: 'M17.5 15Q22 8 24 8Q27 8 30 15',
+    f: c(24, 8, 1.1),
+  },
+  rumor: {
+    // ucho i fale szeptu
+    m: 'M29 8Q42 8 42 21Q42 29 35.5 32Q32 34 33 39Q33.5 44 28.5 44M33 15Q37.5 15 37.5 21Q37.5 25 34 26',
+    a: 'M8 19q3 5 0 10M13 16q4.5 8 0 16M18 13q6 11 0 22',
+    f: c(5, 24, 1),
+  },
+  cupbearer: {
+    // srebrna taca z pucharem i dzbanem
+    m:
+      e(24, 39, 19, 3.6) + 'M5 39q1 3 4 3.6h30q3 -0.6 4 -3.6' +
+      'M11 15h11q0 10 -5.5 11q-5.5 -1 -5.5 -11ZM16.5 26v8M12.5 35h8' +
+      'M29 35V22q0 -4 4 -6V12h4v4q4 2 4 6v13zM37 13l3 -2',
+    a: 'M12 19h9M29 25h12',
+    f: c(16.5, 12, 0.9) + c(14, 10, 0.7),
+  },
+  seamstress: {
+    // szpulka nici, igła z nitką
+    m: e(17, 10, 9, 2.8) + e(17, 36, 9, 2.8) + 'M10 11v24M24 11v24M42 6L35 42',
+    a: 'M10 15q7 3 14 0M10 20q7 3 14 0M10 25q7 3 14 0M10 30q7 3 14 0M24 18Q34 14 40.5 12',
+    f: e(41.4, 8.6, 0.7, 1.6),
+  },
+  familytree: {
+    // drzewo rodów: pień z korzeniami, gałęzie zakończone tarczami herbowymi
+    m:
+      'M21 44q2 -7 1 -17M27 44q-2 -7 -1 -17M21 44q-4 0 -8 1.5M27 44q4 0 8 1.5M24 44v-2' +
+      'M24 27V8M24 22L12 14M24 18L36 10M24 25L37 21M24 24L11 24M12 14L8 9M36 10L40 6',
+    a: [[12, 14], [36, 10], [24, 8], [37, 21], [11, 24]].map(([x, y]) => `M${x - 3} ${y - 3}h6v3q0 3 -3 4.4q-3 -1.4 -3 -4.4z`).join(''),
+    f: c(8, 9, 1.2) + c(40, 6, 1.2),
+  },
+  letter: {
+    // liścik: koperta z serduszkiem i woń perfum
+    m: 'M6 16h36v24H6zM6 16l18 13l18 -13M6 40l13 -11M42 40l-13 -11',
+    a: 'M30 12q-2 -3 1 -5q3 -2 1 -5M36 13q-2 -3 1 -5q3 -2 1 -5',
+    f: 'M24 33l-3.6 -3.6a2 2 0 0 1 3.6 -2.6a2 2 0 0 1 3.6 2.6z',
+  },
+  chamberlain: {
+    // klucz szambelański na wstędze z frędzlem
+    m: c(16, 14, 8) + c(16, 14, 3.5) + 'M21.6 19.6L40 38M34.6 32.6l-4 4M38 36l-3.4 3.4M27 25l-2.6 2.6',
+    a: 'M8 14Q3 22 6 32M6 32l-2 7M6 32l0 7M6 32l2 7',
+    f: c(16, 3.8, 1.4),
+  },
+  dowry: {
+    // posag: skrzynia z kokardą i monetami
+    m: 'M7 24h34v18H7zM7 24q0 -9 17 -9q17 0 17 9M7 31h34M21.5 29h5v6h-5z',
+    a: 'M24 15l-5 -5q-2 3 5 5q7 -2 5 -5zM24 15v9',
+    f: c(10, 45, 1.4) + c(14, 45.2, 1.2) + c(40, 45, 1.3),
+  },
+  majordomo: {
+    // trójramienny kandelabr
+    m: 'M17 44h14M24 44V27M11 21Q11 27 24 27Q37 27 37 21M24 27V20M9 12h4v9H9zM22 10h4v10h-4zM35 12h4v9h-4zM20 44q4 -3 8 0',
+    a: flame(11, 11) + flame(24, 9) + flame(37, 11),
+  },
+  scandal: {
+    // pęknięte lusterko
+    m: er(17, 17, 13, 9.5, 28) + er(17, 17, 10, 7, 28) + 'M27.7 24.6L40.9 31.6Q43.7 31.2 42.5 28.6L29.3 21.6',
+    a: 'M15 15.5l-5.5 -2.8M15 15.5l-1.7 -5.1M15 15.5l3.8 -4.1M15 15.5l9.0 1.1M15 15.5l3.8 7.6M15 15.5l-4.2 3.8',
+    f: c(15, 15.5, 1),
+  },
+  margravine: {
+    // delikatny diadem: cienka obręcz, niskie ażurowe łuki, mały klejnot pośrodku
+    m: 'M5 36Q24 29 43 36M5 36Q24 32.4 43 36M9 33.6Q12 27.5 16 30.4Q19.5 23 24 19.5Q28.5 23 32 30.4Q36 27.5 39 33.6',
+    a: 'M24 23.6l1.9 2.6l-1.9 2.6l-1.9 -2.6zM16 30.4q2 -3 4.2 -1.2M31.8 30.4q-2 -3 -4.2 -1.2M12.4 31.4q1.4 -1.8 3 -1',
+    f: c(24, 18, 1.3) + c(16, 29.2, 0.8) + c(32, 29.2, 0.8) + c(9, 33, 0.7) + c(39, 33, 0.7) + c(14, 33.2, 0.6) + c(19, 32.4, 0.6) + c(29, 32.4, 0.6) + c(34, 33.2, 0.6),
+  },
+  grandball: {
+    // kryształowy żyrandol
+    m: 'M24 1v8M16 9h16M9 19Q9 26 24 26Q39 26 39 19M24 9v17M16 9Q14 16 18 21M32 9Q34 16 30 21M7 15h4v4H7zM22 13h4v4h-4zM37 15h4v4h-4z',
+    a: flame(9, 14) + flame(24, 12) + flame(39, 14) + drop(14, 25) + drop(24, 28) + drop(34, 25) + drop(19, 30) + drop(29, 30),
+  },
+  ballroom: {
+    // sala z łukowymi oknami i posadzką w szachownicę
+    m: 'M2 30H46M4 30V8M44 30V8M2 6h44M9 26V14a4 4 0 0 1 8 0V26zM20 26V12a4 4 0 0 1 8 0V26zM31 26V14a4 4 0 0 1 8 0V26z',
+    a: 'M2 37H46M24 30v14M14 30L8 44M34 30L40 44M6 30L-2 44M42 30L50 44',
+    f: 'M24 30h7l2 7h-9zM14 37h10v7H12zM34 37l2 7H24v-7z',
   },
 };

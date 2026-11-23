@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
-import { cardArt, setSymbol, typeKey } from './art';
+import { cardArt, setSymbol, typeClass } from './art';
 import { cardSymbols, type Sym } from './symbols';
 
 /** Stuknięcie i przytrzymanie (podgląd karty). */
@@ -151,7 +151,7 @@ export function CardFace({ id, lang, className = '', onTap, onLong, onDouble, ba
     );
   const text = c.text[lang];
   return (
-    <div className={`card t-${typeKey(c)} ${className}`} {...press} role="button" aria-label={c.name[lang]}>
+    <div className={`card ${typeClass(c)} ${className}`} {...press} role="button" aria-label={c.name[lang]}>
       <div className="c-head">
         <span className="c-name">{c.name[lang]}</span>
         <SetIcon id={id} className="c-set" />
@@ -219,7 +219,7 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble,
   const press = usePress(onTap, onLong, onDouble, !!onDouble);
   return (
     <div
-      className={`tile t-${typeKey(c)} ${state} ${count <= 0 ? 'empty' : ''}${symbols ? ' sym' : ''}`}
+      className={`tile ${typeClass(c)} ${state} ${count <= 0 ? 'empty' : ''}${symbols ? ' sym' : ''}`}
       style={style}
       {...press}
       role="button"
@@ -271,7 +271,7 @@ export function ConfirmButton(props: {
 export function PlayedCard({ id, n, lang, onTap }: { id: string; n: number; lang: Lang; onTap: () => void }) {
   const c = card(id);
   return (
-    <button className={`played t-${typeKey(c)}` + (n > 1 ? ' stacked' : '')} onClick={onTap} aria-label={`${c.name[lang]} ×${n}`}>
+    <button className={`played ${typeClass(c)}` + (n > 1 ? ' stacked' : '')} onClick={onTap} aria-label={`${c.name[lang]} ×${n}`}>
       <Art id={id} className="played-art" />
       <span className="played-name">{c.name[lang]}</span>
       {n > 1 && <span className="played-count">×{n}</span>}
