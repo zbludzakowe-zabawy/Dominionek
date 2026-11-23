@@ -388,13 +388,44 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 }
 .hand.n8, .hand.n9, .hand.n10, .hand.n11, .hand.n12 { grid-template-columns: repeat(var(--n), minmax(0, 80px)); gap: 3px; }
 
+/* ręka przewijana w bok, gdy miejsc (kart i stosików) jest więcej niż --lim */
+.hand-wrap { position: relative; }
+.hand.scroll {
+  display: flex; justify-content: flex-start; overflow-x: auto; overflow-y: hidden; gap: 5px;
+  padding: 16px 10px 2px 0; scroll-snap-type: x proximity; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.hand.scroll::-webkit-scrollbar { display: none; }
+.hand.scroll { --slot: min(var(--cwmax, 104px), calc((100% - var(--lim) * 5px) / (var(--lim) + .35))); }
+.hand.scroll > * { flex: 0 0 var(--slot); scroll-snap-align: start; }
+/* stosik szerszy o przesunięcie tylnej karty – przednia karta ma rozmiar pojedynczej */
+.hand.scroll > .hand-group { flex-basis: calc(var(--slot) * 1.19); }
+.hand-wrap.more-r .hand.scroll { -webkit-mask-image: linear-gradient(to right, #000 82%, transparent); mask-image: linear-gradient(to right, #000 82%, transparent); }
+.hand-wrap.more-l .hand.scroll { -webkit-mask-image: linear-gradient(to left, #000 82%, transparent); mask-image: linear-gradient(to left, #000 82%, transparent); }
+.hand-wrap.more-l.more-r .hand.scroll {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+}
+.hand-arrow {
+  position: absolute; top: 50%; z-index: 3; width: 30px; height: 44px; margin-top: -16px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--bg2) 88%, transparent);
+  color: var(--ink); font-size: 1.6rem; line-height: 1; box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
+.hand-arrow.l { left: -4px; }
+.hand-arrow.r { right: -4px; }
+
 /* zgrupowane takie same karty w ręce (powyżej 6 kart): stosik z licznikiem */
-.hand-group { position: relative; padding: 16% 16% 0 0; transition: transform .15s; }
-.hand-group > .card { width: 100%; }
+.hand-group { position: relative; min-width: 0; transition: transform .15s; }
+/* odstęp w % liczony od szerokości stosiku (rodzica), nie całej ręki */
+.hand-stack { position: relative; padding: 16% 16% 0 0; }
+.hand-stack > .card { width: 100%; }
 /* druga karta pod spodem, przesunięta w prawo i do góry – wyraźny stosik */
-.hand-group > .card.under { position: absolute; top: 0; right: 0; width: 84%; pointer-events: none; filter: brightness(.72); }
+.hand-stack > .card.under { position: absolute; top: 0; right: 0; width: 84%; pointer-events: none; filter: brightness(.72); }
 .hand-group.has-sel { transform: translateY(-10%); }
-.hand-group.has-sel > .card { transform: none; }
+/* przygaszony stosik: całość przezroczysta, żeby tylna karta nie prześwitywała przez przednią */
+.hand-group.dim { opacity: .55; }
+.hand-group.dim .card.dim { opacity: 1; }
+.hand-group.has-sel .card { transform: none; }
 .hand-count {
   position: absolute; right: -6px; top: -10px; z-index: 1; pointer-events: none;
   background: var(--gold); color: #1d1a12; font-weight: 800; font-size: .8rem; line-height: 1.2;
@@ -452,7 +483,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .supply-basic { grid-template-columns: repeat(7, minmax(0, 96px)); justify-content: center; }
   .tile-art { height: 52px; }
   .supply-basic .tile-art { height: 30px; }
-  .hand { grid-template-columns: repeat(var(--n), minmax(0, 112px)); }
+  .hand { grid-template-columns: repeat(var(--n), minmax(0, 112px)); --cwmax: 112px; }
 }
 @media (max-height: 700px) {
   /* niski ekran: w widoku Symbole bez obrazka; licznik i koszt w górnym pasku, pod nimi nazwa */
@@ -464,13 +495,13 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .supply-basic .tile-art { height: 24px; }
   .play-area { min-height: 0; padding-top: 2px; padding-bottom: 2px; }
   .play-label { display: none; }
-  .hand { min-height: 0; padding-top: 12px; grid-template-columns: repeat(var(--n), minmax(0, 84px)); }
+  .hand { min-height: 0; padding-top: 12px; grid-template-columns: repeat(var(--n), minmax(0, 84px)); --cwmax: 84px; }
 }
 @media (max-height: 600px) {
   .tile-art { height: 26px; }
   .supply-basic .tile-art { display: none; }
   .prompt { font-size: .78rem; }
-  .hand { grid-template-columns: repeat(var(--n), minmax(0, 88px)); }
+  .hand { grid-template-columns: repeat(var(--n), minmax(0, 88px)); --cwmax: 88px; }
 }
 
 /* ---------- komputer: jedna kolumna jak na telefonie, ręka na dole ---------- */
@@ -497,7 +528,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   /* panel gracza (zagrane, faza, ręka) zaczyna się tam, gdzie Królestwo;
      miejsce pod kolumnami stałych stosów zostaje wolne na później */
   .game > .play-area, .game > .status, .game > .hand-area { margin-left: 232px; border-left: 1px solid var(--line); }
-  .game .hand { grid-template-columns: repeat(var(--n), minmax(0, 104px)); }
+  .game .hand { grid-template-columns: repeat(var(--n), minmax(0, 104px)); --cwmax: 104px; }
   .game .hand.n8, .game .hand.n9, .game .hand.n10, .game .hand.n11, .game .hand.n12 { grid-template-columns: repeat(var(--n), minmax(0, 80px)); }
 }
 
@@ -545,7 +576,9 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .hand-area { padding: 2px 8px calc(2px + env(safe-area-inset-bottom)); }
   .deck-pill { top: 8px; padding: 1px 8px; right: max(10px, env(safe-area-inset-right)); flex-direction: column; gap: 0; border-radius: 8px; }
   .bar-toggle { right: auto; left: calc(50% - 17px); top: -12px; height: 20px; }
-  .hand { grid-template-columns: repeat(var(--n), minmax(0, 58px)); padding-top: 9px; min-height: 0; gap: 4px; }
+  .hand { grid-template-columns: repeat(var(--n), minmax(0, 58px)); padding-top: 9px; min-height: 0; gap: 4px; --cwmax: 58px; }
+  .hand.scroll { padding-top: 11px; }
+  .hand-arrow { width: 26px; height: 34px; margin-top: -12px; }
 }
 
 /* ---------- aplikacja: instalacja i aktualizacja ---------- */
