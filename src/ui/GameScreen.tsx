@@ -138,6 +138,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   });
 
   const d = game.pending;
+  // chwila po rozpoczęciu mojej tury, w której „Koniec tury/akcji” nie reaguje
+  // (żeby przypadkowe drugie stuknięcie przy przewijaniu nie zakończyło tury)
+  const myTurnStart = useRef(0);
+  useEffect(() => {
+    if (game.turn.player === HUMAN) myTurnStart.current = Date.now();
+  }, [game.turn, game]);
+  const guardedEnd = () => {
+    if (Date.now() - myTurnStart.current < 800) return;
+    submit({ t: 'end' });
+  };
   useEffect(() => setPeek(false), [d]);
   const canUndo = !!d && d.player === HUMAN && game.turn.player === HUMAN && game.undoable() > 0;
   const undo = () => {
@@ -338,17 +348,12 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     prompt = t('preparing');
   } else if (botTurn && d) {
     prompt = t('thinking', { who: names[d.player] });
-    buttons = (
-      <button className="btn" onClick={() => setFf(true)} disabled={ff}>
-        ⏩ {t('skipToMe')}
-      </button>
-    );
   } else if (myDecision) {
     prompt = msg(lang, myDecision.prompt);
     switch (myDecision.kind) {
       case 'action':
         buttons = (
-          <button className="btn" onClick={() => submit({ t: 'end' })}>
+          <button className="btn" onClick={() => guardedEnd()}>
             {t('endActions')}
           </button>
         );
@@ -361,7 +366,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 {t('playAll')}
               </button>
             )}
-            <button className="btn end-turn" onClick={() => submit({ t: 'end' })}>
+            <button className="btn end-turn" onClick={() => guardedEnd()}>
               {t('endTurn')}
             </button>
           </>
@@ -420,6 +425,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const kingdomAscending = kingdomLayout(game.kingdom, lang, game.kingdom.length);
   const lastLog = game.log.length ? game.log[game.log.length - 1] : null;
   const scores = game.over ? game.scores() : null;
+
+  const collapsedNow = barCollapsed && !importantPrompt;
+  // przewijanie ruchów przeciwników: mała ikonka „»” zawsze po lewej stronie paska,
+  // z dala od miejsca, w którym za chwilę pojawi się „Koniec tury”
+  const skipBtn =
+    botTurn && plans && !game.over ? (
+      <button className="icon-btn skip-btn" onClick={() => setFf(true)} disabled={ff} aria-label={t('skipToMe')} title={t('skipToMe')}>
+        »
+      </button>
+    ) : null;
 
   // ---------- render ----------
   return (
@@ -516,7 +531,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         </div>
       </section>
 
-      <section className={'status' + (attacked ? ' attacked' : '') + (barCollapsed && !importantPrompt ? ' is-collapsed' : '')}>
+      <section className={'status' + (attacked ? ' attacked' : '') + (collapsedNow ? ' is-collapsed' : '')}>
         <button
           className="bar-toggle"
           aria-label={barCollapsed ? t('expandBar') : t('collapseBar')}
@@ -525,6 +540,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         >
           {barCollapsed ? '▴' : '▾'}
         </button>
+        {collapsedNow && skipBtn}
         <div className="counters">
           <span className="phase">{t(`phase.${turn.phase}`)}:</span>
           {turn.phase === 'buy' ? (
@@ -549,6 +565,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           )}
         </div>
         <div className="prompt-row">
+          {!collapsedNow && skipBtn}
           <div className="prompt">
             {attacked && <b className="attack-tag">{t('attackedBy')} </b>}
             {myDecision?.source && (

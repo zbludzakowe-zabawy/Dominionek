@@ -101,6 +101,8 @@ Dalej w planie (kolejność jak w README → Plan):
 - Królestwo: od najtańszej (lewy dolny róg) do najdroższej (prawy górny).
 - Liczba kart na stosie: kwadracik w lewym górnym rogu. Licznik monet: tylko zagrane monety.
   Faza zakupów: „Faza zakupów: (monety) Zakupy N”. „Koniec tury” – niebieski przycisk, obok „↶ Cofnij”.
+  Przewijanie tur botów: mała ikonka „»” zawsze po lewej stronie paska fazy (nie tam, gdzie „Koniec tury”);
+  „Koniec tury/akcji” ignoruje stuknięcia przez 0,8 s od początku mojej tury.
 - Ręka powyżej 5 kart: takie same karty zgrupowane w stosik (dwie karty przesunięte, tylna przyciemniona, w prawo i w górę) z licznikiem „×N” (przy wyborze „k/N”), na pigułce
   talii dochodzi „Ręka N”. Stuknięcie gra/zaznacza kolejną kartę z grupy (gdy więcej się nie da – odznacza).
   Gdy miejsc (karty + stosiki) jest więcej niż 5 (telefon pionowo) albo 8 (poziomo i komputer), ręka przewija się
