@@ -59,6 +59,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   width: 40px; height: 40px; border-radius: 50%;
   border: 1px solid var(--line); background: transparent; font-size: 1.15rem; flex: none;
 }
+.skip-btn { width: 36px; height: 36px; font-size: 1.5rem; line-height: 1; padding: 0 0 3px; color: var(--ink); background: var(--bg); }
+.skip-btn:disabled { opacity: .4; }
 .link { background: none; border: 0; padding: 0; color: var(--gold); font-weight: 600; text-decoration: underline dotted; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
 .seg button { border: 0; background: transparent; padding: 8px 12px; color: var(--muted); }
