@@ -67,3 +67,24 @@ export function ShareButton({ lang }: { lang: Lang }) {
     </>
   );
 }
+
+/** Kubek z parującą herbatą i górami (okienko „Czekaj – gospodarz przygotowuje grę”); para unosi się (CSS). */
+export function TeaCup() {
+  return (
+    <div className="tea-art" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="120" height="120" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <g className="tea-steam" stroke="#d7c9a7" strokeWidth="1.1" opacity=".85">
+          <path d="M16 5c-3 3 3 5 0 8s3 5 0 8" />
+          <path d="M23 3c-3 3 3 5 0 8s3 5 0 8" />
+          <path d="M30 5c-3 3 3 5 0 8s3 5 0 8" />
+        </g>
+        <path d="M11 22h24v15c0 3-2 5-5 5H16c-3 0-5-2-5-5z" stroke="#a9b8c6" strokeWidth="1.4" />
+        <path d="M35 25.5h3c3 0 4.5 2 4.5 4.5s-1.5 4.5-4.5 4.5h-3" stroke="#a9b8c6" strokeWidth="1.4" />
+        <path d="M13.5 37l6-9 3.2 4 4.3-6.5 6 11.5" stroke="#d7c9a7" strokeWidth="1.1" />
+        <path d="M19.5 28L18 30.3l1.2-.5 1.3.4zM27 25.5l-1.3 2l1.2-.5 1.3.8z" fill="#d7c9a7" stroke="#d7c9a7" strokeWidth=".6" />
+        <circle cx="16" cy="26" r="1.6" stroke="#d7c9a7" strokeWidth="1" />
+        <path d="M8 44.5h30" stroke="#a9b8c6" strokeWidth="1.2" opacity=".7" />
+      </svg>
+    </div>
+  );
+}

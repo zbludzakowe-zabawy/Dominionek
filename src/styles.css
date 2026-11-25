@@ -703,3 +703,23 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   padding: 10px 16px; border-radius: 10px; text-align: center; overflow-wrap: anywhere;
   background: #f2f2f2; color: #111; font-size: .9rem; box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
 }
+
+/* ---------- rewanż: czekanie na gospodarza ---------- */
+.wait-backdrop { align-items: center; }
+.wait-sheet { border-radius: 18px; width: min(360px, calc(100% - 32px)); text-align: center; }
+.wait-sheet .sheet-actions { justify-content: center; }
+.tea-art {
+  width: 132px; height: 132px; border-radius: 14px; display: grid; place-items: center; background: #2c3440;
+  background-image: repeating-linear-gradient(45deg, rgba(169, 184, 198, .07) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(-45deg, rgba(169, 184, 198, .07) 0 1px, transparent 1px 10px);
+}
+.tea-steam path { animation: steam 2.6s ease-in-out infinite; }
+.tea-steam path:nth-child(2) { animation-delay: -.9s; }
+.tea-steam path:nth-child(3) { animation-delay: -1.7s; }
+@keyframes steam {
+  0% { transform: translateY(3px); opacity: 0; }
+  35% { opacity: 1; }
+  100% { transform: translateY(-3px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .tea-steam path { animation: none; } }
+.rematch-name { flex: 1; font-weight: 600; }

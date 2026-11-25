@@ -1,5 +1,5 @@
 // Gra online: poczekalnia pokoju (link, gracze, start) i gra przez pokój w Firebase.
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
@@ -19,8 +19,10 @@ import {
   type MyRoom,
 } from '../online/room';
 import { GameScreen } from './GameScreen';
-import { BOT_NAMES, CARDS_REV, type OnlineSlot, type SavedGame, type Settings } from './store';
-import type { Rematch } from './App';
+import { BOT_NAMES, CARDS_REV, type SavedGame, type Settings } from './store';
+import type { Rematch, RematchSlot } from './App';
+import { TeaCup } from './Icons';
+import { useEscape } from './CardView';
 
 type T = (k: string, p?: Record<string, string | number>) => string;
 
@@ -32,10 +34,10 @@ export function OnlineRoom(props: {
   onSettings: (p: Partial<Settings>) => void;
   onRules: () => void;
   onExit: () => void;
-  /** Rewanż: ustawienia nowej gry (pozostałe miejsca jak w tej grze). */
-  onRematch: (r: Rematch, otherSlots: OnlineSlot[]) => void;
-  /** W pokoju pojawił się rewanż – przejdź do nowego pokoju. */
-  onFollow: (from: MyRoom, next: string, myName: string | null) => void;
+  /** Rewanż (tylko gospodarz): ustawienia nowej gry, zaczynając od tej. */
+  onRematch: (r: Rematch) => void;
+  /** Gospodarz założył rewanż – przejdź do nowego pokoju. */
+  onFollow: (from: MyRoom, next: string) => void;
   langToggle: React.ReactNode;
 }) {
   const { room, settings } = props;
@@ -97,23 +99,37 @@ export function OnlineRoom(props: {
 
   const exit = () => props.onExit();
 
-  // rewanż założony (przez kogokolwiek) – wszyscy przechodzą do nowego pokoju
+  // gospodarz założył rewanż – wszyscy przechodzą do nowego pokoju
   const next = st?.next ?? null;
   useEffect(() => {
     if (!next) return;
-    props.onFollow(room, next, seat !== null ? (st?.seats[seat]?.name ?? null) : null);
+    props.onFollow({ ...room, seat }, next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [next]);
 
-  const rematch = () => {
+  // rewanż ustawia tylko gospodarz; reszta graczy przechodzi z poprzedniej gry z imionami
+  const rematch = async () => {
     const cfg = st?.cfg;
-    if (!cfg || seat === null) return;
-    const others = cfg.slots.filter((_, i) => i !== seat).map((s): OnlineSlot => (s.k === 'h' ? 'human' : s.level));
-    props.onRematch({ from: { ...room, seat }, kingdom: cfg.kingdom, extras: !!cfg.extras?.length }, others);
+    if (!cfg || seat !== 0 || !conn) return;
+    await conn.setPrep(true);
+    const slots = cfg.slots.slice(1).map((s, k): RematchSlot => {
+      if (s.k === 'b') return { k: 'bot', level: s.level };
+      const who = st.seats[k + 1];
+      return who ? { k: 'keep', name: who.name, cid: who.cid } : { k: 'new' };
+    });
+    props.onRematch({ from: { ...room, seat }, kingdom: cfg.kingdom, extras: !!cfg.extras?.length, slots });
   };
+
+  // pozostali gracze: „Czekaj – gospodarz przygotowuje grę” (można schować)
+  const [hideWait, setHideWait] = useState(false);
+  const waiting = !!conn && seat !== null && seat !== 0 && conn.preparing() && !hideWait;
+  useEffect(() => {
+    if (!st?.prep) setHideWait(false);
+  }, [st?.prep]);
 
   if (conn && st && saved && seat !== null) {
     return (
+      <>
       <GameScreen
         key={room.id}
         saved={saved}
@@ -132,9 +148,11 @@ export function OnlineRoom(props: {
           unsent: conn.unsent,
           ping: st.ping,
           push: (a) => conn.push(a),
-          rematch,
+          rematch: seat === 0 ? rematch : undefined,
         }}
       />
+      {waiting && <RematchWait t={t} onClose={() => setHideWait(true)} />}
+      </>
     );
   }
 
@@ -181,14 +199,6 @@ function Lobby(props: {
   const st = conn?.state;
   const link = roomLink(pageBase(), room.id);
 
-  // rewanż: dołączam sam, pod imieniem z poprzedniej gry
-  const autoJoined = useRef(false);
-  const canAutoJoin = !!(room.join && conn?.loaded && st?.cfg && !st.start && seat === null);
-  useEffect(() => {
-    if (!canAutoJoin || autoJoined.current || !conn) return;
-    autoJoined.current = true;
-    conn.join(room.join!, room.cid).catch(() => undefined);
-  }, [canAutoJoin, conn, room]);
 
   if (!conn || !st || !conn.loaded) {
     return (
@@ -204,6 +214,7 @@ function Lobby(props: {
   const humans = humanSlots(cfg);
   const free = humans.filter((i) => !st.seats[i]);
   const full = allSeated(st);
+  if (room.fromRematch && seat === null) return <p className="lobby-status">{t('online.notInRematch')}</p>;
   if (st.start && seat === null) return <p className="lobby-status">{t('online.startedWithoutYou')}</p>;
 
   const join = async () => {
@@ -370,4 +381,23 @@ export function JoinScreen(props: { lang: Lang; langToggle: React.ReactNode; onB
 /** Zapamiętany pokój dla linku – albo nowy wpis z losowym identyfikatorem urządzenia. */
 export function roomFor(rooms: MyRoom[], id: string, cid: string): MyRoom {
   return rooms.find((r) => r.id === id) ?? { id, cid, seat: null, host: false, at: Date.now() };
+}
+
+/** Okienko dla graczy (nie gospodarza): gospodarz ustawia rewanż. */
+function RematchWait({ t, onClose }: { t: T; onClose: () => void }) {
+  useEscape(onClose);
+  return (
+    <div className="sheet-backdrop wait-backdrop">
+      <div className="sheet center wait-sheet" role="status">
+        <TeaCup />
+        <h2>{t('online.waitTitle')}</h2>
+        <p className="muted">{t('online.waitRematch')}</p>
+        <div className="sheet-actions">
+          <button className="btn ghost" onClick={onClose}>
+            {t('close')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

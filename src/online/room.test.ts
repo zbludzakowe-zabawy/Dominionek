@@ -4,7 +4,7 @@ import { Game } from '../engine/game';
 import { Rng } from '../engine/rng';
 import { randomKingdom } from '../engine/setup';
 import { MemoryStore } from './transport';
-import { ROOM_TTL_MS, RoomConn, allSeated, claimNext, cleanupRooms, createRoom, expiredRooms, loadRooms, saveRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
+import { PREP_MS, RoomConn, allSeated, cleanupRooms, createRoom, expiredRooms, loadRooms, saveRoom, seatOf, touchRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
 import { reconcile } from './sync';
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -136,25 +136,40 @@ describe('pokój online', () => {
     expect(r.game.answers).toEqual(a.state.moves);
   });
 
-  it('rewanż: pierwszy zgłoszony wygrywa, stary pokój wskazuje nowy', async () => {
+  it('rewanż: gospodarz ustawia, gracze z poprzedniej gry od razu na miejscach, stary pokój wskazuje nowy', async () => {
     const store = new MemoryStore();
     const t = store.transport();
-    const id = await createRoom(t, cfg(3, [{ k: 'h' }, { k: 'h' }]), { name: 'A', cid: 'a' });
+    const id = await createRoom(t, cfg(3, [{ k: 'h' }, { k: 'h' }, { k: 'h' }]), { name: 'A', cid: 'a' });
     const a = new RoomConn(t, id).open();
+    const b = new RoomConn(t, id).open();
     await settle();
-    const n1 = await claimNext(t, id);
-    expect(n1).toMatch(/^[A-Za-z0-9]{20}$/);
-    expect(await claimNext(t, id)).toBeNull();
+    await b.join('B', 'b');
+    await new RoomConn(t, id).open().join('C', 'c');
+    await a.begin();
     await settle();
-    expect(a.state.next).toBe(n1);
-    const id2 = await createRoom(t, cfg(4, [{ k: 'h' }, { k: 'h' }]), { name: 'B', cid: 'b' }, n1!);
-    expect(id2).toBe(n1);
-    const b = new RoomConn(t, id2).open();
+    expect(b.preparing()).toBe(false);
+    await a.setPrep(true);
     await settle();
-    expect(await b.join('A', 'a')).toBe(1);
+    expect(b.preparing()).toBe(true); // B widzi „Czekaj…”
+    // gospodarz usuwa C i zostawia B – bez nowych graczy gra rusza od razu
+    const id2 = await createRoom(t, cfg(4, [{ k: 'h' }, { k: 'h' }]), { name: 'A', cid: 'a' }, { seats: { 1: { name: 'B', cid: 'b' } }, start: true });
+    expect(await a.setNext(id2)).toBe(true);
+    expect(await a.setNext(id2)).toBe(false); // zapis raz
+    await settle();
+    expect(b.state.next).toBe(id2);
+    expect(b.preparing()).toBe(false);
+    const n = new RoomConn(t, id2).open();
+    await settle();
+    expect(seatOf(n.state, 'b')).toBe(1);
+    expect(seatOf(n.state, 'c')).toBeNull();
+    expect(n.state.start).not.toBeNull();
+    expect(allSeated(n.state)).toBe(true);
+    // dawno rozpoczęte ustawianie (gospodarz zamknął aplikację) – nie czekamy w nieskończoność
+    await b.setPrep(true);
+    expect(b.preparing(Date.now() + PREP_MS + 1)).toBe(false);
   });
 
-  it('stare pokoje: usuwane z bazy razem z wcześniejszymi rewanżami', async () => {
+  it('stare pokoje: po 14 dniach bez gry z bazy i z listy, pokoje sprzed rewanżu po 2 dniach', async () => {
     const mem: Record<string, string> = {};
     const g = globalThis as { localStorage?: unknown };
     const before = g.localStorage;
@@ -163,16 +178,21 @@ describe('pokój online', () => {
       const store = new MemoryStore();
       const t = store.transport();
       const now = Date.now();
-      const old = await createRoom(t, cfg(5, [{ k: 'h' }]), { name: 'A', cid: 'a' });
-      const cur = await createRoom(t, cfg(6, [{ k: 'h' }]), { name: 'A', cid: 'a' });
-      const fresh = await createRoom(t, cfg(7, [{ k: 'h' }]), { name: 'A', cid: 'a' });
-      saveRoom({ id: cur, cid: 'a', seat: 0, host: true, at: now - ROOM_TTL_MS - 2 * 3600 * 1000, old: [old] });
-      saveRoom({ id: fresh, cid: 'a', seat: 0, host: true, at: now - 3600 * 1000 });
+      const day = 24 * 3600 * 1000;
+      const mk = () => createRoom(t, cfg(5, [{ k: 'h' }]), { name: 'A', cid: 'a' });
+      const [old1, cur, old2, fresh] = [await mk(), await mk(), await mk(), await mk()];
+      // stary pokój: ostatnia gra 15 dni temu (choć założony wcześniej)
+      saveRoom({ id: cur, cid: 'a', seat: 0, host: true, at: now - 30 * day, act: now - 15 * day, old: [old1] });
+      // rewanż sprzed 3 dni: poprzedni pokój do skasowania, bieżący zostaje
+      saveRoom({ id: fresh, cid: 'a', seat: 0, host: true, at: now - 3 * day, act: now - 3600 * 1000, old: [old2] });
       expect(expiredRooms(loadRooms(), now).map((r) => r.id)).toEqual([cur]);
       expect(await cleanupRooms(t, now)).toBe(1);
       const rooms = (store.data as { rooms: Record<string, unknown> }).rooms;
-      expect(Object.keys(rooms)).toEqual([fresh]);
-      expect(loadRooms().map((r) => r.id)).toEqual([fresh]);
+      expect(Object.keys(rooms).sort()).toEqual([fresh]);
+      expect(loadRooms().map((r) => [r.id, r.old])).toEqual([[fresh, []]]);
+      // aktywność (ping) odświeża czas na liście
+      touchRoom(fresh, now + 10 * day);
+      expect(expiredRooms(loadRooms(), now + 20 * day)).toEqual([]);
     } finally {
       g.localStorage = before;
     }

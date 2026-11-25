@@ -13,14 +13,20 @@ go deterministycznym silnikiem (`Game.replay`).
 - Boty liczy urządzenie gospodarza – ruszają się, gdy gospodarz ma otwartą grę.
 - Zielona kropka przy graczu = ma teraz otwartą grę. W tytule karty przeglądarki „●” = czeka na mój ruch.
 - Cofanie ruchów jest wyłączone (ruch od razu widzą inni).
-- **Rewanż**: po końcu gry każdy gracz może stuknąć „Rewanż” → ustawia nową grę (miejsca i Królestwo
-  podpowiedziane z poprzedniej) i zostaje jej gospodarzem. Stary pokój dostaje `next` = id nowego pokoju, więc
-  pozostali gracze (i stary link) przechodzą do nowej gry sami i dołączają pod tym samym imieniem.
-  Gdy dwie osoby stukną jednocześnie, wygrywa pierwsza (zapis `next` tylko raz).
-- **Kasowanie**: pokój wolno usunąć 14 dni po założeniu (`ROOM_TTL_DAYS`, reguła bazy z `now`). Robią to
-  urządzenia graczy przy uruchomieniu aplikacji – każde usuwa stare pokoje ze swojej listy „Twoje gry online”
-  (razem z wcześniejszymi pokojami rewanżów). Pokoje, których nikt już nie ma na liście, zostają – można je
-  usunąć ręcznie w konsoli.
+- **Rewanż** (ustawia tylko gospodarz): po końcu gry gospodarz stuka „Rewanż” → ekran jak „Gra online”, ale z graczami
+  poprzedniej gry z imionami (✕ usuwa gracza na stałe, „+ Dodaj miejsce” = nowy gracz z tym samym linkiem albo bot),
+  Królestwo podpowiedziane z poprzedniej gry. Pozostali w tym czasie widzą okienko „Czekaj…” z kubkiem herbaty
+  (pole `prep` w starym pokoju; „Wstecz” u gospodarza je kasuje, po 30 min bez rewanżu przestaje się pokazywać).
+  Nowy pokój powstaje od razu z graczami na ich miejscach; bez nowych graczy także od razu ze `start` – wszyscy
+  przechodzą prosto do gry. Stary pokój dostaje `next` = id nowego, więc gracze (i stary link) przechodzą sami.
+  Usunięty gracz zobaczy „Gospodarz zaczął nową grę bez ciebie”; nowy gracz ze starym linkiem trafia do poczekalni.
+- **Kasowanie** (robią to urządzenia graczy przy uruchomieniu aplikacji, reguły bazy pilnują czasu):
+  - pokój bez gry przez 14 dni (`ROOM_TTL_DAYS`; ostatnia aktywność = pole `act`, zapisywane co 30 s, gdy ktoś
+    ma pokój otwarty) – z bazy i z listy „Twoje gry online”;
+  - pokój zastąpiony rewanżem (ma `next`) – po 2 dniach bez aktywności (`OLD_TTL_DAYS`), bo służy już tylko
+    jako przekierowanie starego linku.
+  Każde urządzenie sprząta tylko pokoje ze swojej listy. Pokoje, których nikt już nie ma na liście, zostają –
+  do usunięcia ręcznie w konsoli (w planie: cotygodniowe sprzątanie przez GitHub Actions).
 - Brak tajemnic: kto zna się na narzędziach programisty, może podejrzeć cudze karty (wspólne ziarno losowania).
 
 ## Dane w bazie
@@ -33,10 +39,13 @@ rooms/<id pokoju: 20 losowych znaków>/
   start  – czas rozpoczęcia                       – zapis raz
   moves  – {<nr>: JSON odpowiedzi}                – zapis tylko w puste miejsce, po starcie
   ping   – {<nr miejsca>: czas}                   – „jestem w grze”, co 30 s
+  act    – ostatnia aktywność (czas)              – co 30 s, gdy ktoś ma pokój otwarty
+  prep   – gospodarz ustawia rewanż (czas, 0 = nie) – po starcie
   next   – id pokoju z rewanżem                    – zapis raz, po starcie
 ```
 
-Cały pokój można usunąć (zapis `null`), gdy `at` jest starsze niż 14 dni.
+Cały pokój można usunąć (zapis `null`), gdy ostatnia aktywność (`act`, a bez niego `at`) jest starsza niż 14 dni,
+albo – gdy pokój ma już `next` – starsza niż 2 dni.
 
 Zapis „tylko w puste miejsce” (reguła `!data.exists()`) sprawia, że dwa urządzenia nie nadpiszą sobie ruchów.
 Gdyby jednak dwa zapisały ruch o tym samym numerze (np. jeden gracz na dwóch telefonach), wygrywa pierwszy,

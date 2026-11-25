@@ -949,7 +949,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 </li>
               ))}
             </ol>
-            {online?.rematch && <p className="muted small">{t('online.rematchInfo')}</p>}
+            {online && <p className="muted small">{t(online.rematch ? 'online.rematchInfo' : 'online.rematchByHost')}</p>}
             <div className="end-buttons">
               {online?.rematch && (
                 <button className="btn primary" onClick={online.rematch}>

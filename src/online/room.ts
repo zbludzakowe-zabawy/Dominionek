@@ -5,8 +5,12 @@
 //   moves  – {<nr>: JSON odpowiedzi} – lista odpowiedzi na decyzje; zapis tylko w puste miejsce,
 //            więc dwa urządzenia nie nadpiszą sobie ruchów
 //   ping   – {<nr miejsca>: czas} – kiedy gracz ostatnio miał otwartą grę
+//   at     – czas założenia
+//   act    – ostatnia aktywność (gracz z otwartym pokojem zapisuje co 30 s)
+//   prep   – gospodarz ustawia rewanż (czas; 0 = zrezygnował) – pozostali widzą „Czekaj…”
 //   next   – id pokoju z rewanżem (zapis raz, po starcie) – stary link prowadzi do nowej gry
-//   at     – czas założenia; po ROOM_TTL_DAYS dniach pokój wolno usunąć (robią to urządzenia graczy)
+// Kasowanie (robią to urządzenia graczy, reguły bazy pilnują czasu): ROOM_TTL_DAYS dni od ostatniej
+// aktywności, a pokój zastąpiony rewanżem już po OLD_TTL_DAYS dniach.
 // Stan gry = cfg + seats + moves; każde urządzenie odtwarza go silnikiem (Game.replay).
 // Odpowiedzi trzymamy jako tekst JSON, bo Firebase gubi puste tablice (np. {t:'cards', is: []}).
 import type { Answer, BotLevel, GameSetup } from '../engine/types';
@@ -19,6 +23,13 @@ const ID_LEN = 20;
 /** Po tylu dniach od założenia pokój jest usuwany (reguły bazy: firebase/database.rules.json). */
 export const ROOM_TTL_DAYS = 14;
 export const ROOM_TTL_MS = ROOM_TTL_DAYS * 24 * 3600 * 1000;
+/** Pokój, z którego zrobiono rewanż (zostaje tylko jako przekierowanie starego linku). */
+export const OLD_TTL_DAYS = 2;
+export const OLD_TTL_MS = OLD_TTL_DAYS * 24 * 3600 * 1000;
+/** „Gospodarz ustawia rewanż” – po tylu ms bez rewanżu przestajemy czekać (gospodarz zamknął aplikację). */
+export const PREP_MS = 30 * 60 * 1000;
+/** Zapas na różnicę zegarów urządzenia i bazy. */
+const SLACK_MS = 3600 * 1000;
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
 
 export type Slot = { k: 'h' } | { k: 'b'; level: BotLevel };
@@ -45,8 +56,10 @@ export interface RoomState {
   start: number | null;
   moves: Answer[];
   ping: Record<number, number>;
-  /** Pokój z rewanżem (jeśli ktoś go założył). */
+  /** Pokój z rewanżem (jeśli gospodarz go założył). */
   next: string | null;
+  /** Gospodarz ustawia rewanż (czas rozpoczęcia; null/0 = nie). */
+  prep: number | null;
 }
 
 export function randomId(len = ID_LEN): string {
@@ -111,7 +124,8 @@ export function parseRoom(raw: unknown): RoomState {
   const ping: Record<number, number> = {};
   for (const [i, t] of entries(r.ping)) if (typeof t === 'number') ping[i] = t;
   const next = typeof r.next === 'string' && validRoomId(r.next) ? r.next : null;
-  return { cfg, seats, start: typeof r.start === 'number' ? r.start : null, moves, ping, next };
+  const prep = typeof r.prep === 'number' && r.prep > 0 ? r.prep : null;
+  return { cfg, seats, start: typeof r.start === 'number' ? r.start : null, moves, ping, next, prep };
 }
 
 /** Ustawienia gry dla silnika: ludzie z nazwami z zajętych miejsc, boty z nazwami z listy. */
@@ -138,23 +152,20 @@ export const seatOf = (st: RoomState, cid: string) => {
 
 // ---------- zakładanie i dołączanie ----------
 
-/** Zakłada pokój (gospodarz zajmuje miejsce 0). Zwraca id pokoju. */
-export async function createRoom(t: Transport, cfg: RoomCfg, host: Seat, wantId?: string): Promise<string> {
+/**
+ * Zakłada pokój (gospodarz zajmuje miejsce 0). Zwraca id pokoju.
+ * Rewanż: `seats` – gracze z poprzedniej gry od razu na swoich miejscach, `start` – gra rusza bez poczekalni.
+ */
+export async function createRoom(t: Transport, cfg: RoomCfg, host: Seat, extra: { seats?: Record<number, Seat>; start?: boolean } = {}): Promise<string> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const id = attempt === 0 && wantId ? wantId : randomId();
-    const ok = await t.create(`rooms/${id}`, { cfg: JSON.stringify(cfg), seats: { 0: host }, at: Date.now() });
+    const id = randomId();
+    const now = Date.now();
+    const room: Record<string, unknown> = { cfg: JSON.stringify(cfg), seats: { ...extra.seats, 0: host }, at: now, act: now };
+    if (extra.start) room.start = now;
+    const ok = await t.create(`rooms/${id}`, room);
     if (ok) return id;
   }
   throw new TransportError('Nie udało się założyć pokoju (reguły bazy?)', 'other');
-}
-
-/**
- * Rewanż: rezerwuje w starym pokoju miejsce na link do nowego pokoju (zapis raz – wygrywa pierwszy).
- * Zwraca id nowego pokoju, który trzeba teraz założyć, albo null, gdy ktoś był szybszy.
- */
-export async function claimNext(t: Transport, roomId: string): Promise<string | null> {
-  const id = randomId();
-  return (await t.create(`rooms/${roomId}/next`, id)) ? id : null;
 }
 
 /**
@@ -172,7 +183,7 @@ export async function rulesMissing(t: Transport, id: string, host: Seat): Promis
 // ---------- połączenie z pokojem ----------
 
 export class RoomConn {
-  state: RoomState = { cfg: null, seats: {}, start: null, moves: [], ping: {}, next: null };
+  state: RoomState = { cfg: null, seats: {}, start: null, moves: [], ping: {}, next: null, prep: null };
   link: LinkState = 'offline';
   /** Ile razy przyszły dane (0 = jeszcze nic). */
   loaded = 0;
@@ -243,11 +254,29 @@ export class RoomConn {
     return this.t.create(`rooms/${this.id}/start`, Date.now());
   }
 
-  /** Co 30 s zapisuje „jestem” dla danego miejsca (tylko gdy aplikacja jest widoczna). */
+  /** Rewanż: gospodarz zaczyna (true) albo przestaje (false) ustawiać nową grę. */
+  async setPrep(on: boolean): Promise<void> {
+    await this.t.set(`rooms/${this.id}/prep`, on ? Date.now() : 0).catch(() => undefined);
+  }
+
+  /** Rewanż gotowy: stary pokój wskazuje nowy (zapis raz). */
+  async setNext(id: string): Promise<boolean> {
+    return this.t.create(`rooms/${this.id}/next`, id);
+  }
+
+  /** Czy gospodarz właśnie ustawia rewanż (i nie zostawił tego dawno temu). */
+  preparing(now = Date.now()): boolean {
+    return !this.state.next && !!this.state.prep && now - this.state.prep < PREP_MS;
+  }
+
+  /** Co 30 s zapisuje „jestem” dla danego miejsca i aktywność pokoju (tylko gdy aplikacja jest widoczna). */
   startPing(seat: number): void {
     const beat = () => {
       if (typeof document !== 'undefined' && document.hidden) return;
-      this.t.set(`rooms/${this.id}/ping/${seat}`, Date.now()).catch(() => undefined);
+      const now = Date.now();
+      this.t.set(`rooms/${this.id}/ping/${seat}`, now).catch(() => undefined);
+      this.t.set(`rooms/${this.id}/act`, now).catch(() => undefined);
+      touchRoom(this.id, now);
     };
     beat();
     clearInterval(this.pingTimer);
@@ -318,12 +347,15 @@ export interface MyRoom {
   /** Moje miejsce (po dołączeniu). */
   seat: number | null;
   host: boolean;
+  /** Kiedy pokój trafił na listę (dla rewanżu: kiedy powstał). */
   at: number;
+  /** Ostatnio widziana aktywność w pokoju (moja). */
+  act?: number;
   /** Nazwy graczy (do listy na ekranie startowym). */
   names?: string[];
   over?: boolean;
-  /** Rewanż: dołącz od razu pod tym imieniem. */
-  join?: string;
+  /** Przyszedłem tu z rewanżu jako gracz poprzedniej gry (bez miejsca = gospodarz mnie nie wziął). */
+  fromRematch?: boolean;
   /** Wcześniejsze pokoje tej samej grupy (rewanże) – do usunięcia razem z tym. */
   old?: string[];
 }
@@ -348,6 +380,19 @@ export function saveRoom(r: MyRoom): void {
   }
 }
 
+/** Zapamiętuje aktywność w pokoju z listy. */
+export function touchRoom(id: string, now = Date.now()): void {
+  const list = loadRooms();
+  const r = list.find((x) => x.id === id);
+  if (!r) return;
+  r.act = now;
+  try {
+    localStorage.setItem(ROOMS_KEY, JSON.stringify(list));
+  } catch {
+    /* trudno */
+  }
+}
+
 export function forgetRoom(id: string): void {
   try {
     localStorage.setItem(ROOMS_KEY, JSON.stringify(loadRooms().filter((x) => x.id !== id)));
@@ -356,25 +401,45 @@ export function forgetRoom(id: string): void {
   }
 }
 
-/** Pokoje z listy, które są już tak stare, że baza pozwala je usunąć. */
+/** Pokoje z listy bez aktywności tak długo, że baza pozwala je usunąć. */
 export function expiredRooms(list: MyRoom[], now = Date.now()): MyRoom[] {
-  return list.filter((r) => now - r.at > ROOM_TTL_MS + 3600 * 1000);
+  return list.filter((r) => now - (r.act ?? r.at) > ROOM_TTL_MS + SLACK_MS);
 }
 
 /**
- * Sprząta stare pokoje z tego urządzenia: usuwa je z bazy (razem z wcześniejszymi rewanżami) i z listy.
- * Błędy sieci – spróbujemy przy następnym uruchomieniu.
+ * Sprząta stare pokoje z tego urządzenia (przy starcie aplikacji):
+ * - pokoje zastąpione rewanżem – po OLD_TTL_DAYS dniach od rewanżu,
+ * - pokoje bez aktywności przez ROOM_TTL_DAYS dni – z bazy i z listy.
+ * Ostatnie słowo ma baza: odmowa (ktoś grał później) = pokój zostaje. Błąd sieci – następnym razem.
+ * Zwraca liczbę pokoi zdjętych z listy.
  */
 export async function cleanupRooms(t: Transport, now = Date.now()): Promise<number> {
   let n = 0;
-  for (const r of expiredRooms(loadRooms(), now)) {
+  for (const r of loadRooms()) {
     try {
-      for (const id of [...(r.old ?? []), r.id]) await t.remove(`rooms/${id}`);
-      forgetRoom(r.id);
-      n++;
+      if (r.old?.length && now - r.at > OLD_TTL_MS + SLACK_MS) {
+        const left: string[] = [];
+        for (const id of r.old) if (!(await t.remove(`rooms/${id}`))) left.push(id);
+        r.old = left;
+        saveRoomInPlace(r);
+      }
+      if (expiredRooms([r], now).length && (await t.remove(`rooms/${r.id}`))) {
+        for (const id of r.old ?? []) await t.remove(`rooms/${id}`);
+        forgetRoom(r.id);
+        n++;
+      }
     } catch {
       /* następnym razem */
     }
   }
   return n;
+}
+
+/** Zapisuje zmieniony wpis bez przesuwania go na początek listy. */
+function saveRoomInPlace(r: MyRoom): void {
+  try {
+    localStorage.setItem(ROOMS_KEY, JSON.stringify(loadRooms().map((x) => (x.id === r.id ? r : x))));
+  } catch {
+    /* trudno */
+  }
 }
