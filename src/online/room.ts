@@ -52,21 +52,20 @@ export const validRoomId = (id: string) => /^[A-Za-z0-9]{20,40}$/.test(id);
 
 // ---------- link do pokoju ----------
 
-/** Link do pokoju: adres gry + #room=<id> (+ &db=<baza>, gdy inna niż wbudowana). */
-export function roomLink(base: string, id: string, db: string, defaultDb: string): string {
-  const u = base.replace(/#.*$/, '');
-  return `${u}#room=${id}` + (db && db !== defaultDb ? `&db=${encodeURIComponent(db)}` : '');
+/** Link do pokoju: adres gry + #room=<id>. */
+export function roomLink(base: string, id: string): string {
+  return `${base.replace(/#.*$/, '')}#room=${id}`;
 }
 
-/** Odczytuje id pokoju (i adres bazy) z linku, fragmentu „#room=…” albo samego identyfikatora. */
-export function parseRoomRef(text: string): { id: string; db: string | null } | null {
+/** Odczytuje id pokoju z linku, fragmentu „#room=…” albo samego identyfikatora. */
+export function parseRoomRef(text: string): { id: string } | null {
   const s = text.trim();
-  if (validRoomId(s)) return { id: s, db: null };
+  if (validRoomId(s)) return { id: s };
   const hash = s.includes('#') ? s.slice(s.indexOf('#') + 1) : s;
   const params = new URLSearchParams(hash);
   const id = params.get('room');
   if (!id || !validRoomId(id)) return null;
-  return { id, db: params.get('db') };
+  return { id };
 }
 
 // ---------- odczyt danych pokoju ----------
@@ -279,6 +278,7 @@ export class RoomConn {
         this.retry = 0;
         if (!ok) return this.conflict();
         this.outbox.shift();
+        if (!this.outbox.length) this.emit();
       }
     } finally {
       this.sending = false;
@@ -297,7 +297,6 @@ export class RoomConn {
 
 export interface MyRoom {
   id: string;
-  db: string;
   cid: string;
   /** Moje miejsce (po dołączeniu). */
   seat: number | null;

@@ -7,7 +7,7 @@ import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
 import { CardFace, ConfirmButton, Cost, PileTile } from './CardView';
 import { GameScreen } from './GameScreen';
-import { DbField, JoinScreen, OnlineRoom, roomFor } from './Online';
+import { JoinScreen, OnlineRoom, roomFor } from './Online';
 import {
   BOT_NAMES,
   loadGame,
@@ -19,8 +19,8 @@ import {
   type Settings,
   CARDS_REV,
 } from './store';
-import { DEFAULT_DB } from '../online/config';
-import { firebaseTransport, normalizeDb } from '../online/firebase';
+import { ONLINE_DB } from '../online/config';
+import { firebaseTransport } from '../online/firebase';
 import { ROOM_V, createRoom, forgetRoom, loadRooms, parseRoomRef, randomId, saveRoom, type MyRoom, type RoomCfg } from '../online/room';
 
 export { BOT_NAMES };
@@ -29,7 +29,7 @@ const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
 type Screen = 'home' | 'setup' | 'kingdom' | 'rules' | 'game' | 'online' | 'join';
 
 /** Link do pokoju w adresie (#room=…): zapamiętany pokój albo nowy, do którego dopiero dołączymy. */
-function roomFromHash(settings: Settings): MyRoom | null {
+function roomFromHash(): MyRoom | null {
   const ref = typeof location !== 'undefined' ? parseRoomRef(location.hash) : null;
   if (!ref) return null;
   try {
@@ -37,14 +37,12 @@ function roomFromHash(settings: Settings): MyRoom | null {
   } catch {
     /* trudno */
   }
-  const db = normalizeDb(ref.db ?? (DEFAULT_DB || settings.onlineDb));
-  if (!db) return null;
-  return roomFor(loadRooms(), ref.id, db, randomId(16));
+  return roomFor(loadRooms(), ref.id, randomId(16));
 }
 
 export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings);
-  const [room, setRoom] = useState<MyRoom | null>(() => roomFromHash(settings));
+  const [room, setRoom] = useState<MyRoom | null>(roomFromHash);
   const [screen, setScreen] = useState<Screen>(() => (room ? 'online' : loadGame() ? 'game' : 'home'));
   /** Ustawienia i Królestwo dla gry online (zamiast gry z botami). */
   const [online, setOnline] = useState(false);
@@ -82,8 +80,6 @@ export function App() {
     setScreen('game');
   };
 
-  const onlineDb = normalizeDb(DEFAULT_DB || settings.onlineDb);
-
   const openRoom = (r: MyRoom) => {
     setRoom(r);
     setScreen('online');
@@ -102,8 +98,8 @@ export function App() {
     };
     const cid = randomId(16);
     try {
-      const id = await createRoom(firebaseTransport(onlineDb), cfg, { name: settings.name.trim() || t('defaultName'), cid });
-      const r: MyRoom = { id, db: onlineDb, cid, seat: 0, host: true, at: Date.now() };
+      const id = await createRoom(firebaseTransport(ONLINE_DB), cfg, { name: settings.name.trim() || t('defaultName'), cid });
+      const r: MyRoom = { id, cid, seat: 0, host: true, at: Date.now() };
       saveRoom(r);
       setCreating('');
       openRoom(r);
@@ -167,13 +163,9 @@ export function App() {
     return (
       <JoinScreen
         lang={lang}
-        dbSetting={settings.onlineDb}
         langToggle={langToggle}
         onBack={() => setScreen('home')}
-        onJoin={(id, db) => {
-          if (!DEFAULT_DB && db !== settings.onlineDb) update({ onlineDb: db });
-          openRoom(roomFor(loadRooms(), id, db, randomId(16)));
-        }}
+        onJoin={(id) => openRoom(roomFor(loadRooms(), id, randomId(16)))}
       />
     );
   }
@@ -344,7 +336,6 @@ function SetupScreen(props: {
         {props.langToggle}
       </header>
       <main className="page setup">
-        {online && !DEFAULT_DB && <DbField lang={lang} value={settings.onlineDb} onChange={(v) => update({ onlineDb: v.trim() })} />}
         <section>
           <label className="field">
             <span>{t('yourName')}</span>
@@ -436,7 +427,7 @@ function SetupScreen(props: {
         <button
           className="btn primary big"
           onClick={props.onNext}
-          disabled={online && (!settings.onlineSlots.includes('human') || !normalizeDb(DEFAULT_DB || settings.onlineDb))}
+          disabled={online && !settings.onlineSlots.includes('human')}
         >
           {t('kingdom')} →
         </button>

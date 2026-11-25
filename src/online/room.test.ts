@@ -50,13 +50,13 @@ class Device {
 }
 
 describe('pokój online', () => {
-  it('link do pokoju: id i adres bazy', () => {
-    const link = roomLink('https://x.github.io/Dominionek/#stare', 'Abcdefghijkmnopqrstu', 'https://db.example', '');
-    expect(link).toBe('https://x.github.io/Dominionek/#room=Abcdefghijkmnopqrstu&db=https%3A%2F%2Fdb.example');
-    expect(parseRoomRef(link)).toEqual({ id: 'Abcdefghijkmnopqrstu', db: 'https://db.example' });
-    expect(parseRoomRef('Abcdefghijkmnopqrstu')).toEqual({ id: 'Abcdefghijkmnopqrstu', db: null });
+  it('link do pokoju: tylko id (adres bazy jest w konfiguracji)', () => {
+    const link = roomLink('https://x.github.io/Dominionek/#stare', 'Abcdefghijkmnopqrstu');
+    expect(link).toBe('https://x.github.io/Dominionek/#room=Abcdefghijkmnopqrstu');
+    expect(parseRoomRef(link)).toEqual({ id: 'Abcdefghijkmnopqrstu' });
+    expect(parseRoomRef('Abcdefghijkmnopqrstu')).toEqual({ id: 'Abcdefghijkmnopqrstu' });
+    expect(parseRoomRef('https://x/#room=Abcdefghijkmnopqrstu&db=https://inna.baza')).toEqual({ id: 'Abcdefghijkmnopqrstu' });
     expect(parseRoomRef('https://x/#room=krótki')).toBeNull();
-    expect(roomLink('https://x/', 'Abcdefghijkmnopqrstu', 'https://db', 'https://db')).toBe('https://x/#room=Abcdefghijkmnopqrstu');
   });
 
   it('puste tablice i liczbowe klucze z Firebase', () => {

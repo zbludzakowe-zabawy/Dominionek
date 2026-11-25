@@ -43,8 +43,11 @@ a drugie urządzenie odtwarza grę z bazy (`src/online/sync.ts`).
    **Opublikuj**.
 5. Na zakładce **Dane (Data)** u góry jest adres bazy, np.
    `https://crownforge-1a2b3-default-rtdb.europe-west1.firebasedatabase.app` – skopiuj go.
-6. Adres wpisz na stałe w `src/online/config.ts` (`DEFAULT_DB`) – albo w aplikacji (Gra online → „Adres bazy
-   Firebase”; wtedy link do pokoju niesie adres dalej).
+6. Adres wpisz w `src/online/config.ts` (`ONLINE_DB`). Gracze nie mogą go zmienić w aplikacji, a link do pokoju
+   zawiera tylko identyfikator pokoju.
+
+Obecna baza: `https://crownforge-5710b-default-rtdb.europe-west1.firebasedatabase.app` (projekt `crownforge-5710b`,
+reguły opublikowane i sprawdzone 25.11).
 
 Nie trzeba: rejestrować „aplikacji internetowej” w Firebase, kluczy API, logowania, karty płatniczej.
 Plan bezpłatny (Spark): 1 GB danych, 10 GB pobrań miesięcznie, 100 równoczesnych połączeń – jedna partia
@@ -58,8 +61,8 @@ Stare pokoje można co jakiś czas usunąć w konsoli (zakładka Dane → `rooms
 
 ```bash
 node scripts/fake-firebase.mjs 9400        # udawana baza z regułami (--open = bez reguł)
-npm run build && npx vite preview --port 4173
+VITE_ONLINE_DB=http://localhost:9400 npm run build && npx vite preview --port 4173
 ```
 
-W aplikacji jako adres bazy wpisz `http://localhost:9400`. Dwie przeglądarki (albo okno zwykłe i prywatne)
+Dwie przeglądarki (albo okno zwykłe i prywatne)
 = dwóch graczy. Logika pokoju ma testy w `src/online/room.test.ts` (magazyn w pamięci).

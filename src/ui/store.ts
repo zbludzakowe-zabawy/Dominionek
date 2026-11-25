@@ -20,8 +20,6 @@ export interface Settings {
   mode: 'random' | 'manual';
   /** Gra online: pozostałe miejsca przy stole (człowiek albo bot danego poziomu). */
   onlineSlots: OnlineSlot[];
-  /** Gra online: adres bazy Firebase, gdy nie jest wbudowany (src/online/config.ts). */
-  onlineDb: string;
 }
 
 export type OnlineSlot = 'human' | BotLevel;
@@ -61,7 +59,7 @@ const defaultLang = (): Lang => {
 };
 
 export function loadSettings(): Settings {
-  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, barCollapsed: null, pileView: 'art', bots: ['medium'], sets: ['keep'], mode: 'random', onlineSlots: ['human'], onlineDb: '' };
+  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, barCollapsed: null, pileView: 'art', bots: ['medium'], sets: ['keep'], mode: 'random', onlineSlots: ['human'] };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) return { ...base, ...JSON.parse(raw) };

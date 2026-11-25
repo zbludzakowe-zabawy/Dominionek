@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
-import { DEFAULT_DB } from '../online/config';
-import { firebaseTransport, normalizeDb } from '../online/firebase';
+import { ONLINE_DB } from '../online/config';
+import { firebaseTransport } from '../online/firebase';
 import {
   ROOM_V,
   RoomConn,
@@ -41,7 +41,7 @@ export function OnlineRoom(props: {
   const [noRules, setNoRules] = useState(false);
 
   useEffect(() => {
-    const c = new RoomConn(firebaseTransport(room.db), room.id);
+    const c = new RoomConn(firebaseTransport(ONLINE_DB), room.id);
     const off = c.on(() => setVer((v) => v + 1));
     c.open();
     setConn(c);
@@ -49,7 +49,7 @@ export function OnlineRoom(props: {
       off();
       c.close();
     };
-  }, [room.db, room.id]);
+  }, [room.id]);
 
   const st = conn?.state;
   const seat = st ? seatOf(st, room.cid) : null;
@@ -158,7 +158,7 @@ function Lobby(props: {
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
   const st = conn?.state;
-  const link = roomLink(pageBase(), room.id, room.db, DEFAULT_DB);
+  const link = roomLink(pageBase(), room.id);
 
   if (!conn || !st || !conn.loaded) {
     return (
@@ -299,23 +299,14 @@ function Lobby(props: {
 }
 
 /** Dołączanie przez wklejony link (np. w aplikacji zainstalowanej na iPhonie, która nie otwiera linków). */
-export function JoinScreen(props: {
-  lang: Lang;
-  dbSetting: string;
-  langToggle: React.ReactNode;
-  onBack: () => void;
-  onJoin: (id: string, db: string) => void;
-}) {
+export function JoinScreen(props: { lang: Lang; langToggle: React.ReactNode; onBack: () => void; onJoin: (id: string) => void }) {
   const t: T = (k, p) => tr(props.lang, k, p);
   const [text, setText] = useState('');
-  const [db, setDb] = useState(props.dbSetting);
   const [err, setErr] = useState('');
   const go = () => {
     const ref = parseRoomRef(text);
     if (!ref) return setErr(t('online.badLink'));
-    const base = normalizeDb(ref.db ?? (DEFAULT_DB || db));
-    if (!base) return setErr(t('online.needDb'));
-    props.onJoin(ref.id, base);
+    props.onJoin(ref.id);
   };
   return (
     <div className="screen">
@@ -333,7 +324,6 @@ export function JoinScreen(props: {
             <input value={text} onChange={(e) => setText(e.target.value)} placeholder="https://…#room=…" autoFocus />
           </label>
         </section>
-        {!DEFAULT_DB && <DbField lang={props.lang} value={db} onChange={setDb} />}
         {err && <p className="lobby-status warn">{err}</p>}
         <button className="btn primary big" onClick={go} disabled={!text.trim()}>
           {t('online.joinBtn')}
@@ -343,19 +333,7 @@ export function JoinScreen(props: {
   );
 }
 
-export function DbField({ lang, value, onChange }: { lang: Lang; value: string; onChange: (v: string) => void }) {
-  return (
-    <section>
-      <label className="field">
-        <span>{tr(lang, 'online.db')}</span>
-        <input value={value} onChange={(e) => onChange(e.target.value)} placeholder="https://….firebasedatabase.app" inputMode="url" />
-      </label>
-      <p className="muted small">{tr(lang, 'online.dbInfo')}</p>
-    </section>
-  );
-}
-
-/** Zapamiętany pokój dla linku (id + baza) – albo nowy wpis z losowym identyfikatorem urządzenia. */
-export function roomFor(rooms: MyRoom[], id: string, db: string, cid: string): MyRoom {
-  return rooms.find((r) => r.id === id) ?? { id, db, cid, seat: null, host: false, at: Date.now() };
+/** Zapamiętany pokój dla linku – albo nowy wpis z losowym identyfikatorem urządzenia. */
+export function roomFor(rooms: MyRoom[], id: string, cid: string): MyRoom {
+  return rooms.find((r) => r.id === id) ?? { id, cid, seat: null, host: false, at: Date.now() };
 }

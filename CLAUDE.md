@@ -27,7 +27,8 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 Dalej w planie (kolejność jak w README → Plan):
 1. Przegląd działania kart – użytkownik uważa, że efekty kart wymagają zmian (temat z innego wątku).
 2. Gra online – zrobiona (25.11): Firebase Realtime Database przez REST, link-pokój bez logowania (`docs/gra-online.md`).
-   Do sprawdzenia na prawdziwej bazie, gdy użytkownik ją założy i poda adres (`src/online/config.ts`, `DEFAULT_DB`).
+   Baza: projekt Firebase `crownforge-5710b` (adres w `src/online/config.ts`, `ONLINE_DB`; użytkownik nie chce, by dało się
+   go zmienić w aplikacji). Sprawdzone na prawdziwej bazie 25.11 (środowisko chmurowe „Dominionek” ma dostęp do tego hosta).
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 
@@ -62,13 +63,13 @@ Dalej w planie (kolejność jak w README → Plan):
   `transport.ts` (interfejs + `MemoryStore` do testów), `room.ts` (pokój: `cfg` jako tekst JSON, `seats`, `start`,
   `moves` jako teksty JSON – Firebase gubi puste tablice; `RoomConn.push` zapisuje brakujące odpowiedzi po kolei,
   każdą tylko w puste miejsce; „moje pokoje” w localStorage `crownforge-rooms`), `sync.ts` (`reconcile`: dopisz ruchy
-  z bazy albo odtwórz grę przy konflikcie), `config.ts` (`DEFAULT_DB`). Reguły bazy: `firebase/database.rules.json`
+  z bazy albo odtwórz grę przy konflikcie), `config.ts` (`ONLINE_DB`, do testów `VITE_ONLINE_DB` przy budowaniu). Reguły bazy: `firebase/database.rules.json`
   (zmiana zapisu = zmiana reguł + `scripts/fake-firebase.mjs`). Format pokoju `ROOM_V`; pokój pamięta `CARDS_REV`
   – inna wersja kart = komunikat „odśwież aplikację”.
 - `src/ui/` – React.
   - `App.tsx` – ekrany: start, ustawienia, Królestwo (losowe/ręczne, przełącznik Smocze Złoto+Pałac), zasady.
   - `Online.tsx` – poczekalnia pokoju (link, gracze, Królestwo, start), `JoinScreen` (wklejenie linku), `OnlineRoom`
-    (połączenie z pokojem → `GameScreen` z `online`). Link: `#room=<id>[&db=<adres bazy>]`, odczytywany przy starcie.
+    (połączenie z pokojem → `GameScreen` z `online`). Link: `#room=<id>`, odczytywany przy starcie.
   - `GameScreen.tsx` – plansza; „ja” = `online.seat` (solo 0), boty liczy tylko gospodarz (`runBots`), online bez Cofnij
     i bez „Zacznij od nowa”; pętla botów, autozapis (`store.ts`, localStorage, `SavedGame.v = 2`;
     zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
@@ -129,7 +130,7 @@ Dalej w planie (kolejność jak w README → Plan):
 npm install
 npm test          # vitest: symulacje gier botów, testy kart, PWA
 npm run build     # tsc + vite build → dist/ (z sw.js)
-node scripts/fake-firebase.mjs 9400   # udawana baza do testów gry online (adres w aplikacji: http://localhost:9400)
+node scripts/fake-firebase.mjs 9400   # udawana baza do testów gry online; build z VITE_ONLINE_DB=http://localhost:9400
 ```
 
 Podgląd dla użytkownika (Artifact na claude.ai, ten sam link przy każdej publikacji:
