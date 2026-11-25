@@ -25,8 +25,8 @@ go deterministycznym silnikiem (`Game.replay`).
     ma pokój otwarty) – z bazy i z listy „Twoje gry online”;
   - pokój zastąpiony rewanżem (ma `next`) – po 2 dniach bez aktywności (`OLD_TTL_DAYS`), bo służy już tylko
     jako przekierowanie starego linku.
-  Każde urządzenie sprząta tylko pokoje ze swojej listy. Resztę (pokoje, których nikt już nie ma na liście)
-  usuwa cotygodniowe sprzątanie na GitHubie – niżej.
+  Każde urządzenie sprząta tylko pokoje ze swojej listy. Pokoje, których nikt już nie ma na liście, zostają –
+  do usunięcia ręcznie w konsoli (w planie: cotygodniowe sprzątanie przez GitHub Actions).
 - Brak tajemnic: kto zna się na narzędziach programisty, może podejrzeć cudze karty (wspólne ziarno losowania).
 
 ## Dane w bazie
@@ -88,20 +88,3 @@ VITE_ONLINE_DB=http://localhost:9400 npm run build && npx vite preview --port 41
 
 Dwie przeglądarki (albo okno zwykłe i prywatne)
 = dwóch graczy. Logika pokoju ma testy w `src/online/room.test.ts` (magazyn w pamięci).
-
-## Cotygodniowe sprzątanie (GitHub Actions)
-
-Workflow `.github/workflows/cleanup-rooms.yml` w każdy poniedziałek (3:37 UTC) uruchamia `scripts/cleanup-rooms.mjs`.
-Skrypt loguje się do bazy kluczem konta usługi Firebase (omija reguły, więc widzi wszystkie pokoje) i usuwa:
-pokoje bez gry przez 14 dni, pokoje po rewanżu po 2 dniach i puste śmieci – te same zasady co w aplikacji.
-Ręcznie: zakładka **Actions → Sprzątanie pokoi gry online → Run workflow** (domyślnie „Próba” – tylko wypisuje,
-co byłoby usunięte; odznacz, żeby naprawdę usunąć).
-
-Klucz (raz):
-1. Konsola Firebase → projekt → ⚙ obok „Przegląd projektu” → **Ustawienia projektu** → zakładka **Konta usługi**
-   → **Wygeneruj nowy klucz prywatny** → pobiera się plik `.json`.
-2. GitHub → repozytorium → **Settings → Secrets and variables → Actions → New repository secret**:
-   nazwa `FIREBASE_SERVICE_ACCOUNT`, wartość = cała zawartość pliku `.json`.
-3. Plik z dysku usunąć (klucz daje pełny dostęp do projektu Firebase; na GitHubie jest zaszyfrowany).
-
-Test lokalny: `FIREBASE_DB=http://localhost:9400 node scripts/cleanup-rooms.mjs --no-auth --dry-run` (z `fake-firebase.mjs`).
