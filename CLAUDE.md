@@ -75,6 +75,8 @@ Dalej w planie (kolejność jak w README → Plan):
     zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
+  - `Icons.tsx` – ikona dziennika (otwarta książka, inna niż ☰ menu) i `ShareButton` (trzy połączone kropki,
+    lewy górny róg ekranu startowego; udostępnia stały adres GitHub Pages: share → schowek → komunikat).
   - `motifs.ts` – rysunki kart (pole 48×48, ziemia ~y=44; `m` linie, `a` akcent, `f` wypełnienia).
   - `art.ts` – tło karty (kratka / łuski dla Skarbca / sześciokąty dla Wieży), symbole pakietów
     (Twierdza: wieża; Skarbiec: konturowy łeb smoka z otwartą paszczą, patrzy w lewo, bez płomienia,
