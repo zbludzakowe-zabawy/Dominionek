@@ -25,6 +25,8 @@ export interface OnlinePlay {
   /** Kiedy gracze ostatnio mieli otwartą grę (nr miejsca → czas). */
   ping: Record<number, number>;
   push: (answers: Answer[]) => void;
+  /** Rewanż: nowa gra w tym samym pokoju-linku (ustawia ją ten, kto stuknie). */
+  rematch?: () => void;
 }
 
 /** Gracz „obecny”, jeśli jego aplikacja odezwała się w ciągu tylu ms. */
@@ -926,7 +928,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 </li>
               ))}
             </ol>
+            {online?.rematch && <p className="muted small">{t('online.rematchInfo')}</p>}
             <div className="end-buttons">
+              {online?.rematch && (
+                <button className="btn primary" onClick={online.rematch}>
+                  {t('online.rematch')}
+                </button>
+              )}
               {!online && (
                 <button className="btn primary" onClick={() => onRematch(game.setup.kingdom, !!game.setup.extras?.length)}>
                   {t('sameKingdom')}

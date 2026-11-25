@@ -5,6 +5,8 @@
 //   moves  – {<nr>: JSON odpowiedzi} – lista odpowiedzi na decyzje; zapis tylko w puste miejsce,
 //            więc dwa urządzenia nie nadpiszą sobie ruchów
 //   ping   – {<nr miejsca>: czas} – kiedy gracz ostatnio miał otwartą grę
+//   next   – id pokoju z rewanżem (zapis raz, po starcie) – stary link prowadzi do nowej gry
+//   at     – czas założenia; po ROOM_TTL_DAYS dniach pokój wolno usunąć (robią to urządzenia graczy)
 // Stan gry = cfg + seats + moves; każde urządzenie odtwarza go silnikiem (Game.replay).
 // Odpowiedzi trzymamy jako tekst JSON, bo Firebase gubi puste tablice (np. {t:'cards', is: []}).
 import type { Answer, BotLevel, GameSetup } from '../engine/types';
@@ -14,6 +16,9 @@ import { TransportError } from './transport';
 /** Format pokoju – zmiana wymaga podbicia. */
 export const ROOM_V = 1;
 const ID_LEN = 20;
+/** Po tylu dniach od założenia pokój jest usuwany (reguły bazy: firebase/database.rules.json). */
+export const ROOM_TTL_DAYS = 14;
+export const ROOM_TTL_MS = ROOM_TTL_DAYS * 24 * 3600 * 1000;
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
 
 export type Slot = { k: 'h' } | { k: 'b'; level: BotLevel };
@@ -40,6 +45,8 @@ export interface RoomState {
   start: number | null;
   moves: Answer[];
   ping: Record<number, number>;
+  /** Pokój z rewanżem (jeśli ktoś go założył). */
+  next: string | null;
 }
 
 export function randomId(len = ID_LEN): string {
@@ -103,7 +110,8 @@ export function parseRoom(raw: unknown): RoomState {
   }
   const ping: Record<number, number> = {};
   for (const [i, t] of entries(r.ping)) if (typeof t === 'number') ping[i] = t;
-  return { cfg, seats, start: typeof r.start === 'number' ? r.start : null, moves, ping };
+  const next = typeof r.next === 'string' && validRoomId(r.next) ? r.next : null;
+  return { cfg, seats, start: typeof r.start === 'number' ? r.start : null, moves, ping, next };
 }
 
 /** Ustawienia gry dla silnika: ludzie z nazwami z zajętych miejsc, boty z nazwami z listy. */
@@ -131,13 +139,22 @@ export const seatOf = (st: RoomState, cid: string) => {
 // ---------- zakładanie i dołączanie ----------
 
 /** Zakłada pokój (gospodarz zajmuje miejsce 0). Zwraca id pokoju. */
-export async function createRoom(t: Transport, cfg: RoomCfg, host: Seat): Promise<string> {
+export async function createRoom(t: Transport, cfg: RoomCfg, host: Seat, wantId?: string): Promise<string> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const id = randomId();
+    const id = attempt === 0 && wantId ? wantId : randomId();
     const ok = await t.create(`rooms/${id}`, { cfg: JSON.stringify(cfg), seats: { 0: host }, at: Date.now() });
     if (ok) return id;
   }
   throw new TransportError('Nie udało się założyć pokoju (reguły bazy?)', 'other');
+}
+
+/**
+ * Rewanż: rezerwuje w starym pokoju miejsce na link do nowego pokoju (zapis raz – wygrywa pierwszy).
+ * Zwraca id nowego pokoju, który trzeba teraz założyć, albo null, gdy ktoś był szybszy.
+ */
+export async function claimNext(t: Transport, roomId: string): Promise<string | null> {
+  const id = randomId();
+  return (await t.create(`rooms/${roomId}/next`, id)) ? id : null;
 }
 
 /**
@@ -155,7 +172,7 @@ export async function rulesMissing(t: Transport, id: string, host: Seat): Promis
 // ---------- połączenie z pokojem ----------
 
 export class RoomConn {
-  state: RoomState = { cfg: null, seats: {}, start: null, moves: [], ping: {} };
+  state: RoomState = { cfg: null, seats: {}, start: null, moves: [], ping: {}, next: null };
   link: LinkState = 'offline';
   /** Ile razy przyszły dane (0 = jeszcze nic). */
   loaded = 0;
@@ -305,6 +322,10 @@ export interface MyRoom {
   /** Nazwy graczy (do listy na ekranie startowym). */
   names?: string[];
   over?: boolean;
+  /** Rewanż: dołącz od razu pod tym imieniem. */
+  join?: string;
+  /** Wcześniejsze pokoje tej samej grupy (rewanże) – do usunięcia razem z tym. */
+  old?: string[];
 }
 
 const ROOMS_KEY = 'crownforge-rooms';
@@ -333,4 +354,27 @@ export function forgetRoom(id: string): void {
   } catch {
     /* trudno */
   }
+}
+
+/** Pokoje z listy, które są już tak stare, że baza pozwala je usunąć. */
+export function expiredRooms(list: MyRoom[], now = Date.now()): MyRoom[] {
+  return list.filter((r) => now - r.at > ROOM_TTL_MS + 3600 * 1000);
+}
+
+/**
+ * Sprząta stare pokoje z tego urządzenia: usuwa je z bazy (razem z wcześniejszymi rewanżami) i z listy.
+ * Błędy sieci – spróbujemy przy następnym uruchomieniu.
+ */
+export async function cleanupRooms(t: Transport, now = Date.now()): Promise<number> {
+  let n = 0;
+  for (const r of expiredRooms(loadRooms(), now)) {
+    try {
+      for (const id of [...(r.old ?? []), r.id]) await t.remove(`rooms/${id}`);
+      forgetRoom(r.id);
+      n++;
+    } catch {
+      /* następnym razem */
+    }
+  }
+  return n;
 }
