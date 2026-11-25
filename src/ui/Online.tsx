@@ -207,6 +207,16 @@ function Lobby(props: {
       {conn.link !== 'live' && <p className="lobby-status warn">{t(`online.link.${conn.link}`)}</p>}
       {props.noRules && <p className="lobby-status warn">{t('online.rulesMissing')}</p>}
 
+      {/* gość: najpierw imię – przycisk „Dołącz” jest przyklejony na dole ekranu */}
+      {seat === null && free.length > 0 && (
+        <section>
+          <label className="field">
+            <span>{t('yourName')}</span>
+            <input value={name} maxLength={16} placeholder={t('defaultName')} onChange={(e) => setName(e.target.value)} />
+          </label>
+        </section>
+      )}
+
       <section>
         <h2>{t('online.invite')}</h2>
         <p className="muted small">{t('online.inviteInfo')}</p>
@@ -267,21 +277,15 @@ function Lobby(props: {
       </section>
 
       {seat === null && free.length > 0 && (
-        <section>
-          <label className="field">
-            <span>{t('yourName')}</span>
-            <input value={name} maxLength={16} placeholder={t('defaultName')} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <button className="btn primary big" disabled={busy} onClick={join}>
-            {t('online.joinBtn')}
-          </button>
-        </section>
+        <button className="btn primary big sticky" disabled={busy} onClick={join}>
+          {t('online.joinBtn')}
+        </button>
       )}
       {seat === null && !free.length && <p className="lobby-status">{t('online.full')}</p>}
       {err && <p className="lobby-status warn">{err}</p>}
 
       {seat === 0 && (
-        <button className="btn primary big" disabled={!full || busy} onClick={async () => {
+        <button className="btn primary big sticky" disabled={!full || busy} onClick={async () => {
           setBusy(true);
           try {
             await conn.begin();
@@ -325,7 +329,7 @@ export function JoinScreen(props: { lang: Lang; langToggle: React.ReactNode; onB
           </label>
         </section>
         {err && <p className="lobby-status warn">{err}</p>}
-        <button className="btn primary big" onClick={go} disabled={!text.trim()}>
+        <button className="btn primary big sticky" onClick={go} disabled={!text.trim()}>
           {t('online.joinBtn')}
         </button>
       </main>

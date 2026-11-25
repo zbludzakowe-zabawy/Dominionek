@@ -483,7 +483,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .score-head { display: flex; justify-content: space-between; font-weight: 600; }
 .confirm-box { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); text-align: left; }
 .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.end-buttons { display: flex; flex-direction: column; gap: 8px; }
+.end-buttons { display: flex; flex-direction: column; gap: 8px; position: sticky; bottom: 0; background: var(--bg2); padding-top: 4px; }
 .floating { position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: calc(160px + env(safe-area-inset-bottom)); z-index: 50; }
 
 @keyframes fade { from { opacity: 0; } }

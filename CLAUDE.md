@@ -121,6 +121,11 @@ Dalej w planie (kolejność jak w README → Plan):
   Gdy miejsc (karty + stosiki) jest więcej niż 5 (telefon pionowo) albo 8 (poziomo i komputer), ręka przewija się
   w bok (`.hand.scroll`, wygaszone brzegi, strzałki ‹ ›); stosik jest szerszy, by przednia karta miała rozmiar pojedynczej.
 - Dwuklik: kupno/zdobycie stosu, zatwierdzenie wyboru kart. Przytrzymanie: podgląd karty.
+- Główny przycisk ekranu (Królestwo →, Rozpocznij grę, Utwórz pokój, Dołącz…) zawsze widoczny: klasa `.sticky`
+  (przyklejony do dołu `.page`, musi być bezpośrednio w `.page`, nie w `<section>`); w okienkach `.sheet-actions`
+  i `.end-buttons` też przyklejone. Pola, które trzeba wypełnić przed głównym przyciskiem, na górze ekranu.
+- Esc zamyka okienka (`useEscape` w `CardView.tsx` – stos: zamyka tylko to na wierzchu, np. najpierw pytanie
+  „Nowa gra?”, potem menu). Okienko wyboru (opcje, odkryte karty) Esc chowa jak „Pokaż rękę”. Nowe okienko = `useEscape`.
 - Okienko wyboru (odkryte karty, opcje) ma „Pokaż rękę” – chowa je (`peek`), na pasku fazy pojawia się
   „Wróć do wyboru”.
 

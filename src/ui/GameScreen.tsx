@@ -6,7 +6,7 @@ import { Game } from '../engine/game';
 import { makePlan } from '../engine/plan';
 import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
-import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard } from './CardView';
+import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard, useEscape } from './CardView';
 import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings, CARDS_REV } from './store';
 import type { LinkState } from '../online/transport';
@@ -266,6 +266,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const turn = game.turn;
   const current = game.players[turn.player];
   const myDecision = d && d.player === HUMAN ? d : null;
+
+  // Esc zamyka okienka (od wierzchu): okienko wyboru chowa się jak „Pokaż rękę”
+  const choiceSheet = !peek && (myDecision?.kind === 'options' || (myDecision?.kind === 'cards' && myDecision.zone === 'list'));
+  useEscape(choiceSheet && (() => setPeek(true)));
+  useEscape(game.over && showEnd && (() => setShowEnd(false)));
+  useEscape(panel && (() => setPanel(null)));
+  useEscape(detail && (() => setDetail(null)));
   // w fazie akcji też można od razu kupić: gra sama kończy akcje i zagrywa skarby
   const canBuyNow = myDecision?.kind === 'buy' || myDecision?.kind === 'action';
   const potential =

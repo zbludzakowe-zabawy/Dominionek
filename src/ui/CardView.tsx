@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
@@ -236,6 +236,38 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble,
 }
 
 /** Przycisk z potwierdzeniem w samej stronie (zamiast window.confirm). */
+// ---------- Esc zamyka okienka ----------
+
+/** Otwarte okienka w kolejności otwierania – Esc zamyka to na wierzchu (ostatnie). */
+const escStack: { close: () => void }[] = [];
+let escBound = false;
+
+function onEscKey(e: KeyboardEvent) {
+  if (e.key !== 'Escape' || !escStack.length) return;
+  e.preventDefault();
+  escStack[escStack.length - 1].close();
+}
+
+/** Dopóki `onClose` nie jest null, okienko jest otwarte i Esc je zamyka (wywołuje `onClose`). */
+export function useEscape(onClose: (() => void) | null | false | undefined): void {
+  const ref = useRef(onClose);
+  ref.current = onClose;
+  const open = !!onClose;
+  useEffect(() => {
+    if (!open) return;
+    const entry = { close: () => ref.current && ref.current() };
+    escStack.push(entry);
+    if (!escBound && typeof window !== 'undefined') {
+      window.addEventListener('keydown', onEscKey);
+      escBound = true;
+    }
+    return () => {
+      const i = escStack.indexOf(entry);
+      if (i >= 0) escStack.splice(i, 1);
+    };
+  }, [open]);
+}
+
 export function ConfirmButton(props: {
   className?: string;
   label: string;
@@ -246,6 +278,7 @@ export function ConfirmButton(props: {
   onConfirm: () => void;
 }) {
   const [asking, setAsking] = useState(false);
+  useEscape(asking && (() => setAsking(false)));
   if (!asking)
     return (
       <button className={props.className} onClick={() => (props.needConfirm ? setAsking(true) : props.onConfirm())}>
