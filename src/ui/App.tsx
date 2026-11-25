@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { card, kingdomCards, SETS } from '../engine/cards';
 import type { SetId } from '../engine/card';
 import { randomSeed } from '../engine/rng';
@@ -22,10 +22,21 @@ import {
 } from './store';
 import { ONLINE_DB } from '../online/config';
 import { firebaseTransport } from '../online/firebase';
-import { ROOM_V, createRoom, forgetRoom, loadRooms, parseRoomRef, randomId, saveRoom, type MyRoom, type RoomCfg } from '../online/room';
+import { ROOM_TTL_DAYS, ROOM_V, cleanupRooms, createRoom, forgetRoom, loadRooms, parseRoomRef, randomId, saveRoom, type MyRoom, type RoomCfg } from '../online/room';
 
 export { BOT_NAMES };
 const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
+
+/** Miejsce w rewanżu (poza gospodarzem): gracz z poprzedniej gry, nowy gracz z linkiem albo bot. */
+export type RematchSlot = { k: 'keep'; name: string; cid: string } | { k: 'new' } | { k: 'bot'; level: BotLevel };
+
+/** Rewanż w grze online (ustawia go gospodarz): z którego pokoju i jakie były ustawienia. */
+export interface Rematch {
+  from: MyRoom;
+  kingdom: string[];
+  extras: boolean;
+  slots: RematchSlot[];
+}
 
 type Screen = 'home' | 'setup' | 'kingdom' | 'rules' | 'game' | 'online' | 'join';
 
@@ -52,6 +63,7 @@ export function App() {
   const [saved, setSaved] = useState<SavedGame | null>(loadGame);
   const [kingdom, setKingdom] = useState<string[]>([]);
   const [rulesBack, setRulesBack] = useState<Screen>('home');
+  const [rematch, setRematch] = useState<Rematch | null>(null);
   const lang = settings.lang;
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
 
@@ -64,6 +76,14 @@ export function App() {
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
+
+  // stare pokoje online (po ROOM_TTL_DAYS dniach) – usuwane z bazy i z listy
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      cleanupRooms(firebaseTransport(ONLINE_DB)).then((n) => n && setRooms(loadRooms()));
+    }, 3000);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const startGame = (k: string[], withExtras: boolean) => {
     const setup: GameSetup = {
@@ -86,6 +106,30 @@ export function App() {
     setScreen('online');
   };
 
+  /** Rewanż: gospodarz ustawia nową grę, zaczynając od poprzedniej. */
+  const startRematch = (r: Rematch) => {
+    setRematch(r);
+    setOnline(true);
+    setCreating('');
+    setScreen('setup');
+  };
+
+  /** Gospodarz założył rewanż – przechodzę do nowego pokoju (gracze z poprzedniej gry już mają tam miejsca). */
+  const followRoom = (from: MyRoom, next: string) => {
+    forgetRoom(from.id);
+    const known = loadRooms().find((x) => x.id === next);
+    openRoom(known ?? { id: next, cid: from.cid, seat: null, host: false, at: Date.now(), fromRematch: from.seat !== null, old: [...(from.old ?? []), from.id] });
+  };
+
+  /** Gospodarz rezygnuje z ustawiania rewanżu – wraca do starej gry, pozostali przestają czekać. */
+  const cancelRematch = () => {
+    if (!rematch) return;
+    firebaseTransport(ONLINE_DB).set(`rooms/${rematch.from.id}/prep`, 0).catch(() => undefined);
+    const from = rematch.from;
+    setRematch(null);
+    openRoom(from);
+  };
+
   /** Zakłada pokój gry online i przechodzi do poczekalni. */
   const createOnline = async (k: string[], withExtras: boolean) => {
     setCreating('…');
@@ -95,12 +139,32 @@ export function App() {
       seed: randomSeed(),
       kingdom: k,
       extras: withExtras ? ['dragongold', 'palace'] : [],
-      slots: [{ k: 'h' }, ...settings.onlineSlots.map((s): RoomCfg['slots'][number] => (s === 'human' ? { k: 'h' } : { k: 'b', level: s }))],
+      slots: rematch
+        ? [{ k: 'h' }, ...rematch.slots.map((s): RoomCfg['slots'][number] => (s.k === 'bot' ? { k: 'b', level: s.level } : { k: 'h' }))]
+        : [{ k: 'h' }, ...settings.onlineSlots.map((s): RoomCfg['slots'][number] => (s === 'human' ? { k: 'h' } : { k: 'b', level: s }))],
     };
-    const cid = randomId(16);
+    const cid = rematch?.from.cid ?? randomId(16);
+    const tp = firebaseTransport(ONLINE_DB);
+    const host = { name: settings.name.trim() || t('defaultName'), cid };
     try {
-      const id = await createRoom(firebaseTransport(ONLINE_DB), cfg, { name: settings.name.trim() || t('defaultName'), cid });
+      let extra = {};
+      if (rematch) {
+        // gracze z poprzedniej gry od razu na swoich miejscach; bez nowych graczy gra rusza bez poczekalni
+        const seats: Record<number, { name: string; cid: string }> = {};
+        rematch.slots.forEach((s, i) => {
+          if (s.k === 'keep') seats[i + 1] = { name: s.name, cid: s.cid };
+        });
+        extra = { seats, start: !rematch.slots.some((s) => s.k === 'new') };
+      }
+      const id = await createRoom(tp, cfg, host, extra);
       const r: MyRoom = { id, cid, seat: 0, host: true, at: Date.now() };
+      if (rematch) {
+        // stary pokój (i stary link) prowadzi teraz do nowej gry
+        await tp.create(`rooms/${rematch.from.id}/next`, id).catch(() => false);
+        r.old = [...(rematch.from.old ?? []), rematch.from.id];
+        forgetRoom(rematch.from.id);
+        setRematch(null);
+      }
       saveRoom(r);
       setCreating('');
       openRoom(r);
@@ -152,6 +216,8 @@ export function App() {
         onSettings={update}
         onRules={() => openRules('online')}
         langToggle={langToggle}
+        onRematch={startRematch}
+        onFollow={followRoom}
         onExit={() => {
           setRooms(loadRooms());
           setScreen('home');
@@ -199,9 +265,14 @@ export function App() {
         update={update}
         online={online}
         langToggle={langToggle}
-        onBack={() => setScreen('home')}
+        rematch={online ? rematch : null}
+        onRematch={setRematch}
+        onBack={() => {
+          if (rematch) return cancelRematch();
+          setScreen('home');
+        }}
         onNext={() => {
-          setKingdom(settings.mode === 'random' ? randomKingdom(settings.sets) : []);
+          setKingdom(rematch ? rematch.kingdom : settings.mode === 'random' ? randomKingdom(settings.sets) : []);
           setScreen('kingdom');
         }}
       />
@@ -215,13 +286,14 @@ export function App() {
         sets={settings.sets}
         mode={settings.mode}
         kingdom={kingdom}
+        initialExtras={online && rematch ? rematch.extras : undefined}
         setKingdom={setKingdom}
         pileView={settings.pileView}
         onPileView={(v) => update({ pileView: v })}
         langToggle={langToggle}
         onBack={() => setScreen('setup')}
         onStart={(ex) => (online ? createOnline(kingdom, ex) : startGame(kingdom, ex))}
-        startLabel={online ? t('online.create') : undefined}
+        startLabel={online ? (rematch && !rematch.slots.some((x) => x.k === 'new') ? t('online.startRematch') : t('online.create')) : undefined}
         busy={creating === '…'}
         error={creating !== '…' ? creating : ''}
       />
@@ -259,6 +331,7 @@ export function App() {
               saveGame(null);
               setSaved(null);
               setOnline(false);
+              setRematch(null);
               setScreen('setup');
             }}
           />
@@ -266,6 +339,7 @@ export function App() {
             className="btn big"
             onClick={() => {
               setOnline(true);
+              setRematch(null);
               setCreating('');
               setScreen('setup');
             }}
@@ -282,6 +356,7 @@ export function App() {
         {rooms.length > 0 && (
           <section className="my-rooms">
             <h2>{t('online.myGames')}</h2>
+            <p className="muted small">{t('online.expiry', { days: ROOM_TTL_DAYS })}</p>
             {rooms.map((r) => (
               <div key={r.id} className="room-row">
                 <button className="btn" onClick={() => openRoom(r)}>
@@ -315,6 +390,9 @@ function SetupScreen(props: {
   settings: Settings;
   update: (p: Partial<Settings>) => void;
   online: boolean;
+  /** Rewanż: lista graczy z poprzedniej gry zamiast wyboru miejsc. */
+  rematch?: Rematch | null;
+  onRematch?: (r: Rematch) => void;
   langToggle: React.ReactNode;
   onBack: () => void;
   onNext: () => void;
@@ -349,7 +427,10 @@ function SetupScreen(props: {
           </label>
         </section>
 
-        {online && <OnlineSlots lang={lang} slots={settings.onlineSlots} onChange={(onlineSlots) => update({ onlineSlots })} />}
+        {online && props.rematch && (
+          <RematchSlots lang={lang} slots={props.rematch.slots} onChange={(slots) => props.onRematch?.({ ...props.rematch!, slots })} />
+        )}
+        {online && !props.rematch && <OnlineSlots lang={lang} slots={settings.onlineSlots} onChange={(onlineSlots) => update({ onlineSlots })} />}
         {!online && <section>
           <h2>{t('opponents')}</h2>
           {settings.bots.map((b, i) => (
@@ -428,7 +509,7 @@ function SetupScreen(props: {
         <button
           className="btn primary big sticky"
           onClick={props.onNext}
-          disabled={online && !settings.onlineSlots.includes('human')}
+          disabled={online && (props.rematch ? !props.rematch.slots.some((s) => s.k !== 'bot') : !settings.onlineSlots.includes('human'))}
         >
           {t('kingdom')} →
         </button>
@@ -473,6 +554,54 @@ function OnlineSlots({ lang, slots, onChange }: { lang: Lang; slots: OnlineSlot[
   );
 }
 
+/**
+ * Rewanż (gospodarz): gracze z poprzedniej gry z imionami – można ich usunąć (na stałe) albo dodać miejsce
+ * dla nowego gracza (dostaje ten sam link) lub bota.
+ */
+function RematchSlots({ lang, slots, onChange }: { lang: Lang; slots: RematchSlot[]; onChange: (s: RematchSlot[]) => void }) {
+  const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
+  let b = 0;
+  const set = (i: number, s: RematchSlot) => onChange(slots.map((x, j) => (j === i ? s : x)));
+  return (
+    <section>
+      <h2>{t('online.players')}</h2>
+      <p className="muted small">{t('online.rematchPlayers')}</p>
+      {slots.map((s, i) => (
+        <div className="bot-row online-row" key={i}>
+          {s.k === 'keep' ? (
+            <span className="bot-name rematch-name">{s.name}</span>
+          ) : (
+            <>
+              <span className="bot-name">{s.k === 'new' ? t('online.newPlayer') : BOT_NAMES[b++ % BOT_NAMES.length]}</span>
+              <div className="seg">
+                {(['new', ...LEVELS] as const).map((k) => (
+                  <button
+                    key={k}
+                    className={(s.k === 'new' ? 'new' : s.level) === k ? 'on' : ''}
+                    onClick={() => set(i, k === 'new' ? { k: 'new' } : { k: 'bot', level: k })}
+                  >
+                    {k === 'new' ? t('online.human') : t(`level.${k}`)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <button className="icon-btn" aria-label={t('remove')} title={t('remove')} onClick={() => onChange(slots.filter((_, j) => j !== i))}>
+            ✕
+          </button>
+        </div>
+      ))}
+      {slots.length < 3 && (
+        <button className="btn ghost" onClick={() => onChange([...slots, { k: 'new' }])}>
+          + {t('online.addPlayer')}
+        </button>
+      )}
+      {slots.some((s) => s.k === 'new') && <p className="muted small">{t('online.newPlayerInfo')}</p>}
+      {!slots.some((s) => s.k !== 'bot') && <p className="muted small warn">{t('online.needHuman')}</p>}
+    </section>
+  );
+}
+
 // ---------- Królestwo: losowanie / wybór ----------
 
 function KingdomScreen(props: {
@@ -487,6 +616,8 @@ function KingdomScreen(props: {
   onBack: () => void;
   onStart: (extras: boolean) => void;
   startLabel?: string;
+  /** Rewanż: Smocze Złoto i Pałac jak w poprzedniej grze (zamiast losowania). */
+  initialExtras?: boolean;
   busy?: boolean;
   error?: string;
 }) {
@@ -494,9 +625,12 @@ function KingdomScreen(props: {
   const symbols = props.pileView === 'symbols';
   // Smocze Złoto i Pałac – losowane, gdy w Królestwie są karty Skarbca; można zmienić ręcznie
   const hoardIn = hasHoardCards(kingdom);
-  const [extras, setExtras] = useState(false);
+  const [extras, setExtras] = useState(props.initialExtras ?? false);
   const kingdomKey = [...kingdom].sort().join(',');
+  const firstKey = useRef(props.initialExtras !== undefined ? kingdomKey : null);
   useEffect(() => {
+    if (kingdomKey === firstKey.current) return;
+    firstKey.current = null;
     setExtras(kingdom.length === KINGDOM_SIZE && rollHoardExtras(kingdom));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kingdomKey]);
