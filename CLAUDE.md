@@ -29,8 +29,6 @@ Dalej w planie (kolejność jak w README → Plan):
 2. Gra online – zrobiona (25.11): Firebase Realtime Database przez REST, link-pokój bez logowania (`docs/gra-online.md`).
    Baza: projekt Firebase `crownforge-5710b` (adres w `src/online/config.ts`, `ONLINE_DB`; użytkownik nie chce, by dało się
    go zmienić w aplikacji). Sprawdzone na prawdziwej bazie 25.11 (środowisko chmurowe „Dominionek” ma dostęp do tego hosta).
-   Rewanż (stary pokój → `next` → nowy pokój, reszta graczy przechodzi i dołącza sama) i kasowanie pokoi po 14 dniach
-   (`ROOM_TTL_DAYS`, `cleanupRooms` przy starcie aplikacji) – 25.11; wymagają opublikowania nowych reguł w konsoli Firebase.
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 

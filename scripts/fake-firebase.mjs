@@ -7,8 +7,6 @@ import http from 'node:http';
 
 const port = Number(process.argv.find((a) => /^\d+$/.test(a)) ?? 9400);
 const open = process.argv.includes('--open');
-// po ilu ms od założenia wolno usunąć pokój (jak w regułach: 14 dni); do testów FAKE_TTL_MS
-const ttl = Number(process.env.FAKE_TTL_MS ?? 14 * 24 * 3600 * 1000);
 let data = null;
 const streams = new Set();
 
@@ -31,12 +29,10 @@ function allowed(p, value) {
   if (root !== 'rooms' || !room || rest.length) return false;
   const exists = get(p) !== null;
   const base = `rooms/${room}`;
-  if (!field && value === null) return !exists || (typeof get(`${base}/at`) === 'number' && get(`${base}/at`) < Date.now() - ttl);
   if (!field) return !exists && room.length >= 20 && room.length <= 40 && typeof value?.cfg === 'string';
   if (field === 'seats') return /^\d$/.test(sub ?? '') && !exists && get(`${base}/cfg`) !== null && get(`${base}/start`) === null && typeof value?.name === 'string';
   if (field === 'start') return !sub && !exists && get(`${base}/cfg`) !== null && typeof value === 'number';
   if (field === 'moves') return /^\d{1,5}$/.test(sub ?? '') && !exists && get(`${base}/start`) !== null && typeof value === 'string';
-  if (field === 'next') return !sub && !exists && get(`${base}/start`) !== null && typeof value === 'string' && value.length >= 20 && value.length <= 40;
   if (field === 'ping') return /^\d$/.test(sub ?? '') && get(`${base}/cfg`) !== null && typeof value === 'number';
   return false;
 }

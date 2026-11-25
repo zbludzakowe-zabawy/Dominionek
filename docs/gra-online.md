@@ -13,14 +13,6 @@ go deterministycznym silnikiem (`Game.replay`).
 - Boty liczy urządzenie gospodarza – ruszają się, gdy gospodarz ma otwartą grę.
 - Zielona kropka przy graczu = ma teraz otwartą grę. W tytule karty przeglądarki „●” = czeka na mój ruch.
 - Cofanie ruchów jest wyłączone (ruch od razu widzą inni).
-- **Rewanż**: po końcu gry każdy gracz może stuknąć „Rewanż” → ustawia nową grę (miejsca i Królestwo
-  podpowiedziane z poprzedniej) i zostaje jej gospodarzem. Stary pokój dostaje `next` = id nowego pokoju, więc
-  pozostali gracze (i stary link) przechodzą do nowej gry sami i dołączają pod tym samym imieniem.
-  Gdy dwie osoby stukną jednocześnie, wygrywa pierwsza (zapis `next` tylko raz).
-- **Kasowanie**: pokój wolno usunąć 14 dni po założeniu (`ROOM_TTL_DAYS`, reguła bazy z `now`). Robią to
-  urządzenia graczy przy uruchomieniu aplikacji – każde usuwa stare pokoje ze swojej listy „Twoje gry online”
-  (razem z wcześniejszymi pokojami rewanżów). Pokoje, których nikt już nie ma na liście, zostają – można je
-  usunąć ręcznie w konsoli.
 - Brak tajemnic: kto zna się na narzędziach programisty, może podejrzeć cudze karty (wspólne ziarno losowania).
 
 ## Dane w bazie
@@ -33,10 +25,7 @@ rooms/<id pokoju: 20 losowych znaków>/
   start  – czas rozpoczęcia                       – zapis raz
   moves  – {<nr>: JSON odpowiedzi}                – zapis tylko w puste miejsce, po starcie
   ping   – {<nr miejsca>: czas}                   – „jestem w grze”, co 30 s
-  next   – id pokoju z rewanżem                    – zapis raz, po starcie
 ```
-
-Cały pokój można usunąć (zapis `null`), gdy `at` jest starsze niż 14 dni.
 
 Zapis „tylko w puste miejsce” (reguła `!data.exists()`) sprawia, że dwa urządzenia nie nadpiszą sobie ruchów.
 Gdyby jednak dwa zapisały ruch o tym samym numerze (np. jeden gracz na dwóch telefonach), wygrywa pierwszy,
@@ -56,8 +45,6 @@ a drugie urządzenie odtwarza grę z bazy (`src/online/sync.ts`).
    `https://crownforge-1a2b3-default-rtdb.europe-west1.firebasedatabase.app` – skopiuj go.
 6. Adres wpisz w `src/online/config.ts` (`ONLINE_DB`). Gracze nie mogą go zmienić w aplikacji, a link do pokoju
    zawiera tylko identyfikator pokoju.
-
-**Po każdej zmianie `firebase/database.rules.json` trzeba wkleić reguły na nowo i opublikować (krok 4).**
 
 Obecna baza: `https://crownforge-5710b-default-rtdb.europe-west1.firebasedatabase.app` (projekt `crownforge-5710b`,
 reguły opublikowane i sprawdzone 25.11).
