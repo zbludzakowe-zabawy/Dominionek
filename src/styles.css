@@ -641,6 +641,24 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .seats li { padding: 6px 0; }
 .seats li.me { color: var(--gold); }
 .seats li.free::marker { color: var(--muted); }
+/* gość: pole imienia ma się rzucać w oczy (gracze go nie zauważali) */
+.lobby .name-ask {
+  padding: 12px 14px; border: 2px solid var(--gold); border-radius: var(--radius);
+  background: color-mix(in srgb, var(--gold) 10%, var(--panel)); gap: 6px;
+}
+.lobby .name-ask p { margin: 0; }
+.lobby .name-ask.warn { animation: name-pulse 1.2s ease-in-out 2; }
+.name-ask-title { color: var(--gold); font-weight: 700; font-size: 1.05rem; }
+.name-ask .field input { border: 1px solid var(--gold); font-size: 1.1rem; }
+.name-ask .field input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+@keyframes name-pulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--gold) 35%, transparent); } }
+.btn.mini { padding: 4px 10px; font-size: .85rem; min-height: 0; }
+.rename-btn { margin-left: 8px; vertical-align: middle; }
+.rename { display: inline-flex; gap: 6px; align-items: center; max-width: 100%; }
+.rename input {
+  font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--gold);
+  border-radius: var(--radius); padding: 6px 10px; width: 10em; min-width: 0;
+}
 .my-rooms { width: min(320px, 100%); margin-top: 22px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
 .my-rooms h2 { font-size: .95rem; color: var(--muted); margin: 0; }
 .room-row { display: flex; gap: 6px; align-items: center; }

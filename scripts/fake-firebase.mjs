@@ -30,9 +30,12 @@ function set(p, v) {
 function allowed(p, value) {
   if (open) return true;
   const [root, room, field, sub, ...rest] = keys(p);
-  if (root !== 'rooms' || !room || rest.length) return false;
   const exists = get(p) !== null;
   const base = `rooms/${room}`;
+  // zmiana imienia w poczekalni: rooms/<id>/seats/<nr>/name
+  if (root === 'rooms' && room && field === 'seats' && rest.length === 1 && rest[0] === 'name')
+    return exists && get(`${base}/start`) === null && typeof value === 'string' && value.length >= 1 && value.length <= 24;
+  if (root !== 'rooms' || !room || rest.length) return false;
   if (!field && value === null) {
     if (!exists) return true;
     const last = typeof get(`${base}/act`) === 'number' ? get(`${base}/act`) : get(`${base}/at`);

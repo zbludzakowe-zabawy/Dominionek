@@ -35,7 +35,8 @@ go deterministycznym silnikiem (`Game.replay`).
 rooms/<id pokoju: 20 losowych znaków>/
   cfg    – JSON (tekst): {v, rev, seed, kingdom, extras, slots:[{k:'h'} | {k:'b', level}]}   – zapis raz
   at     – czas założenia
-  seats  – {<nr miejsca>: {name, cid}}           – zajęcie miejsca: zapis tylko w puste miejsce, przed startem
+  seats  – {<nr miejsca>: {name, cid}}           – zajęcie miejsca: zapis tylko w puste miejsce, przed startem;
+                                                    samo `name` można zmienić w poczekalni (przed startem)
   start  – czas rozpoczęcia                       – zapis raz
   moves  – {<nr>: JSON odpowiedzi}                – zapis tylko w puste miejsce, po starcie
   ping   – {<nr miejsca>: czas}                   – „jestem w grze”, co 30 s

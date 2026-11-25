@@ -107,6 +107,17 @@ export function App() {
     setScreen('online');
   };
 
+  // link do pokoju wklejony w pasek adresu, gdy aplikacja jest już otwarta w tej karcie: zmienia się tylko
+  // „#room=…”, strona się nie przeładowuje – bez tego gra zostawała na bieżącym ekranie
+  useEffect(() => {
+    const onHash = () => {
+      const r = roomFromHash();
+      if (r) openRoom(r);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
   /** Rewanż: gospodarz ustawia nową grę, zaczynając od poprzedniej. */
   const startRematch = (r: Rematch) => {
     setRematch(r);
