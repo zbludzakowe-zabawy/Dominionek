@@ -723,3 +723,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 }
 @media (prefers-reduced-motion: reduce) { .tea-steam path { animation: none; } }
 .rematch-name { flex: 1; font-weight: 600; }
+
+/* ---------- łapacz błędów ---------- */
+.crash { display: flex; flex-direction: column; gap: 12px; }
+.crash h1 { color: var(--gold); margin: 8px 0 0; }
+.crash-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .78rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin: 0; max-height: 40dvh; overflow-y: auto; }

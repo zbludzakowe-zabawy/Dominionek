@@ -9,6 +9,7 @@ import { CardFace, ConfirmButton, Cost, PileTile, useEscape } from './CardView';
 import { GameScreen } from './GameScreen';
 import { ShareButton } from './Icons';
 import { JoinScreen, OnlineRoom, roomFor } from './Online';
+import { ErrorBoundary } from './ErrorBoundary';
 import {
   BOT_NAMES,
   loadGame,
@@ -187,6 +188,7 @@ export function App() {
 
   if (screen === 'game' && saved) {
     return (
+      <ErrorBoundary>
       <GameScreen
         key={saved.setup.seed}
         saved={saved}
@@ -204,11 +206,13 @@ export function App() {
         }}
         onRematch={(k, ex) => startGame(k, ex)}
       />
+      </ErrorBoundary>
     );
   }
 
   if (screen === 'online' && room) {
     return (
+      <ErrorBoundary>
       <OnlineRoom
         key={room.id}
         room={room}
@@ -223,6 +227,7 @@ export function App() {
           setScreen('home');
         }}
       />
+      </ErrorBoundary>
     );
   }
 
