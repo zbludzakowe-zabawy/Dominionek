@@ -9,6 +9,7 @@ import { CardFace, ConfirmButton, Cost, PileTile, useEscape } from './CardView';
 import { GameScreen } from './GameScreen';
 import { ShareButton } from './Icons';
 import { JoinScreen, OnlineRoom, roomFor } from './Online';
+import { ErrorBoundary } from './ErrorBoundary';
 import {
   BOT_NAMES,
   loadGame,
@@ -145,7 +146,7 @@ export function App() {
     };
     const cid = rematch?.from.cid ?? randomId(16);
     const tp = firebaseTransport(ONLINE_DB);
-    const host = { name: settings.name.trim() || t('defaultName'), cid };
+    const host = { name: settings.name.trim() || t('online.playerN', { n: 1 }), cid };
     try {
       let extra = {};
       if (rematch) {
@@ -187,6 +188,7 @@ export function App() {
 
   if (screen === 'game' && saved) {
     return (
+      <ErrorBoundary>
       <GameScreen
         key={saved.setup.seed}
         saved={saved}
@@ -204,11 +206,13 @@ export function App() {
         }}
         onRematch={(k, ex) => startGame(k, ex)}
       />
+      </ErrorBoundary>
     );
   }
 
   if (screen === 'online' && room) {
     return (
+      <ErrorBoundary>
       <OnlineRoom
         key={room.id}
         room={room}
@@ -223,6 +227,7 @@ export function App() {
           setScreen('home');
         }}
       />
+      </ErrorBoundary>
     );
   }
 
@@ -421,7 +426,7 @@ function SetupScreen(props: {
             <input
               value={settings.name}
               maxLength={16}
-              placeholder={t('defaultName')}
+              placeholder={online ? t('online.playerN', { n: 1 }) : t('defaultName')}
               onChange={(e) => update({ name: e.target.value })}
             />
           </label>

@@ -220,10 +220,11 @@ function Lobby(props: {
   const join = async () => {
     setBusy(true);
     setErr('');
-    const n = name.trim() || t('defaultName');
+    // bez imienia: „Gracz 2”, „Gracz 3”… (numer miejsca), żeby było wiadomo, kto jest kim
+    const typed = name.trim().slice(0, 20);
     props.onName(name.trim());
     try {
-      const s = await conn.join(n.slice(0, 20), room.cid);
+      const s = await conn.join((i) => typed || t('online.playerN', { n: i + 1 }), room.cid);
       if (s === null) setErr(t('online.full'));
     } catch (e) {
       setErr(String((e as Error).message ?? e));
@@ -253,7 +254,7 @@ function Lobby(props: {
         <section>
           <label className="field">
             <span>{t('yourName')}</span>
-            <input value={name} maxLength={16} placeholder={t('defaultName')} onChange={(e) => setName(e.target.value)} />
+            <input value={name} maxLength={16} placeholder={t('online.playerN', { n: (free[0] ?? 1) + 1 })} onChange={(e) => setName(e.target.value)} />
           </label>
         </section>
       )}

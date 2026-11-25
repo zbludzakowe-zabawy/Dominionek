@@ -96,6 +96,10 @@ Dalej w planie (kolejność jak w README → Plan):
   - Koszt z Eliksirem: komponent `Cost` (moneta + fioletowa buteleczka `Flask`); licznik Eliksirów
     na pasku fazy, gdy stos Eliksiru jest w grze.
 - `src/i18n.ts` – wszystkie teksty UI/podpowiedzi/dziennika EN+PL (`tr`, liczba mnoga PL).
+- Tłumaczenie przeglądarki wyłączone (`translate="no"`, `<meta name="google" content="notranslate">`, też w `main.tsx`
+  dla podglądu): Google Tłumacz podmieniał teksty, React się wywracał (szary ekran, błąd „removeChild”), imiona
+  graczy były „tłumaczone” („Do” → „Rób”). `ErrorBoundary.tsx` – zamiast szarego ekranu komunikat z treścią błędu
+  i „Wróć do gry” (owija całą aplikację oraz ekrany gry/pokoju w `App.tsx`).
 - PWA: `src/pwa.ts`, `src/sw-template.js` (plugin w `vite.config.ts` liczy wersję SW z plików),
   `public/manifest.webmanifest`, ikony z `scripts/icon.svg` (`scripts/make-icons.cjs`).
 
