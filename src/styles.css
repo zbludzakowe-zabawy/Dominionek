@@ -624,3 +624,32 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
   .app-banner { gap: 8px; }
   .app-banner .btn { padding: 8px 10px; }
 }
+
+/* ---------- gra online ---------- */
+.warn { color: var(--danger); }
+.lobby { display: flex; flex-direction: column; gap: 18px; }
+.lobby section { display: flex; flex-direction: column; gap: 8px; }
+.lobby h2 { font-size: 1rem; color: var(--muted); margin: 0; }
+.lobby-status { margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--panel); }
+.lobby-status.warn { color: var(--ink); box-shadow: inset 3px 0 0 var(--danger); }
+.link-box {
+  font: inherit; font-size: .85rem; color: var(--ink); background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 10px 12px; width: 100%; box-sizing: border-box;
+}
+.row-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.seats { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 6px; }
+.seats li { padding: 6px 0; }
+.seats li.me { color: var(--gold); }
+.seats li.free::marker { color: var(--muted); }
+.my-rooms { width: min(320px, 100%); margin-top: 22px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.my-rooms h2 { font-size: .95rem; color: var(--muted); margin: 0; }
+.room-row { display: flex; gap: 6px; align-items: center; }
+.room-row .btn { flex: 1; display: flex; justify-content: space-between; gap: 8px; text-align: left; min-width: 0; }
+.room-row .btn span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.presence { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; background: var(--muted); opacity: .6; }
+.presence.on { background: #7fbf6a; opacity: 1; }
+.net-warn { color: var(--danger); }
+.online-row { gap: 6px; }
+.online-row .bot-name { width: auto; min-width: 56px; }
+.online-row .seg { min-width: 0; }
+.online-row .seg button { min-width: 0; padding: 8px 2px; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
