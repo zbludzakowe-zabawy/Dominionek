@@ -1,6 +1,7 @@
 // Pokój gry online. Dane w bazie (rooms/<id>):
 //   cfg    – JSON (tekst) z ustawieniami gry: ziarno, Królestwo, miejsca (człowiek / bot); zapisywany raz
-//   seats  – {<nr miejsca>: {name, cid}} – zajęte miejsca ludzi (zapis tylko w puste miejsce)
+//   seats  – {<nr miejsca>: {name, cid}} – zajęte miejsca ludzi (zapis tylko w puste miejsce; imię można
+//            zmienić w poczekalni, przed startem)
 //   start  – czas rozpoczęcia (zapis raz, przez gospodarza)
 //   moves  – {<nr>: JSON odpowiedzi} – lista odpowiedzi na decyzje; zapis tylko w puste miejsce,
 //            więc dwa urządzenia nie nadpiszą sobie ruchów
@@ -250,6 +251,17 @@ export class RoomConn {
       if (await this.t.create(`rooms/${this.id}/seats/${i}`, { name: n, cid })) return i;
     }
     return null;
+  }
+
+  /** Zmiana imienia na zajętym miejscu – tylko w poczekalni (przed startem; reguły bazy pilnują tego samego). */
+  async rename(seat: number, name: string): Promise<boolean> {
+    if (this.state.start || !this.state.seats[seat]) return false;
+    try {
+      await this.t.set(`rooms/${this.id}/seats/${seat}/name`, name.slice(0, 20));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async begin(): Promise<boolean> {
