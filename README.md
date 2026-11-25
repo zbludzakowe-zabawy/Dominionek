@@ -40,10 +40,8 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 
 ### Do poprawy (zgłoszenia użytkownika)
 
-- **Rzezimieszek nie pokazuje, co stało się u przeciwnika** (25.11): po zagraniu nie widać, jakie 2 karty
-  przeciwnik odkrył i które z nich odrzucił, a które wróciły na talię. Do zrobienia: pokazać to grającemu
-  (np. okienko z odkrytymi kartami jak przy efektach – `Fx.tsx` – i/lub wyraźny wpis w dzienniku). Warto przy okazji
-  sprawdzić inne ataki, które odkrywają karty przeciwników.
+- ~~**Rzezimieszek nie pokazuje, co stało się u przeciwnika**~~ (25.11) – zrobione: okienko z kartami odkrytymi
+  u każdego przeciwnika i tym, co się z nimi stało (też Herszt Bandytów i Plotka).
 
 ## Aplikacja na telefon
 

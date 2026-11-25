@@ -1,11 +1,12 @@
 // Animacje zmian, które dzieją się bez stuknięcia gracza:
 // - zdobyta/kupiona karta leci ze stosu do gracza (boty, inni gracze online; moje zakupy – do talii),
+// - karty odkryte u przeciwników przez atak (Rzezimieszek…) – okienko z tym, co stało się z każdą kartą,
 // - moje karty z efektów (dobrane, włożone na rękę, zdobyte, spalone) pokazują się po kolei w okienku,
 //   a potem lecą tam, gdzie trafiły (ręka, talia) albo – spalone – przechylają się i wpadają do kosza.
 // Silnik zapisuje zdarzenia w `Game.fx`; tu czytamy tylko nowe (po każdej zmianie gry).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Game } from '../engine/game';
-import type { Fx, Lang } from '../engine/types';
+import type { Fx, Lang, RevealOut } from '../engine/types';
 import { tr } from '../i18n';
 import { CardFace } from './CardView';
 import type { Speed } from './store';
@@ -18,6 +19,15 @@ interface Pop {
   cards: string[];
   dest: Dest;
 }
+/** Karty odkryte u przeciwników przez jeden atak: wiersz na gracza. */
+interface RevealPop {
+  key: number;
+  kind: 'reveal';
+  by: number;
+  src: string;
+  rows: { p: number; cards: string[]; out: RevealOut[] }[];
+}
+type AnyPop = Pop | RevealPop;
 interface Fly {
   key: number;
   id: string;
@@ -34,8 +44,10 @@ const STAGGER = 220;
 const HOLD = 750;
 const OUT = 480;
 const FLY = 1000;
+/** Odkryte karty przeciwników – dłużej, żeby dało się przeczytać. */
+const REVEAL_HOLD = 2200;
 
-const popOf = (f: Fx): Omit<Pop, 'key'> | null => {
+const popOf = (f: Exclude<Fx, { k: 'reveal' }>): Omit<Pop, 'key'> | null => {
   if (f.k === 'hand') return { kind: f.how, cards: f.cards, dest: 'hand' };
   if (f.k === 'trash') return { kind: 'trash', cards: f.cards, dest: 'trash' };
   if (f.bought) return null;
@@ -46,11 +58,11 @@ const popOf = (f: Fx): Omit<Pop, 'key'> | null => {
 const rectOf = (sel: string) => document.querySelector(sel)?.getBoundingClientRect() ?? null;
 const visible = (r: DOMRect | null): r is DOMRect => !!r && r.width > 0 && r.height > 0;
 
-export function useCardFx(opts: { game: Game; human: number; enabled: boolean; speed: Speed; ff: boolean; lang: Lang }) {
-  const { game, human, enabled, ff, lang } = opts;
+export function useCardFx(opts: { game: Game; human: number; enabled: boolean; speed: Speed; ff: boolean; lang: Lang; names: string[] }) {
+  const { game, human, enabled, ff, lang, names } = opts;
   const k = SCALE[opts.speed];
   const seen = useRef({ game, n: game.fx.length });
-  const [queue, setQueue] = useState<Pop[]>([]);
+  const [queue, setQueue] = useState<AnyPop[]>([]);
   const [flies, setFlies] = useState<Fly[]>([]);
   const keyGen = useRef(1);
 
@@ -66,15 +78,23 @@ export function useCardFx(opts: { game: Game; human: number; enabled: boolean; s
     seen.current.n = game.fx.length;
     if (!fresh.length || !enabled) return;
 
-    const pops: Pop[] = [];
+    const pops: AnyPop[] = [];
     const newFlies: Fly[] = [];
     let flyDelay = 0;
     for (const f of fresh) {
+      if (f.k === 'reveal') {
+        if (!f.show.includes(human)) continue;
+        const last = pops[pops.length - 1];
+        const row = { p: f.p, cards: f.cards, out: f.out };
+        if (last && last.kind === 'reveal' && last.by === f.by && last.src === f.src) last.rows = [...last.rows, row];
+        else pops.push({ key: keyGen.current++, kind: 'reveal', by: f.by, src: f.src, rows: [row] });
+        continue;
+      }
       if (f.p === human) {
         const p = popOf(f);
         if (p) {
           const last = pops[pops.length - 1];
-          if (last && last.kind === p.kind) last.cards = [...last.cards, ...p.cards];
+          if (last && last.kind !== 'reveal' && last.kind === p.kind) last.cards = [...last.cards, ...p.cards];
           else pops.push({ ...p, key: keyGen.current++ });
           continue;
         }
@@ -95,14 +115,19 @@ export function useCardFx(opts: { game: Game; human: number; enabled: boolean; s
   const done = (key: number) => setQueue((q) => q.filter((p) => p.key !== key));
   const current = queue[0] ?? null;
   /** Karty, które są już na ręce, ale jeszcze „lecą” w okienku – ręka pokaże je po animacji. */
-  const hidden = queue.filter((p) => p.dest === 'hand').flatMap((p) => p.cards);
+  const hidden = queue.flatMap((p) => (p.kind !== 'reveal' && p.dest === 'hand' ? p.cards : []));
 
   const layer = (
     <>
       {flies.map((f) => (
         <FlyCard key={f.key} fly={f} lang={lang} dur={FLY * k} onEnd={() => setFlies((fl) => fl.filter((x) => x.key !== f.key))} />
       ))}
-      {current && <PopSheet key={current.key} pop={current} lang={lang} k={k} onDone={() => done(current.key)} onSkip={() => setQueue([])} />}
+      {current &&
+        (current.kind === 'reveal' ? (
+          <RevealSheet key={current.key} pop={current} human={human} names={names} lang={lang} k={k} onDone={() => done(current.key)} />
+        ) : (
+          <PopSheet key={current.key} pop={current} lang={lang} k={k} onDone={() => done(current.key)} onSkip={() => setQueue([])} />
+        ))}
     </>
   );
   return { hidden, busy: queue.length > 0, flying: flies.length > 0, layer };
@@ -220,6 +245,47 @@ function PopSheet({ pop, lang, k, onDone, onSkip }: { pop: Pop; lang: Lang; k: n
           </div>
         )}
         <div className="fx-skip muted small">{tr(lang, 'fx.tapToSkip')}</div>
+      </div>
+    </div>
+  );
+}
+
+/** Karty odkryte u przeciwników przez atak: kto, jakie karty i co się z nimi stało. Stuknięcie zamyka. */
+function RevealSheet(props: { pop: RevealPop; human: number; names: string[]; lang: Lang; k: number; onDone: () => void }) {
+  const { pop, human, names, lang, k, onDone } = props;
+  const [out, setOut] = useState(false);
+  const n = pop.rows.reduce((s, r) => s + r.cards.length, 0);
+  useEffect(() => {
+    const a = window.setTimeout(() => setOut(true), (n * STAGGER + REVEAL_HOLD) * k);
+    const b = window.setTimeout(onDone, (n * STAGGER + REVEAL_HOLD + 300) * k);
+    return () => {
+      window.clearTimeout(a);
+      window.clearTimeout(b);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const who = (p: number) => (p === human ? tr(lang, 'fx.you') : names[p] ?? '');
+  const title =
+    pop.by === human ? tr(lang, 'fx.reveal', { card: '@' + pop.src }) : tr(lang, 'fx.revealBy', { card: '@' + pop.src, who: names[pop.by] ?? '' });
+  let i = 0;
+  return (
+    <div className={'fx-backdrop fx-reveal' + (out ? ' out gone' : '')} onClick={onDone} role="presentation">
+      <div className="fx-pop" style={{ ['--fx-k' as string]: k }}>
+        <div className="fx-title">{title}</div>
+        {pop.rows.map((r, ri) => (
+          <div key={ri} className="fx-row">
+            <div className="fx-who">{who(r.p)}</div>
+            <div className={'fx-cards n' + Math.min(r.cards.length, 6)}>
+              {r.cards.map((id, ci) => (
+                <div key={ci} className={'fx-card fx-' + r.out[ci]} style={{ animationDelay: `${i++ * STAGGER * k}ms` }}>
+                  <CardFace id={id} lang={lang} />
+                  <div className="fx-out">{tr(lang, 'fx.out.' + r.out[ci])}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="fx-skip muted small">{tr(lang, 'fx.tapToClose')}</div>
       </div>
     </div>
   );

@@ -124,7 +124,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const [handEdge, setHandEdge] = useState({ l: false, r: false });
   const names = game.players.map((p) => p.name);
   // animacje: lot zdobytych kart, okienko z kartami z efektów
-  const fx = useCardFx({ game, human: HUMAN, enabled: settings.anim !== false, speed: settings.speed, ff, lang });
+  const fx = useCardFx({ game, human: HUMAN, enabled: settings.anim !== false, speed: settings.speed, ff, lang, names });
 
   const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
     online ? online.push(g.answers) : saveGame(g.over ? null : { v: 2, hoardRev: CARDS_REV, setup: g.setup, answers: g.answers, plans: pl ?? {} });

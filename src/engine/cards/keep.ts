@@ -340,6 +340,7 @@ export const KEEP: CardDef[] = [
         const isGood = (id: string) => isType(card(id), 'action') || isType(card(id), 'treasure');
         g.discardCards(v, top.filter(isGood));
         v.deck.unshift(...top.filter((id) => !isGood(id)));
+        g.revealFx(p, v, 'footpad', top, top.map((id) => (isGood(id) ? 'discard' : 'deck')));
       });
     },
     ai: { value: 4, role: 'attack' },
@@ -406,6 +407,8 @@ export const KEEP: CardDef[] = [
         });
         g.trashCards(v, top.filter((_, i) => is.includes(i)));
         g.discardCards(v, top.filter((_, i) => !is.includes(i)), false);
+        // ofiara sama wybierała (i widzi spalenie) – okienko tylko dla grającego
+        g.revealFx(p, v, 'banditchief', top, top.map((_, i) => (is.includes(i) ? 'trash' : 'discard')), [p.id]);
       });
     },
     ai: { value: 5, role: 'attack' },
