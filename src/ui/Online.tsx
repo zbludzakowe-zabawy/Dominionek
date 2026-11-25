@@ -10,6 +10,7 @@ import {
   RoomConn,
   allSeated,
   humanSlots,
+  markRoomOver,
   parseRoomRef,
   roomLink,
   rulesMissing,
@@ -89,6 +90,10 @@ export function OnlineRoom(props: {
     saveRoom({ ...room, seat, host: seat === 0, names: setup.players.map((p) => p.name) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seat, names]);
+  // gra poddana – na liście „moich pokoi” zaznaczone, żeby sprzątanie usunęło pokój po 2 dniach, a nie po 14
+  useEffect(() => {
+    if (st?.end != null) markRoomOver(room.id);
+  }, [st?.end, room.id]);
 
   const started = !!st?.start;
   const saved: SavedGame | null = useMemo(
@@ -149,6 +154,8 @@ export function OnlineRoom(props: {
           ping: st.ping,
           push: (a) => conn.push(a),
           rematch: seat === 0 ? rematch : undefined,
+          resigned: st.end,
+          resign: () => void conn.resign(seat).catch(() => undefined),
         }}
       />
       {waiting && <RematchWait t={t} onClose={() => setHideWait(true)} />}

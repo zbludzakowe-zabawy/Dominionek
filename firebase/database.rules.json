@@ -5,7 +5,7 @@
     "rooms": {
       "$room": {
         ".read": "$room.length >= 20",
-        ".write": "(!data.exists() && $room.length >= 20 && $room.length <= 40) || (data.exists() && !newData.exists() && (((data.child('act').isNumber() && data.child('act').val() < now - 1209600000) || (!data.child('act').exists() && data.child('at').isNumber() && data.child('at').val() < now - 1209600000)) || (data.child('next').exists() && ((data.child('act').isNumber() && data.child('act').val() < now - 172800000) || (!data.child('act').exists() && data.child('at').isNumber() && data.child('at').val() < now - 172800000)))))",
+        ".write": "(!data.exists() && $room.length >= 20 && $room.length <= 40) || (data.exists() && !newData.exists() && (((data.child('act').isNumber() && data.child('act').val() < now - 1209600000) || (!data.child('act').exists() && data.child('at').isNumber() && data.child('at').val() < now - 1209600000)) || ((data.child('next').exists() || data.child('end').exists()) && ((data.child('act').isNumber() && data.child('act').val() < now - 172800000) || (!data.child('act').exists() && data.child('at').isNumber() && data.child('at').val() < now - 172800000)))))",
         "cfg": { ".validate": "newData.isString() && newData.val().length < 4000" },
         "at": { ".validate": "newData.isNumber()" },
         "act": {
@@ -34,9 +34,13 @@
         },
         "moves": {
           "$n": {
-            ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",
+            ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists() && !root.child('rooms').child($room).child('end').exists()",
             ".validate": "$n.matches(/^[0-9]{1,5}$/) && newData.isString() && newData.val().length <= 300"
           }
+        },
+        "end": {
+          ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9"
         },
         "next": {
           ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",

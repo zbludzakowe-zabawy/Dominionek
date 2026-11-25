@@ -4,7 +4,7 @@ import { Game } from '../engine/game';
 import { Rng } from '../engine/rng';
 import { randomKingdom } from '../engine/setup';
 import { MemoryStore } from './transport';
-import { PREP_MS, RoomConn, allSeated, cleanupRooms, createRoom, expiredRooms, loadRooms, saveRoom, seatOf, touchRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
+import { PREP_MS, RoomConn, allSeated, cleanupRooms, createRoom, expiredRooms, loadRooms, markRoomOver, saveRoom, seatOf, touchRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
 import { reconcile } from './sync';
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -68,6 +68,27 @@ describe('pokój online', () => {
     });
     expect(st.moves).toEqual([{ t: 'end' }, { t: 'cards', is: [] }]); // przerwa w numeracji = koniec listy
     expect(allSeated(st)).toBe(true);
+  });
+
+  it('poddanie gry: zapis raz, po starcie; potem nie ma nowych ruchów', async () => {
+    const t = new MemoryStore().transport();
+    const id = await createRoom(t, cfg(9, [{ k: 'h' }, { k: 'h' }]), { name: 'Adam', cid: 'cA' });
+    const a = new RoomConn(t, id).open();
+    const b = new RoomConn(t, id).open();
+    await settle();
+    await b.join('Basia', 'cB');
+    await settle();
+    expect(await b.resign(1)).toBe(false); // przed startem nie
+    await a.begin();
+    await settle();
+    expect(a.state.end).toBeNull();
+    expect(await b.resign(1)).toBe(true);
+    await settle();
+    expect(a.state.end).toBe(1);
+    expect(await a.resign(0)).toBe(false); // już poddana
+    a.push([{ t: 'end' }]);
+    await settle();
+    expect(a.state.moves).toEqual([]);
   });
 
   it('w poczekalni można zmienić imię, po starcie już nie', async () => {
@@ -212,6 +233,10 @@ describe('pokój online', () => {
       // aktywność (ping) odświeża czas na liście
       touchRoom(fresh, now + 10 * day);
       expect(expiredRooms(loadRooms(), now + 20 * day)).toEqual([]);
+      // gra poddana: pokój znika już po 2 dniach bez aktywności
+      markRoomOver(fresh);
+      expect(expiredRooms(loadRooms(), now + 11 * day)).toEqual([]);
+      expect(expiredRooms(loadRooms(), now + 13 * day).map((r) => r.id)).toEqual([fresh]);
     } finally {
       g.localStorage = before;
     }

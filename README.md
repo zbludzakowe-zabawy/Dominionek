@@ -29,9 +29,8 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 1. **Przegląd działania kart** (najbliższy krok): przemyśleć, co karty mają robić – obecne efekty
    prawdopodobnie wymagają zmian (kontynuacja rozmowy z innego wątku).
 2. **Gra online dla 2–4 osób** przez link-pokój – zrobione (Firebase Realtime Database, `docs/gra-online.md`); do sprawdzenia na prawdziwej bazie.
-   - **Do zrobienia: „Koniec gry – poddaję się”** (w menu gry online). Każdy gracz może zakończyć grę.
-     Najpierw pytanie „Na pewno?” – „Nie” nic nie zmienia. „Tak” kończy grę u wszystkich, a pozostali
-     gracze widzą, kto się poddał, i komunikat „Wygrywasz walkowerem”.
+   - „Koniec gry – poddaję się” w menu gry online – zrobione: po potwierdzeniu gra kończy się u wszystkich,
+     pozostali widzą, kto się poddał, i „Wygrywasz walkowerem”.
 3. **Skrót działania karty na stosach w Królestwie**: przemyśleć inny widok dostępnych kart, gdzie
    stos na stole pokazuje ikonkami w skrócie, co robi karta – np. torba zakupowa = +zakup,
    moneta = +monety, karta = +karty (podobnie akcje, palenie, atak). Najpierw podgląd do akceptacji.

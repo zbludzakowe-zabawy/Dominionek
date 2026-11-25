@@ -52,6 +52,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .btn:active { filter: brightness(1.2); }
 .btn.primary { background: var(--accent); color: #1d1a12; border-color: transparent; font-weight: 600; }
 .btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
 .btn.end-turn { background: #3f6fa3; border-color: #5a8cc2; color: #f2f6fb; font-weight: 600; }
 .btn.big { padding: 14px 22px; font-size: 1.05rem; width: 100%; }
 .btn:disabled { opacity: .4; cursor: default; }
@@ -484,7 +485,6 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .confirm-box { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); text-align: left; }
 .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .end-buttons { display: flex; flex-direction: column; gap: 8px; position: sticky; bottom: 0; background: var(--bg2); padding-top: 4px; }
-.floating { position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: calc(160px + env(safe-area-inset-bottom)); z-index: 50; }
 
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { transform: translateY(20px); opacity: 0; } }
@@ -755,3 +755,6 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .crash { display: flex; flex-direction: column; gap: 12px; }
 .crash h1 { color: var(--gold); margin: 8px 0 0; }
 .crash-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .78rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; margin: 0; max-height: 40dvh; overflow-y: auto; }
+
+/* gra online poddana: kto poddał – nad „Wygrywasz walkowerem” */
+.sheet.end .resigned-by { margin: 0 0 4px; color: var(--muted); }
