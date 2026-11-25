@@ -2,7 +2,7 @@
 // Cotygodniowe sprzątanie starych pokoi gry online (GitHub Actions: .github/workflows/cleanup-rooms.yml).
 // Te same zasady co w aplikacji i w regułach bazy (src/online/room.ts, firebase/database.rules.json):
 //   - pokój bez aktywności przez 14 dni (act, a bez niego at) – usuwany,
-//   - pokój zastąpiony rewanżem (ma next) – po 2 dniach,
+//   - pokój zastąpiony rewanżem (ma next) albo z poddaną grą (ma end) – po 2 dniach,
 //   - śmieci (brak cfg i czasu założenia) – usuwane.
 // Aplikacja sprząta tylko pokoje ze swojej listy; ten skrypt widzi całą bazę (konto usługi omija reguły).
 //
@@ -17,7 +17,7 @@ export const ROOM_TTL_MS = 14 * DAY;
 export const OLD_TTL_MS = 2 * DAY;
 
 /**
- * Czy usunąć pokój. `room` = {act?, at?, next?, cfg?} (tylko te pola).
+ * Czy usunąć pokój. `room` = {act?, at?, next?, end?, cfg?} (tylko te pola).
  * Zwraca powód (tekst) albo null, gdy pokój zostaje.
  */
 export function deleteReason(room, now = Date.now()) {
@@ -26,6 +26,7 @@ export function deleteReason(room, now = Date.now()) {
   const idle = now - last;
   if (idle > ROOM_TTL_MS) return `bez gry ${Math.floor(idle / DAY)} dni`;
   if (room.next && idle > OLD_TTL_MS) return `po rewanżu, ${Math.floor(idle / DAY)} dni`;
+  if (room.end != null && idle > OLD_TTL_MS) return `gra poddana, ${Math.floor(idle / DAY)} dni`;
   return null;
 }
 
@@ -80,8 +81,8 @@ export async function cleanup({ db, token, dryRun, now = Date.now(), log = conso
   const ids = Object.keys(list);
   let removed = 0;
   for (const id of ids) {
-    const [act, at, next, cfg] = await Promise.all(['act', 'at', 'next', 'cfg'].map((f) => c.get(`rooms/${id}/${f}`, { shallow: 'true' })));
-    const why = deleteReason({ act, at, next, cfg }, now);
+    const [act, at, next, end, cfg] = await Promise.all(['act', 'at', 'next', 'end', 'cfg'].map((f) => c.get(`rooms/${id}/${f}`, { shallow: 'true' })));
+    const why = deleteReason({ act, at, next, end, cfg }, now);
     if (!why) continue;
     log(`${dryRun ? '[próba] ' : ''}usuwam ${id} (${why})`);
     if (!dryRun) await c.remove(`rooms/${id}`);

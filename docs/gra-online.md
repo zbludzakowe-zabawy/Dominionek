@@ -24,7 +24,8 @@ go deterministycznym silnikiem (`Game.replay`).
   - pokój bez gry przez 14 dni (`ROOM_TTL_DAYS`; ostatnia aktywność = pole `act`, zapisywane co 30 s, gdy ktoś
     ma pokój otwarty) – z bazy i z listy „Twoje gry online”;
   - pokój zastąpiony rewanżem (ma `next`) – po 2 dniach bez aktywności (`OLD_TTL_DAYS`), bo służy już tylko
-    jako przekierowanie starego linku.
+    jako przekierowanie starego linku;
+  - pokój z poddaną grą (ma `end`) – też po 2 dniach bez aktywności (lista pamięta to jako `over`).
   Każde urządzenie sprząta tylko pokoje ze swojej listy. Resztę (pokoje, których nikt już nie ma na liście)
   usuwa cotygodniowe sprzątanie na GitHubie – niżej.
 - Brak tajemnic: kto zna się na narzędziach programisty, może podejrzeć cudze karty (wspólne ziarno losowania).
@@ -35,6 +36,7 @@ go deterministycznym silnikiem (`Game.replay`).
 rooms/<id pokoju: 20 losowych znaków>/
   cfg    – JSON (tekst): {v, rev, seed, kingdom, extras, slots:[{k:'h'} | {k:'b', level}]}   – zapis raz
   at     – czas założenia
+  end    – nr miejsca gracza, który poddał grę – zapis raz, po starcie; potem bez nowych ruchów
   seats  – {<nr miejsca>: {name, cid}}           – zajęcie miejsca: zapis tylko w puste miejsce, przed startem;
                                                     samo `name` można zmienić w poczekalni (przed startem)
   start  – czas rozpoczęcia                       – zapis raz
@@ -46,7 +48,7 @@ rooms/<id pokoju: 20 losowych znaków>/
 ```
 
 Cały pokój można usunąć (zapis `null`), gdy ostatnia aktywność (`act`, a bez niego `at`) jest starsza niż 14 dni,
-albo – gdy pokój ma już `next` – starsza niż 2 dni.
+albo – gdy pokój ma już `next` albo `end` – starsza niż 2 dni.
 
 Zapis „tylko w puste miejsce” (reguła `!data.exists()`) sprawia, że dwa urządzenia nie nadpiszą sobie ruchów.
 Gdyby jednak dwa zapisały ruch o tym samym numerze (np. jeden gracz na dwóch telefonach), wygrywa pierwszy,
@@ -94,7 +96,7 @@ Dwie przeglądarki (albo okno zwykłe i prywatne)
 
 Workflow `.github/workflows/cleanup-rooms.yml` w każdy poniedziałek (3:37 UTC) uruchamia `scripts/cleanup-rooms.mjs`.
 Skrypt loguje się do bazy kluczem konta usługi Firebase (omija reguły, więc widzi wszystkie pokoje) i usuwa:
-pokoje bez gry przez 14 dni, pokoje po rewanżu po 2 dniach i puste śmieci – te same zasady co w aplikacji.
+pokoje bez gry przez 14 dni, pokoje po rewanżu i z poddaną grą po 2 dniach i puste śmieci – te same zasady co w aplikacji.
 Ręcznie: zakładka **Actions → Sprzątanie pokoi gry online → Run workflow** (domyślnie „Próba” – tylko wypisuje,
 co byłoby usunięte; odznacz, żeby naprawdę usunąć).
 

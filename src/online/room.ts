@@ -9,9 +9,11 @@
 //   at     – czas założenia
 //   act    – ostatnia aktywność (gracz z otwartym pokojem zapisuje co 30 s)
 //   prep   – gospodarz ustawia rewanż (czas; 0 = zrezygnował) – pozostali widzą „Czekaj…”
+//   end    – nr miejsca gracza, który poddał grę (zapis raz, po starcie) – gra kończy się u wszystkich,
+//            potem nie można już dopisywać ruchów
 //   next   – id pokoju z rewanżem (zapis raz, po starcie) – stary link prowadzi do nowej gry
 // Kasowanie (robią to urządzenia graczy, reguły bazy pilnują czasu): ROOM_TTL_DAYS dni od ostatniej
-// aktywności, a pokój zastąpiony rewanżem już po OLD_TTL_DAYS dniach.
+// aktywności, a pokój zastąpiony rewanżem albo z poddaną grą (end) już po OLD_TTL_DAYS dniach.
 // Stan gry = cfg + seats + moves; każde urządzenie odtwarza go silnikiem (Game.replay).
 // Odpowiedzi trzymamy jako tekst JSON, bo Firebase gubi puste tablice (np. {t:'cards', is: []}).
 import type { Answer, BotLevel, GameSetup } from '../engine/types';
@@ -59,6 +61,8 @@ export interface RoomState {
   ping: Record<number, number>;
   /** Pokój z rewanżem (jeśli gospodarz go założył). */
   next: string | null;
+  /** Kto poddał grę (nr miejsca) – null = gra trwa. */
+  end: number | null;
   /** Gospodarz ustawia rewanż (czas rozpoczęcia; null/0 = nie). */
   prep: number | null;
 }
@@ -126,7 +130,8 @@ export function parseRoom(raw: unknown): RoomState {
   for (const [i, t] of entries(r.ping)) if (typeof t === 'number') ping[i] = t;
   const next = typeof r.next === 'string' && validRoomId(r.next) ? r.next : null;
   const prep = typeof r.prep === 'number' && r.prep > 0 ? r.prep : null;
-  return { cfg, seats, start: typeof r.start === 'number' ? r.start : null, moves, ping, next, prep };
+  const end = typeof r.end === 'number' && Number.isInteger(r.end) && r.end >= 0 && r.end <= 9 ? r.end : null;
+  return { cfg, seats, start: typeof r.start === 'number' ? r.start : null, moves, ping, next, prep, end };
 }
 
 /** Ustawienia gry dla silnika: ludzie z nazwami z zajętych miejsc, boty z nazwami z listy. */
@@ -184,7 +189,7 @@ export async function rulesMissing(t: Transport, id: string, host: Seat): Promis
 // ---------- połączenie z pokojem ----------
 
 export class RoomConn {
-  state: RoomState = { cfg: null, seats: {}, start: null, moves: [], ping: {}, next: null, prep: null };
+  state: RoomState = { cfg: null, seats: {}, start: null, moves: [], ping: {}, next: null, prep: null, end: null };
   link: LinkState = 'offline';
   /** Ile razy przyszły dane (0 = jeszcze nic). */
   loaded = 0;
@@ -264,6 +269,12 @@ export class RoomConn {
     }
   }
 
+  /** „Koniec gry – poddaję się”: zapis raz, po starcie; gra kończy się u wszystkich. */
+  async resign(seat: number): Promise<boolean> {
+    if (!this.state.start || this.state.end !== null) return false;
+    return this.t.create(`rooms/${this.id}/end`, seat);
+  }
+
   async begin(): Promise<boolean> {
     return this.t.create(`rooms/${this.id}/start`, Date.now());
   }
@@ -302,6 +313,7 @@ export class RoomConn {
    * w bazie, są pomijane). Zapis po kolei, każdy tylko w puste miejsce.
    */
   push(all: Answer[]): void {
+    if (this.state.end !== null) return; // gra poddana – ruchów już nie dopisujemy
     this.next = Math.max(this.next, this.state.moves.length);
     for (; this.next < all.length; this.next++) this.outbox.push([this.next, all[this.next]]);
     this.pump();
@@ -367,6 +379,7 @@ export interface MyRoom {
   act?: number;
   /** Nazwy graczy (do listy na ekranie startowym). */
   names?: string[];
+  /** Gra poddana (pole end w bazie) – pokój znika już po OLD_TTL_DAYS dniach bez aktywności. */
   over?: boolean;
   /** Przyszedłem tu z rewanżu jako gracz poprzedniej gry (bez miejsca = gospodarz mnie nie wziął). */
   fromRematch?: boolean;
@@ -415,15 +428,21 @@ export function forgetRoom(id: string): void {
   }
 }
 
-/** Pokoje z listy bez aktywności tak długo, że baza pozwala je usunąć. */
+/** Pokoje z listy bez aktywności tak długo, że baza pozwala je usunąć (gra poddana – krócej). */
 export function expiredRooms(list: MyRoom[], now = Date.now()): MyRoom[] {
-  return list.filter((r) => now - (r.act ?? r.at) > ROOM_TTL_MS + SLACK_MS);
+  return list.filter((r) => now - (r.act ?? r.at) > (r.over ? OLD_TTL_MS : ROOM_TTL_MS) + SLACK_MS);
+}
+
+/** Zaznacza na liście „moich pokoi”, że gra w pokoju została poddana. */
+export function markRoomOver(id: string): void {
+  const r = loadRooms().find((x) => x.id === id);
+  if (r && !r.over) saveRoomInPlace({ ...r, over: true });
 }
 
 /**
  * Sprząta stare pokoje z tego urządzenia (przy starcie aplikacji):
  * - pokoje zastąpione rewanżem – po OLD_TTL_DAYS dniach od rewanżu,
- * - pokoje bez aktywności przez ROOM_TTL_DAYS dni – z bazy i z listy.
+ * - pokoje bez aktywności przez ROOM_TTL_DAYS dni (z poddaną grą: OLD_TTL_DAYS) – z bazy i z listy.
  * Ostatnie słowo ma baza: odmowa (ktoś grał później) = pokój zostaje. Błąd sieci – następnym razem.
  * Zwraca liczbę pokoi zdjętych z listy.
  */

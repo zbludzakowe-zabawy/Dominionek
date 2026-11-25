@@ -29,6 +29,10 @@ export interface OnlinePlay {
   push: (answers: Answer[]) => void;
   /** Rewanż: nowa gra w tym samym pokoju-linku (ustawia ją ten, kto stuknie). */
   rematch?: () => void;
+  /** Kto poddał grę (nr miejsca); null = gra trwa. */
+  resigned: number | null;
+  /** „Koniec gry – poddaję się” (po potwierdzeniu): gra kończy się u wszystkich. */
+  resign: () => void;
 }
 
 /** Gracz „obecny”, jeśli jego aplikacja odezwała się w ciągu tylu ms. */
@@ -143,8 +147,12 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [online?.version]);
 
+  /** Gra online poddana przez któregoś gracza (a nie skończona zwyczajnie) – nikt już nie wykonuje ruchów. */
+  const resigned = !game.over && online?.resigned != null ? online.resigned : null;
+  const ended = game.over || resigned !== null;
+
   // online: w tytule karty przeglądarki widać, że czekamy na mój ruch
-  const myMove = !!online && !!game.pending && game.pending.player === HUMAN;
+  const myMove = !!online && resigned === null && !!game.pending && game.pending.player === HUMAN;
   useEffect(() => {
     if (!online) return;
     const base = document.title.replace(/^● /, '');
@@ -191,7 +199,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     };
   });
 
-  const d = game.pending;
+  const d = resigned === null ? game.pending : null;
   // chwila po rozpoczęciu mojej tury, w której „Koniec tury/akcji” nie reaguje
   // (żeby przypadkowe drugie stuknięcie przy przewijaniu nie zakończyło tury)
   const myTurnStart = useRef(0);
@@ -278,7 +286,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   // Esc zamyka okienka (od wierzchu): okienko wyboru chowa się jak „Pokaż rękę”
   const choiceSheet = !peek && (myDecision?.kind === 'options' || (myDecision?.kind === 'cards' && myDecision.zone === 'list'));
   useEscape(choiceSheet && (() => setPeek(true)));
-  useEscape(game.over && showEnd && (() => setShowEnd(false)));
+  useEscape(ended && showEnd && (() => setShowEnd(false)));
   useEscape(panel && (() => setPanel(null)));
   useEscape(detail && (() => setDetail(null)));
   // w fazie akcji też można od razu kupić: gra sama kończy akcje i zagrywa skarby
@@ -412,8 +420,14 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   // ---------- pasek podpowiedzi i przyciski ----------
   let prompt = '';
   let buttons: React.ReactNode = null;
-  if (game.over) {
-    prompt = t('gameOver');
+  if (ended) {
+    prompt = game.over ? t('gameOver') : resigned === HUMAN ? t('online.youResigned') : t('online.resignedBy', { who: names[resigned!] });
+    // wyniki na pasku (pływający przycisk zasłaniał tekst)
+    buttons = (
+      <button className="btn primary" onClick={() => setShowEnd(true)}>
+        {t('results')}
+      </button>
+    );
   } else if (!plans) {
     prompt = t('preparing');
   } else if (broken) {
@@ -496,13 +510,22 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const importantPrompt = !!myDecision && myDecision.kind !== 'action' && myDecision.kind !== 'buy';
   const kingdomAscending = kingdomLayout(game.kingdom, lang, game.kingdom.length);
   const lastLog = game.log.length ? game.log[game.log.length - 1] : null;
-  const scores = game.over ? game.scores() : null;
+  const allScores = ended ? game.scores() : null;
+  // gra poddana: kto się poddał – na końcu listy, bez miejsca; pozostali ponumerowani na nowo
+  const others = allScores?.filter((s) => s.player !== resigned) ?? [];
+  const scores =
+    allScores && resigned !== null
+      ? [
+          ...others.map((s) => ({ ...s, rank: 1 + others.filter((o) => o.rank < s.rank).length })),
+          ...allScores.filter((s) => s.player === resigned).map((s) => ({ ...s, rank: 0 })),
+        ]
+      : allScores;
 
   const collapsedNow = barCollapsed && !importantPrompt;
   // przewijanie ruchów przeciwników: mała ikonka „»” zawsze po lewej stronie paska,
   // z dala od miejsca, w którym za chwilę pojawi się „Koniec tury”
   const skipBtn =
-    botDeciding && runBots && plans && !game.over ? (
+    botDeciding && runBots && plans && !ended ? (
       <button className="icon-btn skip-btn" onClick={() => setFf(true)} disabled={ff} aria-label={t('skipToMe')} title={t('skipToMe')}>
         »
       </button>
@@ -621,7 +644,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {barCollapsed ? '▴' : '▾'}
         </button>
         {collapsedNow && skipBtn}
-        <div className="counters">
+        {/* gra poddana: liczniki tury nic już nie znaczą */}
+        {resigned === null && <div className="counters">
           <span className="phase">{t(`phase.${turn.phase}`)}:</span>
           {turn.phase === 'buy' ? (
             <>
@@ -643,7 +667,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               {hasElixir && <Flask n={turn.potions} />}
             </>
           )}
-        </div>
+        </div>}
         <div className="prompt-row">
           {!collapsedNow && skipBtn}
           <div className="prompt">
@@ -905,6 +929,21 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             <button className="btn" onClick={() => { persist(); onExit(); }}>
               {t('leaveGame')}
             </button>
+            {online && !ended && (
+              <ConfirmButton
+                className="btn danger"
+                label={t('online.resign')}
+                question={t('online.resignConfirm')}
+                yes={t('online.resignYes')}
+                no={t('no')}
+                needConfirm
+                onConfirm={() => {
+                  setPanel(null);
+                  setShowEnd(true);
+                  online.resign();
+                }}
+              />
+            )}
             {!online && <ConfirmButton
               className="btn"
               label={t('restart')}
@@ -925,6 +964,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         <div className="sheet-backdrop">
           <div className="sheet end">
             <h2>{t('gameOver')}</h2>
+            {resigned !== null ? (
+              resigned === HUMAN ? (
+                <p className="winner">{t('online.youResigned')}</p>
+              ) : (
+                <>
+                  <p className="resigned-by">{t('online.resignedBy', { who: names[resigned] })}</p>
+                  <p className="winner">{t('online.walkover')}</p>
+                </>
+              )
+            ) : (
             <p className="winner">
               {scores.filter((s) => s.rank === 1).length > 1
                 ? t('tie')
@@ -932,12 +981,16 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                   ? t('youWin')
                   : t('winner', { who: names[scores[0].player] })}
             </p>
+            )}
+            {resigned !== null && <p className="muted small">{t('online.scoresAtResign')}</p>}
             <ol className="scores">
               {scores.map((s) => (
                 <li key={s.player} className={s.player === HUMAN ? 'me' : ''}>
                   <div className="score-head">
                     <span>
-                      {s.rank}. {names[s.player]}
+                      {s.rank ? `${s.rank}. ` : '– '}
+                      {names[s.player]}
+                      {s.player === resigned && <span className="muted small"> · {t('online.gaveUp')}</span>}
                     </span>
                     <b>
                       {s.vp} {t('vp')}
@@ -970,11 +1023,6 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             </div>
           </div>
         </div>
-      )}
-      {scores && !showEnd && (
-        <button className="btn primary floating" onClick={() => setShowEnd(true)}>
-          {t('gameOver')}
-        </button>
       )}
       {fx.layer}
     </div>
