@@ -5,7 +5,7 @@ import { randomSeed } from '../engine/rng';
 import { KINGDOM_SIZE, hasHoardCards, randomKingdom, rerollOne, rollHoardExtras } from '../engine/setup';
 import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
-import { CardFace, ConfirmButton, Cost, PileTile } from './CardView';
+import { CardFace, ConfirmButton, Cost, PileTile, useEscape } from './CardView';
 import { GameScreen } from './GameScreen';
 import { JoinScreen, OnlineRoom, roomFor } from './Online';
 import {
@@ -425,7 +425,7 @@ function SetupScreen(props: {
         </section>
 
         <button
-          className="btn primary big"
+          className="btn primary big sticky"
           onClick={props.onNext}
           disabled={online && !settings.onlineSlots.includes('human')}
         >
@@ -501,6 +501,7 @@ function KingdomScreen(props: {
   }, [kingdomKey]);
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
   const [detail, setDetail] = useState<string | null>(null);
+  useEscape(!!detail && (() => setDetail(null)));
   const [manual, setManual] = useState(props.mode === 'manual');
   const pool = useMemo(
     () => kingdomCards(sets).sort((a, b) => card(a).cost - card(b).cost || card(a).name[lang].localeCompare(card(b).name[lang])),
