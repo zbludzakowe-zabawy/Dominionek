@@ -35,6 +35,12 @@ export function firebaseTransport(db: string): Transport {
       check(r);
       return true;
     },
+    async remove(path) {
+      const r = await put(path, null);
+      if (r.status === 401 || r.status === 403) return false;
+      check(r);
+      return true;
+    },
     async set(path, value) {
       check(await put(path, value));
     },

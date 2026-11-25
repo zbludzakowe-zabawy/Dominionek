@@ -5,6 +5,8 @@
 export interface Transport {
   /** Zapisuje wartość, jeśli miejsce jest puste. false = już zajęte albo reguły bazy nie pozwalają. Błąd sieci = wyjątek. */
   create(path: string, value: unknown): Promise<boolean>;
+  /** Usuwa poddrzewo (stary pokój). false = reguły bazy nie pozwalają (np. pokój jeszcze za młody). */
+  remove(path: string): Promise<boolean>;
   /** Zapis bez warunku (tylko „obecność” graczy). */
   set(path: string, value: unknown): Promise<void>;
   /** Śledzi poddrzewo: cb dostaje całą jego aktualną zawartość po każdej zmianie. Zwraca funkcję kończącą. */
@@ -63,6 +65,11 @@ export class MemoryStore {
       create: async (path, value) => {
         if (getAt(this.data, path) !== null) return false;
         this.data = setAt(this.data, path, JSON.parse(JSON.stringify(value)));
+        this.notify();
+        return true;
+      },
+      remove: async (path) => {
+        this.data = setAt(this.data, path, null);
         this.notify();
         return true;
       },

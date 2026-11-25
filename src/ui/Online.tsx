@@ -1,5 +1,5 @@
 // Gra online: poczekalnia pokoju (link, gracze, start) i gra przez pokój w Firebase.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
@@ -19,7 +19,8 @@ import {
   type MyRoom,
 } from '../online/room';
 import { GameScreen } from './GameScreen';
-import { BOT_NAMES, CARDS_REV, type SavedGame, type Settings } from './store';
+import { BOT_NAMES, CARDS_REV, type OnlineSlot, type SavedGame, type Settings } from './store';
+import type { Rematch } from './App';
 
 type T = (k: string, p?: Record<string, string | number>) => string;
 
@@ -31,6 +32,10 @@ export function OnlineRoom(props: {
   onSettings: (p: Partial<Settings>) => void;
   onRules: () => void;
   onExit: () => void;
+  /** Rewanż: ustawienia nowej gry (pozostałe miejsca jak w tej grze). */
+  onRematch: (r: Rematch, otherSlots: OnlineSlot[]) => void;
+  /** W pokoju pojawił się rewanż – przejdź do nowego pokoju. */
+  onFollow: (from: MyRoom, next: string, myName: string | null) => void;
   langToggle: React.ReactNode;
 }) {
   const { room, settings } = props;
@@ -92,6 +97,21 @@ export function OnlineRoom(props: {
 
   const exit = () => props.onExit();
 
+  // rewanż założony (przez kogokolwiek) – wszyscy przechodzą do nowego pokoju
+  const next = st?.next ?? null;
+  useEffect(() => {
+    if (!next) return;
+    props.onFollow(room, next, seat !== null ? (st?.seats[seat]?.name ?? null) : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [next]);
+
+  const rematch = () => {
+    const cfg = st?.cfg;
+    if (!cfg || seat === null) return;
+    const others = cfg.slots.filter((_, i) => i !== seat).map((s): OnlineSlot => (s.k === 'h' ? 'human' : s.level));
+    props.onRematch({ from: { ...room, seat }, kingdom: cfg.kingdom, extras: !!cfg.extras?.length }, others);
+  };
+
   if (conn && st && saved && seat !== null) {
     return (
       <GameScreen
@@ -112,6 +132,7 @@ export function OnlineRoom(props: {
           unsent: conn.unsent,
           ping: st.ping,
           push: (a) => conn.push(a),
+          rematch,
         }}
       />
     );
@@ -159,6 +180,15 @@ function Lobby(props: {
   const [copied, setCopied] = useState(false);
   const st = conn?.state;
   const link = roomLink(pageBase(), room.id);
+
+  // rewanż: dołączam sam, pod imieniem z poprzedniej gry
+  const autoJoined = useRef(false);
+  const canAutoJoin = !!(room.join && conn?.loaded && st?.cfg && !st.start && seat === null);
+  useEffect(() => {
+    if (!canAutoJoin || autoJoined.current || !conn) return;
+    autoJoined.current = true;
+    conn.join(room.join!, room.cid).catch(() => undefined);
+  }, [canAutoJoin, conn, room]);
 
   if (!conn || !st || !conn.loaded) {
     return (

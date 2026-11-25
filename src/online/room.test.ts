@@ -4,7 +4,7 @@ import { Game } from '../engine/game';
 import { Rng } from '../engine/rng';
 import { randomKingdom } from '../engine/setup';
 import { MemoryStore } from './transport';
-import { RoomConn, allSeated, createRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
+import { ROOM_TTL_MS, RoomConn, allSeated, claimNext, cleanupRooms, createRoom, expiredRooms, loadRooms, saveRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
 import { reconcile } from './sync';
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -134,5 +134,47 @@ describe('pokój online', () => {
     const r = reconcile(loser, setup, a.state.moves);
     expect(r.changed).toBe(true);
     expect(r.game.answers).toEqual(a.state.moves);
+  });
+
+  it('rewanż: pierwszy zgłoszony wygrywa, stary pokój wskazuje nowy', async () => {
+    const store = new MemoryStore();
+    const t = store.transport();
+    const id = await createRoom(t, cfg(3, [{ k: 'h' }, { k: 'h' }]), { name: 'A', cid: 'a' });
+    const a = new RoomConn(t, id).open();
+    await settle();
+    const n1 = await claimNext(t, id);
+    expect(n1).toMatch(/^[A-Za-z0-9]{20}$/);
+    expect(await claimNext(t, id)).toBeNull();
+    await settle();
+    expect(a.state.next).toBe(n1);
+    const id2 = await createRoom(t, cfg(4, [{ k: 'h' }, { k: 'h' }]), { name: 'B', cid: 'b' }, n1!);
+    expect(id2).toBe(n1);
+    const b = new RoomConn(t, id2).open();
+    await settle();
+    expect(await b.join('A', 'a')).toBe(1);
+  });
+
+  it('stare pokoje: usuwane z bazy razem z wcześniejszymi rewanżami', async () => {
+    const mem: Record<string, string> = {};
+    const g = globalThis as { localStorage?: unknown };
+    const before = g.localStorage;
+    g.localStorage = { getItem: (k: string) => mem[k] ?? null, setItem: (k: string, v: string) => void (mem[k] = v) };
+    try {
+      const store = new MemoryStore();
+      const t = store.transport();
+      const now = Date.now();
+      const old = await createRoom(t, cfg(5, [{ k: 'h' }]), { name: 'A', cid: 'a' });
+      const cur = await createRoom(t, cfg(6, [{ k: 'h' }]), { name: 'A', cid: 'a' });
+      const fresh = await createRoom(t, cfg(7, [{ k: 'h' }]), { name: 'A', cid: 'a' });
+      saveRoom({ id: cur, cid: 'a', seat: 0, host: true, at: now - ROOM_TTL_MS - 2 * 3600 * 1000, old: [old] });
+      saveRoom({ id: fresh, cid: 'a', seat: 0, host: true, at: now - 3600 * 1000 });
+      expect(expiredRooms(loadRooms(), now).map((r) => r.id)).toEqual([cur]);
+      expect(await cleanupRooms(t, now)).toBe(1);
+      const rooms = (store.data as { rooms: Record<string, unknown> }).rooms;
+      expect(Object.keys(rooms)).toEqual([fresh]);
+      expect(loadRooms().map((r) => r.id)).toEqual([fresh]);
+    } finally {
+      g.localStorage = before;
+    }
   });
 });
