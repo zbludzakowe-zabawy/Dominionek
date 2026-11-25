@@ -47,6 +47,10 @@ Po instalacji gra działa **bez internetu**. Bieżąca partia zapisuje się na u
 Gdy pojawi się **„Dostępna nowa wersja”**, przycisk *Odśwież* wczytuje nową wersję,
 a gra wraca dokładnie w tym samym miejscu. *Później* odkłada aktualizację.
 
+Żeby wysłać grę znajomym, stuknij małą ikonę udostępniania (trzy połączone kropki) w lewym górnym
+rogu ekranu startowego – na telefonie otworzy się systemowe okno udostępniania, na komputerze link
+trafi do schowka.
+
 ## Uruchomienie lokalne
 
 ```bash

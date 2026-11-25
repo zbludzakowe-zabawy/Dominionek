@@ -75,6 +75,8 @@ Dalej w planie (kolejność jak w README → Plan):
     zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
+  - `Icons.tsx` – ikona dziennika (otwarta książka, inna niż ☰ menu) i `ShareButton` (trzy połączone kropki,
+    lewy górny róg ekranu startowego; udostępnia stały adres GitHub Pages: share → schowek → komunikat).
   - `motifs.ts` – rysunki kart (pole 48×48, ziemia ~y=44; `m` linie, `a` akcent, `f` wypełnienia).
   - `art.ts` – tło karty (kratka / łuski dla Skarbca / sześciokąty dla Wieży), symbole pakietów
     (Twierdza: wieża; Skarbiec: konturowy łeb smoka z otwartą paszczą, patrzy w lewo, bez płomienia,
@@ -139,7 +141,7 @@ node scripts/fake-firebase.mjs 9400   # udawana baza do testów gry online; buil
 ```
 
 Podgląd dla użytkownika (Artifact na claude.ai, ten sam link przy każdej publikacji:
-https://claude.ai/artifact/NnaYtLULayu9fcCcx1cSDC):
+https://claude.ai/artifact/F3ksA6gomJxuCgJprtkHNx):
 `npm run build && python3 scripts/build-artifact.py <scratchpad>` → opublikuj `<scratchpad>/crownforge.html`
 narzędziem Artifact. Do testów lokalnych dołóż na początku `<!doctype html><meta name="viewport" ...>`.
 

@@ -1,3 +1,4 @@
+import { LogIcon } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { decide, type Plan } from '../engine/bot';
 import { isType } from '../engine/card';
@@ -512,8 +513,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {online && online.link !== 'live' && <span className="net-warn small"> · {t(`online.link.${online.link}`)}</span>}
           {online && online.link === 'live' && online.unsent > 0 && <span className="muted small"> · {t('online.sending')}</span>}
         </div>
-        <button className="icon-btn" onClick={() => setPanel('log')} aria-label={t('log')}>
-          ≡
+        <button className="icon-btn" onClick={() => setPanel('log')} aria-label={t('log')} title={t('log')}>
+          <LogIcon />
         </button>
       </header>
 

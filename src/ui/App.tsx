@@ -7,6 +7,7 @@ import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
 import { CardFace, ConfirmButton, Cost, PileTile, useEscape } from './CardView';
 import { GameScreen } from './GameScreen';
+import { ShareButton } from './Icons';
 import { JoinScreen, OnlineRoom, roomFor } from './Online';
 import {
   BOT_NAMES,
@@ -231,7 +232,7 @@ export function App() {
   return (
     <div className="screen home">
       <header className="bar">
-        <span />
+        <ShareButton lang={lang} />
         <span />
         {langToggle}
       </header>
