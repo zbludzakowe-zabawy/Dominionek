@@ -13,7 +13,7 @@
 //            potem nie można już dopisywać ruchów
 //   next   – id pokoju z rewanżem (zapis raz, po starcie) – stary link prowadzi do nowej gry
 // Kasowanie (robią to urządzenia graczy, reguły bazy pilnują czasu): ROOM_TTL_DAYS dni od ostatniej
-// aktywności, a pokój zastąpiony rewanżem już po OLD_TTL_DAYS dniach.
+// aktywności, a pokój zastąpiony rewanżem albo z poddaną grą (end) już po OLD_TTL_DAYS dniach.
 // Stan gry = cfg + seats + moves; każde urządzenie odtwarza go silnikiem (Game.replay).
 // Odpowiedzi trzymamy jako tekst JSON, bo Firebase gubi puste tablice (np. {t:'cards', is: []}).
 import type { Answer, BotLevel, GameSetup } from '../engine/types';
@@ -379,6 +379,7 @@ export interface MyRoom {
   act?: number;
   /** Nazwy graczy (do listy na ekranie startowym). */
   names?: string[];
+  /** Gra poddana (pole end w bazie) – pokój znika już po OLD_TTL_DAYS dniach bez aktywności. */
   over?: boolean;
   /** Przyszedłem tu z rewanżu jako gracz poprzedniej gry (bez miejsca = gospodarz mnie nie wziął). */
   fromRematch?: boolean;
@@ -427,15 +428,21 @@ export function forgetRoom(id: string): void {
   }
 }
 
-/** Pokoje z listy bez aktywności tak długo, że baza pozwala je usunąć. */
+/** Pokoje z listy bez aktywności tak długo, że baza pozwala je usunąć (gra poddana – krócej). */
 export function expiredRooms(list: MyRoom[], now = Date.now()): MyRoom[] {
-  return list.filter((r) => now - (r.act ?? r.at) > ROOM_TTL_MS + SLACK_MS);
+  return list.filter((r) => now - (r.act ?? r.at) > (r.over ? OLD_TTL_MS : ROOM_TTL_MS) + SLACK_MS);
+}
+
+/** Zaznacza na liście „moich pokoi”, że gra w pokoju została poddana. */
+export function markRoomOver(id: string): void {
+  const r = loadRooms().find((x) => x.id === id);
+  if (r && !r.over) saveRoomInPlace({ ...r, over: true });
 }
 
 /**
  * Sprząta stare pokoje z tego urządzenia (przy starcie aplikacji):
  * - pokoje zastąpione rewanżem – po OLD_TTL_DAYS dniach od rewanżu,
- * - pokoje bez aktywności przez ROOM_TTL_DAYS dni – z bazy i z listy.
+ * - pokoje bez aktywności przez ROOM_TTL_DAYS dni (z poddaną grą: OLD_TTL_DAYS) – z bazy i z listy.
  * Ostatnie słowo ma baza: odmowa (ktoś grał później) = pokój zostaje. Błąd sieci – następnym razem.
  * Zwraca liczbę pokoi zdjętych z listy.
  */

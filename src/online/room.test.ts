@@ -4,7 +4,7 @@ import { Game } from '../engine/game';
 import { Rng } from '../engine/rng';
 import { randomKingdom } from '../engine/setup';
 import { MemoryStore } from './transport';
-import { PREP_MS, RoomConn, allSeated, cleanupRooms, createRoom, expiredRooms, loadRooms, saveRoom, seatOf, touchRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
+import { PREP_MS, RoomConn, allSeated, cleanupRooms, createRoom, expiredRooms, loadRooms, markRoomOver, saveRoom, seatOf, touchRoom, parseRoom, parseRoomRef, roomLink, rulesMissing, setupOf, type RoomCfg } from './room';
 import { reconcile } from './sync';
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -233,6 +233,10 @@ describe('pokój online', () => {
       // aktywność (ping) odświeża czas na liście
       touchRoom(fresh, now + 10 * day);
       expect(expiredRooms(loadRooms(), now + 20 * day)).toEqual([]);
+      // gra poddana: pokój znika już po 2 dniach bez aktywności
+      markRoomOver(fresh);
+      expect(expiredRooms(loadRooms(), now + 11 * day)).toEqual([]);
+      expect(expiredRooms(loadRooms(), now + 13 * day).map((r) => r.id)).toEqual([fresh]);
     } finally {
       g.localStorage = before;
     }

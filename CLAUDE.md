@@ -40,7 +40,8 @@ Dalej w planie (kolejność jak w README → Plan):
    Poddanie gry (25.11): menu gry online → „Koniec gry – poddaję się” (`ConfirmButton`) → `RoomConn.resign` zapisuje raz
    pole `end` (nr miejsca); reguły nie pozwalają potem dopisywać ruchów. `GameScreen` (`online.resigned`): brak decyzji
    i botów, okienko końca: „Gra została poddana przez gracza: X.” + „Wygrywasz walkowerem!” (wszyscy pozostali), punkty
-   w chwili poddania, poddający na końcu listy bez miejsca. Wyniki – przycisk „Wyniki” na pasku fazy (też przy zwykłym końcu).
+   w chwili poddania, poddający na końcu listy bez miejsca. Pokój z `end` kasowany po 2 dniach bez aktywności
+   (jak z `next`; aplikacja: `MyRoom.over`/`markRoomOver`, reguły, skrypt sprzątania). Wyniki – przycisk „Wyniki” na pasku fazy (też przy zwykłym końcu).
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 
