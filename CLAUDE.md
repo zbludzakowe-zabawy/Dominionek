@@ -141,7 +141,7 @@ node scripts/fake-firebase.mjs 9400   # udawana baza do testów gry online; buil
 ```
 
 Podgląd dla użytkownika (Artifact na claude.ai, ten sam link przy każdej publikacji:
-https://claude.ai/artifact/NnaYtLULayu9fcCcx1cSDC):
+https://claude.ai/artifact/F3ksA6gomJxuCgJprtkHNx):
 `npm run build && python3 scripts/build-artifact.py <scratchpad>` → opublikuj `<scratchpad>/crownforge.html`
 narzędziem Artifact. Do testów lokalnych dołóż na początku `<!doctype html><meta name="viewport" ...>`.
 
