@@ -13,6 +13,8 @@ export interface Settings {
   autoEnd: boolean;
   /** Pasek fazy zwinięty do jednej linijki; null = automatycznie (zwinięty przy telefonie poziomo). */
   barCollapsed: boolean | null;
+  /** Animacje (lot zdobytych kart, okienko z kartami z efektów). Brak = włączone. */
+  anim?: boolean;
   /** Wygląd stosów Królestwa: obraz (domyślnie) albo symbole działania karty. */
   pileView: 'art' | 'symbols';
   bots: BotLevel[];

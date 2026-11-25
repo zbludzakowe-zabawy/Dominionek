@@ -102,6 +102,12 @@ export type Answer =
 export type Step = Generator<Decision, void, Answer>;
 export type Ask<T> = Generator<Decision, T, Answer>;
 
+/** Zdarzenie do animacji (UI): karty na rękę (dobrane / włożone), zdobyta karta, spalone karty. */
+export type Fx =
+  | { k: 'hand'; p: number; cards: string[]; how: 'draw' | 'put' }
+  | { k: 'gain'; p: number; card: string; to: 'discard' | 'hand' | 'deck'; bought: boolean }
+  | { k: 'trash'; p: number; cards: string[] };
+
 export interface LogEntry {
   turn: number;
   player: number;

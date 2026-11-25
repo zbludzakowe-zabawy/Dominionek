@@ -377,4 +377,26 @@ describe('silnik', () => {
     expect(k2[3]).not.toBe(k[3]);
     expect(kingdomCards(['keep']).length).toBeGreaterThanOrEqual(25);
   });
+
+  it('zdarzenia do animacji: dobranie z efektu, zakup, spalenie – bez zwykłego dobierania na koniec tury', () => {
+    const r = new Rng(5);
+    const g = new Game({ seed: 5, kingdom: randomKingdom(['keep', 'hoard', 'tower', 'court'], () => r.next()), extras: [], players: [{ name: 'A', bot: 'medium' }, { name: 'B', bot: 'medium' }] });
+    expect(g.fx).toEqual([]); // ręka startowa
+    let turns = 0;
+    for (let n = 0; n < 3000 && g.pending; n++) {
+      const before = g.fx.length;
+      const a = decide(g, g.pending, 'medium', () => r.next());
+      const turn = g.turn.number;
+      g.submit(a);
+      if (g.turn.number !== turn) turns++;
+      for (const f of g.fx.slice(before)) {
+        if (f.k === 'gain' && f.bought) expect(a.t).toBe('buy');
+        if (f.k === 'hand') expect(f.cards.length).toBeGreaterThan(0);
+      }
+    }
+    expect(turns).toBeGreaterThan(10);
+    expect(g.fx.filter((f) => f.k === 'gain' && f.bought).length).toBeGreaterThan(5);
+    // dobranie 5 kart na koniec każdej tury nie trafia do zdarzeń
+    expect(g.fx.filter((f) => f.k === 'hand' && f.cards.length === 5 && f.how === 'draw').length).toBeLessThan(3);
+  });
 });
