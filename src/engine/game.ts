@@ -7,6 +7,7 @@ import type {
   Decision,
   GameSetup,
   Fx,
+  RevealOut,
   LogEntry,
   Msg,
   PlayerState,
@@ -357,6 +358,11 @@ export class Game {
       this.logMsg(p.id, 'log.trash', { card: '@' + id });
     }
     if (ids.length) this.fx.push({ k: 'trash', p: p.id, cards: [...ids] });
+  }
+
+  /** Zdarzenie dla animacji: karty odkryte u gracza `v` przez atak gracza `by` i co się z nimi stało. */
+  revealFx(by: PlayerState, v: PlayerState, src: string, cards: string[], out: RevealOut[], show = [by.id, v.id]): void {
+    if (cards.length) this.fx.push({ k: 'reveal', p: v.id, by: by.id, src, cards: [...cards], out: [...out], show });
   }
 
   discardCards(p: PlayerState, ids: string[], log = true): void {

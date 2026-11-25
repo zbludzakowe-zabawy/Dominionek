@@ -128,6 +128,8 @@ export const COURT: CardDef[] = [
         const discard = yield* g.yesNo(p, { k: 'prompt.rumor', p: { card: '@' + id, name: v.name } }, 'rumor', good);
         if (discard) g.discardCards(v, [id]);
         else v.deck.unshift(id);
+        // grający widział kartę przy wyborze – okienko tylko dla odkrywającego
+        g.revealFx(p, v, 'rumor', [id], [discard ? 'discard' : 'deck'], [v.id]);
       });
     },
     ai: { value: 4, role: 'attack' },

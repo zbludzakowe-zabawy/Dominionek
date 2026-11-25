@@ -699,6 +699,15 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 @keyframes fx-in { from { transform: translateY(-26px) scale(.7) rotate(-4deg); opacity: 0; } }
 .fx-bin { color: var(--muted); margin-top: 2px; transform-origin: 50% 100%; }
 .fx-skip { transition: opacity .2s; }
+/* karty odkryte u przeciwników (atak) */
+.fx-reveal.gone { opacity: 0; transition: opacity .3s; }
+.fx-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.fx-who { font-weight: 700; font-size: .9rem; }
+.fx-out { margin-top: 3px; text-align: center; font-size: .72rem; font-weight: 700; border-radius: 6px; padding: 1px 4px; }
+.fx-discard .card, .fx-trash .card { filter: saturate(.55) brightness(.8); }
+.fx-discard .fx-out { color: #f0c27a; background: rgba(240, 194, 122, .12); }
+.fx-trash .fx-out { color: #f08a7a; background: rgba(240, 138, 122, .14); }
+.fx-deck .fx-out { color: #9fd49a; background: rgba(159, 212, 154, .12); }
 @media (orientation: landscape) and (max-height: 520px) {
   .fx-card { width: 78px; }
   .fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: 68px; }

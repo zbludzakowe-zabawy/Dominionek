@@ -106,7 +106,11 @@ export type Ask<T> = Generator<Decision, T, Answer>;
 export type Fx =
   | { k: 'hand'; p: number; cards: string[]; how: 'draw' | 'put' }
   | { k: 'gain'; p: number; card: string; to: 'discard' | 'hand' | 'deck'; bought: boolean }
-  | { k: 'trash'; p: number; cards: string[] };
+  | { k: 'trash'; p: number; cards: string[] }
+  /** Karty odkryte u gracza `p` przez atak gracza `by` (karta `src`): co się stało z każdą; `show` = komu pokazać. */
+  | { k: 'reveal'; p: number; by: number; src: string; cards: string[]; out: RevealOut[]; show: number[] };
+
+export type RevealOut = 'discard' | 'deck' | 'trash';
 
 export interface LogEntry {
   turn: number;

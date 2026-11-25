@@ -399,4 +399,32 @@ describe('silnik', () => {
     // dobranie 5 kart na koniec każdej tury nie trafia do zdarzeń
     expect(g.fx.filter((f) => f.k === 'hand' && f.cards.length === 5 && f.how === 'draw').length).toBeLessThan(3);
   });
+
+  it('zdarzenia do animacji: karty odkryte u przeciwników (Rzezimieszek, Herszt, Plotka)', () => {
+    const seen: Record<string, number> = {};
+    for (let seed = 1; seed <= 12; seed++) {
+      const r = new Rng(seed);
+      const rest = randomKingdom(['keep', 'court'], () => r.next()).filter((id) => !['footpad', 'banditchief', 'rumor'].includes(id));
+      const kingdom = ['footpad', 'banditchief', 'rumor', ...rest.slice(0, 7)];
+      const players = [{ name: 'A', bot: 'medium' as const }, { name: 'B', bot: 'medium' as const }, { name: 'C', bot: 'easy' as const }];
+      const g = new Game({ seed, kingdom, extras: [], players });
+      playOut(g, seed, 4000);
+      for (const f of g.fx) {
+        if (f.k !== 'reveal') continue;
+        seen[f.src] = (seen[f.src] ?? 0) + 1;
+        expect(f.p).not.toBe(f.by);
+        expect(f.cards.length).toBe(f.out.length);
+        expect(f.cards.length).toBeGreaterThan(0);
+        if (f.src === 'footpad') {
+          expect(f.show).toEqual([f.by, f.p]);
+          f.cards.forEach((id, i) => {
+            const good = card(id).types.includes('action') || card(id).types.includes('treasure');
+            expect(f.out[i]).toBe(good ? 'discard' : 'deck');
+          });
+        }
+        if (f.src === 'banditchief') expect(f.out.filter((o) => o === 'trash').length).toBeLessThanOrEqual(1);
+      }
+    }
+    expect(seen.footpad).toBeGreaterThan(0);
+  });
 });
