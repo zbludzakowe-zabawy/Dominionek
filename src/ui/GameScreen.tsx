@@ -1,3 +1,4 @@
+import { LogIcon } from './Icons';
 import { useEffect, useRef, useState } from 'react';
 import { decide, type Plan } from '../engine/bot';
 import { isType } from '../engine/card';
@@ -6,7 +7,7 @@ import { Game } from '../engine/game';
 import { makePlan } from '../engine/plan';
 import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
-import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard } from './CardView';
+import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard, useEscape } from './CardView';
 import { typeKey } from './art';
 import { useCardFx } from './Fx';
 import { saveGame, type SavedGame, type Settings, CARDS_REV } from './store';
@@ -271,6 +272,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const turn = game.turn;
   const current = game.players[turn.player];
   const myDecision = d && d.player === HUMAN ? d : null;
+
+  // Esc zamyka okienka (od wierzchu): okienko wyboru chowa się jak „Pokaż rękę”
+  const choiceSheet = !peek && (myDecision?.kind === 'options' || (myDecision?.kind === 'cards' && myDecision.zone === 'list'));
+  useEscape(choiceSheet && (() => setPeek(true)));
+  useEscape(game.over && showEnd && (() => setShowEnd(false)));
+  useEscape(panel && (() => setPanel(null)));
+  useEscape(detail && (() => setDetail(null)));
   // w fazie akcji też można od razu kupić: gra sama kończy akcje i zagrywa skarby
   const canBuyNow = myDecision?.kind === 'buy' || myDecision?.kind === 'action';
   const potential =
@@ -514,8 +522,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {online && online.link !== 'live' && <span className="net-warn small"> · {t(`online.link.${online.link}`)}</span>}
           {online && online.link === 'live' && online.unsent > 0 && <span className="muted small"> · {t('online.sending')}</span>}
         </div>
-        <button className="icon-btn" onClick={() => setPanel('log')} aria-label={t('log')}>
-          ≡
+        <button className="icon-btn" onClick={() => setPanel('log')} aria-label={t('log')} title={t('log')}>
+          <LogIcon />
         </button>
       </header>
 

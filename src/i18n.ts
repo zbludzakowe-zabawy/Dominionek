@@ -6,6 +6,10 @@ type Dict = Record<string, string>;
 const en: Dict = {
   appName: 'Crownforge',
   tagline: 'A fantasy deck-building game',
+  shareApp: 'Share Crownforge',
+  shareText: 'Play Crownforge – a fantasy deck-building card game',
+  shareCopied: 'Link copied – paste it in a message',
+  shareAddress: 'Address: {url}',
   continue: 'Continue game',
   newGame: 'New game',
   rules: 'How to play',
@@ -250,6 +254,10 @@ Buy good cards early, Victory cards late — they do nothing in your hand. Trash
 const pl: Dict = {
   appName: 'Crownforge',
   tagline: 'Karciana gra fantasy o budowaniu talii',
+  shareApp: 'Udostępnij Crownforge',
+  shareText: 'Zagraj w Crownforge – karcianą grę fantasy o budowaniu talii',
+  shareCopied: 'Skopiowano link – wklej go w wiadomości',
+  shareAddress: 'Adres: {url}',
   continue: 'Kontynuuj grę',
   newGame: 'Nowa gra',
   rules: 'Zasady',

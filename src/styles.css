@@ -483,7 +483,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .score-head { display: flex; justify-content: space-between; font-weight: 600; }
 .confirm-box { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); text-align: left; }
 .confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.end-buttons { display: flex; flex-direction: column; gap: 8px; }
+.end-buttons { display: flex; flex-direction: column; gap: 8px; position: sticky; bottom: 0; background: var(--bg2); padding-top: 4px; }
 .floating { position: fixed; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: calc(160px + env(safe-area-inset-bottom)); z-index: 50; }
 
 @keyframes fade { from { opacity: 0; } }
@@ -675,8 +675,8 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .fx-title { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; color: var(--gold); transition: opacity .2s; }
 .fx-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .fx-card { width: 104px; animation: fx-in .32s cubic-bezier(.2, .8, .3, 1.2) both; }
-.fx-cards.n4 .fx-card { width: min(104px, calc((100vw - 80px) / 4)); }
-.fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: min(86px, calc((100vw - 80px) / 5)); }
+.fx-cards.n4 .fx-card { width: min(104px, calc((100vw - 100px) / 4)); }
+.fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: min(86px, calc((100vw - 104px) / 5)); }
 .fx-card .card { width: 100%; }
 @keyframes fx-in { from { transform: translateY(-26px) scale(.7) rotate(-4deg); opacity: 0; } }
 .fx-bin { color: var(--muted); margin-top: 2px; transform-origin: 50% 100%; }
@@ -684,4 +684,22 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 @media (orientation: landscape) and (max-height: 520px) {
   .fx-card { width: 78px; }
   .fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: 68px; }
+}
+
+/* ---------- udostępnianie ---------- */
+.icon-btn svg { display: block; margin: auto; }
+.share-btn {
+  flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px;
+  padding: 0; border: 0; border-radius: 8px; background: transparent;
+  color: var(--muted); opacity: .65; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.share-btn:hover, .share-btn:focus-visible { opacity: 1; color: var(--ink); }
+.share-btn:focus-visible { outline: 2px solid currentColor; outline-offset: 0; }
+.toast {
+  position: fixed; z-index: 50; left: 0; right: 0; margin: 0 auto;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: max-content; max-width: calc(100% - 32px); box-sizing: border-box;
+  padding: 10px 16px; border-radius: 10px; text-align: center; overflow-wrap: anywhere;
+  background: #f2f2f2; color: #111; font-size: .9rem; box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
 }
