@@ -20,7 +20,10 @@
           "$seat": {
             ".write": "!data.exists() && root.child('rooms').child($room).child('cfg').exists() && !root.child('rooms').child($room).child('start').exists()",
             ".validate": "$seat.matches(/^[0-9]$/) && newData.hasChildren(['name', 'cid']) && newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('cid').isString() && newData.child('cid').val().length <= 40",
-            "name": { ".validate": true },
+            "name": {
+              ".write": "data.exists() && !root.child('rooms').child($room).child('start').exists()",
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24"
+            },
             "cid": { ".validate": true },
             "$other": { ".validate": false }
           }

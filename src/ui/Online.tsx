@@ -1,5 +1,5 @@
 // Gra online: poczekalnia pokoju (link, gracze, start) i gra przez pokój w Firebase.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { card } from '../engine/cards';
 import type { Lang } from '../engine/types';
 import { tr } from '../i18n';
@@ -196,6 +196,11 @@ function Lobby(props: {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [copied, setCopied] = useState(false);
+  /** Gość stuknął „Dołącz” bez imienia – pokazujemy prośbę; drugie stuknięcie dołącza jako „Gracz N”. */
+  const [askName, setAskName] = useState(false);
+  /** Zmiana imienia w poczekalni: null = nie edytuję, tekst = edytowane imię. */
+  const [edit, setEdit] = useState<string | null>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const st = conn?.state;
   const link = roomLink(pageBase(), room.id);
 
@@ -218,6 +223,12 @@ function Lobby(props: {
   if (st.start && seat === null) return <p className="lobby-status">{t('online.startedWithoutYou')}</p>;
 
   const join = async () => {
+    if (!name.trim() && !askName) {
+      setAskName(true);
+      nameRef.current?.focus();
+      nameRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      return;
+    }
     setBusy(true);
     setErr('');
     // bez imienia: „Gracz 2”, „Gracz 3”… (numer miejsca), żeby było wiadomo, kto jest kim
@@ -230,6 +241,17 @@ function Lobby(props: {
       setErr(String((e as Error).message ?? e));
     }
     setBusy(false);
+  };
+  const rename = async () => {
+    const n = (edit ?? '').trim().slice(0, 20);
+    if (seat === null || !n) return setEdit(null);
+    setBusy(true);
+    const ok = await conn.rename(seat, n);
+    setBusy(false);
+    if (!ok) return setErr(t('online.renameFailed'));
+    setErr('');
+    props.onName(n);
+    setEdit(null);
   };
   const copy = async () => {
     try {
@@ -251,11 +273,23 @@ function Lobby(props: {
 
       {/* gość: najpierw imię – przycisk „Dołącz” jest przyklejony na dole ekranu */}
       {seat === null && free.length > 0 && (
-        <section>
+        <section className={'name-ask' + (askName && !name.trim() ? ' warn' : '')}>
           <label className="field">
-            <span>{t('yourName')}</span>
-            <input value={name} maxLength={16} placeholder={t('online.playerN', { n: (free[0] ?? 1) + 1 })} onChange={(e) => setName(e.target.value)} />
+            <span className="name-ask-title">{t('online.enterName')}</span>
+            <input
+              ref={nameRef}
+              value={name}
+              maxLength={16}
+              autoComplete="nickname"
+              enterKeyHint="go"
+              placeholder={t('online.namePlaceholder')}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && join()}
+            />
           </label>
+          <p className="muted small">
+            {askName && !name.trim() ? t('online.noName', { name: t('online.playerN', { n: (free[0] ?? 1) + 1 }) }) : t('online.nameInfo')}
+          </p>
         </section>
       )}
 
@@ -286,11 +320,34 @@ function Lobby(props: {
                   <>
                     {BOT_NAMES[b++ % BOT_NAMES.length]} <span className="muted small">· {t('online.bot')} · {t(`level.${s.level}`)}</span>
                   </>
+                ) : taken && i === seat && edit !== null ? (
+                  <span className="rename">
+                    <input
+                      autoFocus
+                      value={edit}
+                      maxLength={16}
+                      autoComplete="nickname"
+                      enterKeyHint="done"
+                      onChange={(e) => setEdit(e.target.value)}
+                      onKeyDown={(e) => (e.key === 'Enter' ? rename() : e.key === 'Escape' ? setEdit(null) : undefined)}
+                    />
+                    <button className="btn mini primary" disabled={busy || !edit.trim()} onClick={rename}>
+                      {t('online.saveName')}
+                    </button>
+                    <button className="btn mini ghost" onClick={() => setEdit(null)} aria-label={t('online.cancelRename')}>
+                      ✕
+                    </button>
+                  </span>
                 ) : taken ? (
                   <>
                     {taken.name}
                     {i === 0 && <span className="muted small"> · {t('online.hostTag')}</span>}
                     {i === seat && <span className="muted small"> · {t('you')}</span>}
+                    {i === seat && !st.start && (
+                      <button className="btn mini ghost rename-btn" onClick={() => setEdit(taken.name)}>
+                        ✎ {t('online.changeName')}
+                      </button>
+                    )}
                   </>
                 ) : (
                   <span className="muted">{t('online.freeSeat')}</span>

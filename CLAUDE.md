@@ -37,6 +37,10 @@ Dalej w planie (kolejność jak w README → Plan):
    `FIREBASE_SERVICE_ACCOUNT`; zmiana zasad kasowania = aplikacja, reguły i skrypt – test pilnuje zgodności).
    Zmiany reguł wymagają opublikowania ich w konsoli Firebase. Środowisko chmurowe „Dominionek” ma dostęp do bazy
    (zapis testowych danych do prawdziwej bazy tylko za zgodą użytkownika).
+   **Do zrobienia (zapisane 25.11, „popracujemy później”):** w menu gry online opcja „Koniec gry – poddaję się”
+   (każdy gracz). Najpierw potwierdzenie (`ConfirmButton`/pytanie „Na pewno?”); „Nie” = nic. „Tak” = gra kończy się
+   u wszystkich, inni dostają informację, kto poddał grę, i „Wygrywasz walkowerem”. Do przemyślenia: zapis w pokoju
+   (np. pole `resign` z miejscem gracza – zmiana reguł + `fake-firebase.mjs`), z botami/3–4 graczami.
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 
@@ -70,14 +74,15 @@ Dalej w planie (kolejność jak w README → Plan):
 - `src/online/` – gra online (bez SDK Firebase): `firebase.ts` (REST: PUT, strumień zdarzeń EventSource),
   `transport.ts` (interfejs + `MemoryStore` do testów), `room.ts` (pokój: `cfg` jako tekst JSON, `seats`, `start`,
   `moves` jako teksty JSON – Firebase gubi puste tablice; `RoomConn.push` zapisuje brakujące odpowiedzi po kolei,
-  każdą tylko w puste miejsce; „moje pokoje” w localStorage `crownforge-rooms`), `sync.ts` (`reconcile`: dopisz ruchy
+  każdą tylko w puste miejsce; `rename` – zmiana imienia w poczekalni, przed startem; „moje pokoje” w localStorage `crownforge-rooms`), `sync.ts` (`reconcile`: dopisz ruchy
   z bazy albo odtwórz grę przy konflikcie), `config.ts` (`ONLINE_DB`, do testów `VITE_ONLINE_DB` przy budowaniu). Reguły bazy: `firebase/database.rules.json`
   (zmiana zapisu = zmiana reguł + `scripts/fake-firebase.mjs`). Format pokoju `ROOM_V`; pokój pamięta `CARDS_REV`
   – inna wersja kart = komunikat „odśwież aplikację”.
 - `src/ui/` – React.
   - `App.tsx` – ekrany: start, ustawienia, Królestwo (losowe/ręczne, przełącznik Smocze Złoto+Pałac), zasady.
-  - `Online.tsx` – poczekalnia pokoju (link, gracze, Królestwo, start), `JoinScreen` (wklejenie linku), `OnlineRoom`
-    (połączenie z pokojem → `GameScreen` z `online`). Link: `#room=<id>`, odczytywany przy starcie.
+  - `Online.tsx` – poczekalnia pokoju (link, gracze, Królestwo, start; gość: wyróżnione pole „Wpisz swoje imię” na górze,
+    „Dołącz” bez imienia najpierw prosi o imię, drugie stuknięcie = „Gracz N”; „✎ Zmień” przy własnym imieniu), `JoinScreen` (wklejenie linku), `OnlineRoom`
+    (połączenie z pokojem → `GameScreen` z `online`). Link: `#room=<id>`, odczytywany przy starcie i przy `hashchange` (link wklejony w otwartej karcie).
   - `GameScreen.tsx` – plansza; „ja” = `online.seat` (solo 0), boty liczy tylko gospodarz (`runBots`), online bez Cofnij
     i bez „Zacznij od nowa”; pętla botów, autozapis (`store.ts`, localStorage, `SavedGame.v = 2`;
     zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
