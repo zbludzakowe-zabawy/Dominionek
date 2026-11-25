@@ -35,6 +35,13 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 4. Pakiet Court Whispers (Szepty Dworu) – zrobione (16 kart, do oceny przez użytkownika).
 5. Statystyki gier.
 
+### Do poprawy (zgłoszenia użytkownika)
+
+- **Rzezimieszek nie pokazuje, co stało się u przeciwnika** (25.11): po zagraniu nie widać, jakie 2 karty
+  przeciwnik odkrył i które z nich odrzucił, a które wróciły na talię. Do zrobienia: pokazać to grającemu
+  (np. okienko z odkrytymi kartami jak przy efektach – `Fx.tsx` – i/lub wyraźny wpis w dzienniku). Warto przy okazji
+  sprawdzić inne ataki, które odkrywają karty przeciwników.
+
 ## Aplikacja na telefon
 
 Crownforge to PWA: instaluje się z przeglądarki, bez sklepu z aplikacjami.
