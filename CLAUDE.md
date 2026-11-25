@@ -33,7 +33,10 @@ Dalej w planie (kolejność jak w README → Plan):
    link); reszta widzi „Czekaj…” z kubkiem (`prep`, `TeaCup` w `Icons.tsx`, wersja B2 zaakceptowana); nowy pokój od razu
    z graczami na miejscach (bez nowych graczy – od razu ze `start`), stary dostaje `next`. Kasowanie: 14 dni bez
    aktywności (`act`), pokój z `next` po 2 dniach (`cleanupRooms` przy starcie aplikacji). Cotygodniowe sprzątanie
-   przez GitHub Actions – osobny PR. Zmiany reguł wymagają opublikowania ich w konsoli Firebase.
+   całej bazy: `.github/workflows/cleanup-rooms.yml` + `scripts/cleanup-rooms.mjs` (klucz konta usługi w sekrecie
+   `FIREBASE_SERVICE_ACCOUNT`; zmiana zasad kasowania = aplikacja, reguły i skrypt – test pilnuje zgodności).
+   Zmiany reguł wymagają opublikowania ich w konsoli Firebase. Środowisko chmurowe „Dominionek” ma dostęp do bazy
+   (zapis testowych danych do prawdziwej bazy tylko za zgodą użytkownika).
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 
