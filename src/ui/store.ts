@@ -18,7 +18,15 @@ export interface Settings {
   bots: BotLevel[];
   sets: SetId[];
   mode: 'random' | 'manual';
+  /** Gra online: pozostałe miejsca przy stole (człowiek albo bot danego poziomu). */
+  onlineSlots: OnlineSlot[];
+  /** Gra online: adres bazy Firebase, gdy nie jest wbudowany (src/online/config.ts). */
+  onlineDb: string;
 }
+
+export type OnlineSlot = 'human' | BotLevel;
+
+export const BOT_NAMES = ['Aldric', 'Brenna', 'Corvin'];
 
 export interface SavedGame {
   /** 2: silnik pyta o koniec tury także przy 0 zakupach (starsze zapisy nie pasują). */
@@ -53,7 +61,7 @@ const defaultLang = (): Lang => {
 };
 
 export function loadSettings(): Settings {
-  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, barCollapsed: null, pileView: 'art', bots: ['medium'], sets: ['keep'], mode: 'random' };
+  const base: Settings = { lang: defaultLang(), name: '', speed: 'normal', autoEnd: true, barCollapsed: null, pileView: 'art', bots: ['medium'], sets: ['keep'], mode: 'random', onlineSlots: ['human'], onlineDb: '' };
   try {
     const raw = localStorage.getItem(SETTINGS_KEY);
     if (raw) return { ...base, ...JSON.parse(raw) };

@@ -1,0 +1,40 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$room": {
+        ".read": "$room.length >= 20",
+        ".write": "!data.exists() && $room.length >= 20 && $room.length <= 40",
+        "cfg": { ".validate": "newData.isString() && newData.val().length < 4000" },
+        "at": { ".validate": "newData.isNumber()" },
+        "seats": {
+          "$seat": {
+            ".write": "!data.exists() && root.child('rooms').child($room).child('cfg').exists() && !root.child('rooms').child($room).child('start').exists()",
+            ".validate": "$seat.matches(/^[0-9]$/) && newData.hasChildren(['name', 'cid']) && newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('cid').isString() && newData.child('cid').val().length <= 40",
+            "name": { ".validate": true },
+            "cid": { ".validate": true },
+            "$other": { ".validate": false }
+          }
+        },
+        "start": {
+          ".write": "!data.exists() && root.child('rooms').child($room).child('cfg').exists()",
+          ".validate": "newData.isNumber()"
+        },
+        "moves": {
+          "$n": {
+            ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",
+            ".validate": "$n.matches(/^[0-9]{1,5}$/) && newData.isString() && newData.val().length <= 300"
+          }
+        },
+        "ping": {
+          "$seat": {
+            ".write": "root.child('rooms').child($room).child('cfg').exists()",
+            ".validate": "$seat.matches(/^[0-9]$/) && newData.isNumber()"
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}

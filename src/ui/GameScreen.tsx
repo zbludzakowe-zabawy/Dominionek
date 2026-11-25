@@ -9,8 +9,26 @@ import { msg, tr } from '../i18n';
 import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard } from './CardView';
 import { typeKey } from './art';
 import { saveGame, type SavedGame, type Settings, CARDS_REV } from './store';
+import type { LinkState } from '../online/transport';
+import { reconcile } from '../online/sync';
 
-const HUMAN = 0;
+/** Gra online: moje miejsce przy stole i ruchy z bazy (src/online). */
+export interface OnlinePlay {
+  seat: number;
+  /** Gospodarz wykonuje ruchy botów. */
+  host: boolean;
+  moves: Answer[];
+  /** Zmienia się przy każdej zmianie danych pokoju. */
+  version: number;
+  link: LinkState;
+  unsent: number;
+  /** Kiedy gracze ostatnio mieli otwartą grę (nr miejsca → czas). */
+  ping: Record<number, number>;
+  push: (answers: Answer[]) => void;
+}
+
+/** Gracz „obecny”, jeśli jego aplikacja odezwała się w ciągu tylu ms. */
+const PRESENT_MS = 75000;
 /** Telefon trzymany poziomo – osobny, niski układ. */
 const LANDSCAPE_PHONE = '(orientation: landscape) and (max-height: 520px)';
 
@@ -50,6 +68,7 @@ interface Props {
   onExit: () => void;
   onNewGame: () => void;
   onRematch: (kingdom: string[], extras: boolean) => void;
+  online?: OnlinePlay;
 }
 
 /** Od tylu kart w ręce (wyłącznie) takie same karty są grupowane z licznikiem. */
@@ -61,7 +80,11 @@ const WIDE_SCREEN = '(min-width: 900px) and (min-height: 521px)';
 
 type Detail = { id: string; from: 'supply' | 'hand' | 'other'; index?: number };
 
-export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNewGame, onRematch }: Props) {
+export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNewGame, onRematch, online }: Props) {
+  /** Moje miejsce przy stole (gra solo: zawsze 0). */
+  const HUMAN = online?.seat ?? 0;
+  /** Czy to urządzenie wykonuje ruchy botów (solo: tak; online: tylko gospodarz). */
+  const runBots = !online || online.host;
   const lang = settings.lang;
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
 
@@ -81,7 +104,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   };
   const [plans, setPlans] = useState<Record<number, Plan> | null>(() => {
     const need = game.players.filter((p) => p.bot === 'hard' && !saved.plans[p.id]);
-    return need.length ? null : saved.plans;
+    return need.length && runBots ? null : saved.plans;
   });
   const [, setTick] = useState(0);
   const [sel, setSel] = useState<number[]>([]);
@@ -98,7 +121,32 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const names = game.players.map((p) => p.name);
 
   const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
-    saveGame(g.over ? null : { v: 2, hoardRev: CARDS_REV, setup: g.setup, answers: g.answers, plans: pl ?? {} });
+    online ? online.push(g.answers) : saveGame(g.over ? null : { v: 2, hoardRev: CARDS_REV, setup: g.setup, answers: g.answers, plans: pl ?? {} });
+
+  // online: ruchy innych graczy (i rozstrzygnięcie konfliktu) z bazy
+  const [broken, setBroken] = useState(false);
+  useEffect(() => {
+    if (!online) return;
+    const r = reconcile(game, saved.setup, online.moves);
+    if (r.broken !== broken) setBroken(r.broken);
+    if (!r.changed) return;
+    marks.current = [];
+    setSel([]);
+    if (r.game !== game) setGame(r.game);
+    else refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online?.version]);
+
+  // online: w tytule karty przeglądarki widać, że czekamy na mój ruch
+  const myMove = !!online && !!game.pending && game.pending.player === HUMAN;
+  useEffect(() => {
+    if (!online) return;
+    const base = document.title.replace(/^● /, '');
+    document.title = myMove ? '● ' + base : base;
+    return () => {
+      document.title = base;
+    };
+  }, [myMove, online]);
 
   const refresh = () => setTick((x) => x + 1);
 
@@ -149,7 +197,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     submit({ t: 'end' });
   };
   useEffect(() => setPeek(false), [d]);
-  const canUndo = !!d && d.player === HUMAN && game.turn.player === HUMAN && game.undoable() > 0;
+  const canUndo = !online && !!d && d.player === HUMAN && game.turn.player === HUMAN && game.undoable() > 0;
   const undo = () => {
     if (!canUndo) return;
     const floor = game.undoFloor;
@@ -169,7 +217,10 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     setDetail(null);
     persist(plans, g);
   };
+  /** Decyzja należy do kogoś innego (bot albo inny człowiek online). */
   const botTurn = !!d && d.player !== HUMAN;
+  const isBot = (i: number) => !!game.players[i].bot;
+  const botDeciding = botTurn && isBot(d!.player);
 
   // automatyczne kończenie tury (opcja w menu): tylko gdy nie zostały już żadne zakupy.
   // Dopóki jest zakup, czekamy na gracza – może chce kupić coś za 0.
@@ -183,19 +234,19 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
 
   // ruchy botów
   useEffect(() => {
-    if (!plans || !d || d.player === HUMAN) {
+    if (!plans || !d || d.player === HUMAN || !runBots || !isBot(d.player)) {
       if (ff) setFf(false);
       return;
     }
     const step = () => {
       const p = game.pending;
-      if (!p || p.player === HUMAN) return;
+      if (!p || p.player === HUMAN || !isBot(p.player)) return;
       const bot = game.players[p.player];
       game.submit(decide(game, p, bot.bot ?? 'medium', Math.random, plans[bot.id]));
     };
     if (ff) {
       const id = window.setTimeout(() => {
-        for (let k = 0; k < 400 && game.pending && game.pending.player !== HUMAN; k++) step();
+        for (let k = 0; k < 400 && game.pending && game.pending.player !== HUMAN && isBot(game.pending.player); k++) step();
         persist();
         refresh();
       }, 0);
@@ -346,8 +397,10 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
     prompt = t('gameOver');
   } else if (!plans) {
     prompt = t('preparing');
+  } else if (broken) {
+    prompt = t('online.broken');
   } else if (botTurn && d) {
-    prompt = t('thinking', { who: names[d.player] });
+    prompt = botDeciding ? t('thinking', { who: names[d.player] }) : t('waitingFor', { who: names[d.player] });
   } else if (myDecision) {
     prompt = msg(lang, myDecision.prompt);
     switch (myDecision.kind) {
@@ -430,7 +483,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   // przewijanie ruchów przeciwników: mała ikonka „»” zawsze po lewej stronie paska,
   // z dala od miejsca, w którym za chwilę pojawi się „Koniec tury”
   const skipBtn =
-    botTurn && plans && !game.over ? (
+    botDeciding && runBots && plans && !game.over ? (
       <button className="icon-btn skip-btn" onClick={() => setFf(true)} disabled={ff} aria-label={t('skipToMe')} title={t('skipToMe')}>
         »
       </button>
@@ -449,6 +502,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             {' '}
             · {t('citadelsLeft', { n: game.supply.citadel })} · {t('piles', { n: game.emptyPiles() })}
           </span>
+          {online && online.link !== 'live' && <span className="net-warn small"> · {t(`online.link.${online.link}`)}</span>}
+          {online && online.link === 'live' && online.unsent > 0 && <span className="muted small"> · {t('online.sending')}</span>}
         </div>
         <button className="icon-btn" onClick={() => setPanel('log')} aria-label={t('log')}>
           ≡
@@ -460,6 +515,12 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           <div key={p.id} className={'opp' + (turn.player === p.id ? ' active' : '') + (p.id === HUMAN ? ' me' : '')}>
             <div className="opp-main">
               <div className="opp-name">
+                {online && !p.bot && p.id !== HUMAN && (
+                  <span
+                    className={'presence' + (Date.now() - (online.ping[p.id] ?? 0) < PRESENT_MS ? ' on' : '')}
+                    title={t(Date.now() - (online.ping[p.id] ?? 0) < PRESENT_MS ? 'online.present' : 'online.away')}
+                  />
+                )}
                 {p.id === HUMAN ? t('you') : p.name}{' '}
                 {p.bot && <span className="muted small opp-level">{t(`level.${p.bot}`)}</span>}
               </div>
@@ -752,7 +813,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         <div className="sheet-backdrop" onClick={() => setPanel(null)}>
           <div className="sheet log-sheet" onClick={(e) => e.stopPropagation()}>
             <h2>{t('log')}</h2>
-            <LogList lang={lang} game={game} names={names} />
+            <LogList lang={lang} game={game} names={names} me={HUMAN} />
             <div className="sheet-actions">
               <button className="btn" onClick={() => setPanel(null)}>
                 {t('close')}
@@ -821,7 +882,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
             <button className="btn" onClick={() => { persist(); onExit(); }}>
               {t('leaveGame')}
             </button>
-            <ConfirmButton
+            {!online && <ConfirmButton
               className="btn"
               label={t('restart')}
               question={t('confirmNew')}
@@ -829,7 +890,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               no={t('no')}
               needConfirm={!game.over}
               onConfirm={onNewGame}
-            />
+            />}
             <button className="btn ghost" onClick={() => setPanel(null)}>
               {t('close')}
             </button>
@@ -866,9 +927,11 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               ))}
             </ol>
             <div className="end-buttons">
-              <button className="btn primary" onClick={() => onRematch(game.setup.kingdom, !!game.setup.extras?.length)}>
-                {t('sameKingdom')}
-              </button>
+              {!online && (
+                <button className="btn primary" onClick={() => onRematch(game.setup.kingdom, !!game.setup.extras?.length)}>
+                  {t('sameKingdom')}
+                </button>
+              )}
               <button className="btn" onClick={onNewGame}>
                 {t('newGame')}
               </button>
@@ -954,7 +1017,7 @@ function logText(lang: Lang, e: Game['log'][number], names: string[]): string {
   return tr(lang, e.msg.k, { ...(e.msg.p ?? {}), who: e.player >= 0 ? names[e.player] : '' });
 }
 
-function LogList({ lang, game, names }: { lang: Lang; game: Game; names: string[] }) {
+function LogList({ lang, game, names, me }: { lang: Lang; game: Game; names: string[]; me: number }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.scrollTo(0, ref.current.scrollHeight);
@@ -963,7 +1026,7 @@ function LogList({ lang, game, names }: { lang: Lang; game: Game; names: string[
   return (
     <div className="log" ref={ref}>
       {entries.map((e, i) => (
-        <div key={i} className={'log-line' + (e.msg.k === 'log.turn' ? ' turn' : '') + (e.player === HUMAN ? ' me' : '')}>
+        <div key={i} className={'log-line' + (e.msg.k === 'log.turn' ? ' turn' : '') + (e.player === me ? ' me' : '')}>
           {logText(lang, e, names)}
         </div>
       ))}

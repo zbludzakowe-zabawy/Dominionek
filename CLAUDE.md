@@ -12,7 +12,8 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 - **Rysunki kart**: każda karta ma rysunek kreską pasujący do nazwy (Latarnik = latarnia morska itd.),
   na spokojnym wzorzystym tle. Bez cukierkowych ikonek. Zanim zmienisz znaczący element graficzny
   (np. symbol pakietu), pokaż użytkownikowi podgląd do akceptacji.
-- Gra solo: człowiek (zawsze gracz 0) + 1–3 boty (łatwy/średni/trudny).
+- Gra solo: człowiek (zawsze gracz 0) + 1–3 boty (łatwy/średni/trudny). Gra online: 2–4 ludzi (+ boty), link-pokój
+  w Firebase, gospodarz = miejsce 0.
 
 ## Pakiety (stan)
 
@@ -25,7 +26,8 @@ Karciana gra fantasy o budowaniu talii (deck-builder), PWA na telefon. Rozmowy z
 
 Dalej w planie (kolejność jak w README → Plan):
 1. Przegląd działania kart – użytkownik uważa, że efekty kart wymagają zmian (temat z innego wątku).
-2. Gra online dla 2–4 osób przez link-pokój (WebRTC/PeerJS, host pilnuje zasad) – nadal ważne.
+2. Gra online – zrobiona (25.11): Firebase Realtime Database przez REST, link-pokój bez logowania (`docs/gra-online.md`).
+   Do sprawdzenia na prawdziwej bazie, gdy użytkownik ją założy i poda adres (`src/online/config.ts`, `DEFAULT_DB`).
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 
@@ -56,9 +58,19 @@ Dalej w planie (kolejność jak w README → Plan):
   - `bot.ts` – heurystyki (easy/medium); `plan.ts` – trudny bot na starcie rozgrywa w pamięci gry
     próbne planów „pieniądze + karta X” i wybiera najlepszy (ok. 0,4–0,6 s).
   - `setup.ts` – losowanie Królestwa, `rollHoardExtras`.
+- `src/online/` – gra online (bez SDK Firebase): `firebase.ts` (REST: PUT, strumień zdarzeń EventSource),
+  `transport.ts` (interfejs + `MemoryStore` do testów), `room.ts` (pokój: `cfg` jako tekst JSON, `seats`, `start`,
+  `moves` jako teksty JSON – Firebase gubi puste tablice; `RoomConn.push` zapisuje brakujące odpowiedzi po kolei,
+  każdą tylko w puste miejsce; „moje pokoje” w localStorage `crownforge-rooms`), `sync.ts` (`reconcile`: dopisz ruchy
+  z bazy albo odtwórz grę przy konflikcie), `config.ts` (`DEFAULT_DB`). Reguły bazy: `firebase/database.rules.json`
+  (zmiana zapisu = zmiana reguł + `scripts/fake-firebase.mjs`). Format pokoju `ROOM_V`; pokój pamięta `CARDS_REV`
+  – inna wersja kart = komunikat „odśwież aplikację”.
 - `src/ui/` – React.
   - `App.tsx` – ekrany: start, ustawienia, Królestwo (losowe/ręczne, przełącznik Smocze Złoto+Pałac), zasady.
-  - `GameScreen.tsx` – plansza, pętla botów, autozapis (`store.ts`, localStorage, `SavedGame.v = 2`;
+  - `Online.tsx` – poczekalnia pokoju (link, gracze, Królestwo, start), `JoinScreen` (wklejenie linku), `OnlineRoom`
+    (połączenie z pokojem → `GameScreen` z `online`). Link: `#room=<id>[&db=<adres bazy>]`, odczytywany przy starcie.
+  - `GameScreen.tsx` – plansza; „ja” = `online.seat` (solo 0), boty liczy tylko gospodarz (`runBots`), online bez Cofnij
+    i bez „Zacznij od nowa”; pętla botów, autozapis (`store.ts`, localStorage, `SavedGame.v = 2`;
     zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
@@ -117,10 +129,11 @@ Dalej w planie (kolejność jak w README → Plan):
 npm install
 npm test          # vitest: symulacje gier botów, testy kart, PWA
 npm run build     # tsc + vite build → dist/ (z sw.js)
+node scripts/fake-firebase.mjs 9400   # udawana baza do testów gry online (adres w aplikacji: http://localhost:9400)
 ```
 
 Podgląd dla użytkownika (Artifact na claude.ai, ten sam link przy każdej publikacji:
-https://claude.ai/artifact/Wmw4mKshmWcNMo6q18wBp7):
+https://claude.ai/artifact/NnaYtLULayu9fcCcx1cSDC):
 `npm run build && python3 scripts/build-artifact.py <scratchpad>` → opublikuj `<scratchpad>/crownforge.html`
 narzędziem Artifact. Do testów lokalnych dołóż na początku `<!doctype html><meta name="viewport" ...>`.
 

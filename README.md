@@ -22,12 +22,13 @@ Karty mają własne nazwy, teksty i abstrakcyjne wzory. Gra jest po angielsku, z
 - **Królestwo**: losowanie 10 kart, ponowne losowanie pojedynczej karty albo ręczny wybór.
 - **EN/PL**: przełącznik języka na każdym ekranie.
 - **Autozapis**: gra zapisuje się po każdym ruchu i wraca po zamknięciu aplikacji.
+- **Gra online** dla 2–4 osób (plus boty) przez link-pokój, bez logowania – opis i zakładanie bazy: `docs/gra-online.md`.
 
 ## Plan
 
 1. **Przegląd działania kart** (najbliższy krok): przemyśleć, co karty mają robić – obecne efekty
    prawdopodobnie wymagają zmian (kontynuacja rozmowy z innego wątku).
-2. **Gra online dla 2–4 osób** przez link-pokój (WebRTC) – nadal ważne.
+2. **Gra online dla 2–4 osób** przez link-pokój – zrobione (Firebase Realtime Database, `docs/gra-online.md`); do sprawdzenia na prawdziwej bazie.
 3. **Skrót działania karty na stosach w Królestwie**: przemyśleć inny widok dostępnych kart, gdzie
    stos na stole pokazuje ikonkami w skrócie, co robi karta – np. torba zakupowa = +zakup,
    moneta = +monety, karta = +karty (podobnie akcje, palenie, atak). Najpierw podgląd do akceptacji.

@@ -7,16 +7,49 @@ import type { BotLevel, GameSetup, Lang } from '../engine/types';
 import { tr } from '../i18n';
 import { CardFace, ConfirmButton, Cost, PileTile } from './CardView';
 import { GameScreen } from './GameScreen';
-import { loadGame, loadSettings, saveGame, saveSettings, type SavedGame, type Settings, CARDS_REV } from './store';
+import { DbField, JoinScreen, OnlineRoom, roomFor } from './Online';
+import {
+  BOT_NAMES,
+  loadGame,
+  loadSettings,
+  saveGame,
+  saveSettings,
+  type OnlineSlot,
+  type SavedGame,
+  type Settings,
+  CARDS_REV,
+} from './store';
+import { DEFAULT_DB } from '../online/config';
+import { firebaseTransport, normalizeDb } from '../online/firebase';
+import { ROOM_V, createRoom, forgetRoom, loadRooms, parseRoomRef, randomId, saveRoom, type MyRoom, type RoomCfg } from '../online/room';
 
-export const BOT_NAMES = ['Aldric', 'Brenna', 'Corvin'];
+export { BOT_NAMES };
 const LEVELS: BotLevel[] = ['easy', 'medium', 'hard'];
 
-type Screen = 'home' | 'setup' | 'kingdom' | 'rules' | 'game';
+type Screen = 'home' | 'setup' | 'kingdom' | 'rules' | 'game' | 'online' | 'join';
+
+/** Link do pokoju w adresie (#room=…): zapamiętany pokój albo nowy, do którego dopiero dołączymy. */
+function roomFromHash(settings: Settings): MyRoom | null {
+  const ref = typeof location !== 'undefined' ? parseRoomRef(location.hash) : null;
+  if (!ref) return null;
+  try {
+    history.replaceState(null, '', location.pathname + location.search);
+  } catch {
+    /* trudno */
+  }
+  const db = normalizeDb(ref.db ?? (DEFAULT_DB || settings.onlineDb));
+  if (!db) return null;
+  return roomFor(loadRooms(), ref.id, db, randomId(16));
+}
 
 export function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings);
-  const [screen, setScreen] = useState<Screen>(() => (loadGame() ? 'game' : 'home'));
+  const [room, setRoom] = useState<MyRoom | null>(() => roomFromHash(settings));
+  const [screen, setScreen] = useState<Screen>(() => (room ? 'online' : loadGame() ? 'game' : 'home'));
+  /** Ustawienia i Królestwo dla gry online (zamiast gry z botami). */
+  const [online, setOnline] = useState(false);
+  const [creating, setCreating] = useState('');
+  const [rooms, setRooms] = useState<MyRoom[]>(loadRooms);
   const [saved, setSaved] = useState<SavedGame | null>(loadGame);
   const [kingdom, setKingdom] = useState<string[]>([]);
   const [rulesBack, setRulesBack] = useState<Screen>('home');
@@ -47,6 +80,36 @@ export function App() {
     saveGame(s);
     setSaved(s);
     setScreen('game');
+  };
+
+  const onlineDb = normalizeDb(DEFAULT_DB || settings.onlineDb);
+
+  const openRoom = (r: MyRoom) => {
+    setRoom(r);
+    setScreen('online');
+  };
+
+  /** Zakłada pokój gry online i przechodzi do poczekalni. */
+  const createOnline = async (k: string[], withExtras: boolean) => {
+    setCreating('…');
+    const cfg: RoomCfg = {
+      v: ROOM_V,
+      rev: CARDS_REV,
+      seed: randomSeed(),
+      kingdom: k,
+      extras: withExtras ? ['dragongold', 'palace'] : [],
+      slots: [{ k: 'h' }, ...settings.onlineSlots.map((s): RoomCfg['slots'][number] => (s === 'human' ? { k: 'h' } : { k: 'b', level: s }))],
+    };
+    const cid = randomId(16);
+    try {
+      const id = await createRoom(firebaseTransport(onlineDb), cfg, { name: settings.name.trim() || t('defaultName'), cid });
+      const r: MyRoom = { id, db: onlineDb, cid, seat: 0, host: true, at: Date.now() };
+      saveRoom(r);
+      setCreating('');
+      openRoom(r);
+    } catch (e) {
+      setCreating(t('online.createFailed', { err: String((e as Error).message ?? e) }));
+    }
   };
 
   const openRules = (from: Screen) => {
@@ -83,11 +146,46 @@ export function App() {
     );
   }
 
+  if (screen === 'online' && room) {
+    return (
+      <OnlineRoom
+        key={room.id}
+        room={room}
+        settings={settings}
+        onSettings={update}
+        onRules={() => openRules('online')}
+        langToggle={langToggle}
+        onExit={() => {
+          setRooms(loadRooms());
+          setScreen('home');
+        }}
+      />
+    );
+  }
+
+  if (screen === 'join') {
+    return (
+      <JoinScreen
+        lang={lang}
+        dbSetting={settings.onlineDb}
+        langToggle={langToggle}
+        onBack={() => setScreen('home')}
+        onJoin={(id, db) => {
+          if (!DEFAULT_DB && db !== settings.onlineDb) update({ onlineDb: db });
+          openRoom(roomFor(loadRooms(), id, db, randomId(16)));
+        }}
+      />
+    );
+  }
+
   if (screen === 'rules') {
     return (
       <div className="screen">
         <header className="bar">
-          <button className="btn ghost" onClick={() => setScreen(rulesBack === 'game' && saved ? 'game' : rulesBack)}>
+          <button
+            className="btn ghost"
+            onClick={() => setScreen(rulesBack === 'game' && saved ? 'game' : rulesBack === 'online' && room ? 'online' : rulesBack === 'online' ? 'home' : rulesBack)}
+          >
             ← {t('back')}
           </button>
           <h1>{t('rules')}</h1>
@@ -106,6 +204,7 @@ export function App() {
         lang={lang}
         settings={settings}
         update={update}
+        online={online}
         langToggle={langToggle}
         onBack={() => setScreen('home')}
         onNext={() => {
@@ -128,7 +227,10 @@ export function App() {
         onPileView={(v) => update({ pileView: v })}
         langToggle={langToggle}
         onBack={() => setScreen('setup')}
-        onStart={(ex) => startGame(kingdom, ex)}
+        onStart={(ex) => (online ? createOnline(kingdom, ex) : startGame(kingdom, ex))}
+        startLabel={online ? t('online.create') : undefined}
+        busy={creating === '…'}
+        error={creating !== '…' ? creating : ''}
       />
     );
   }
@@ -163,13 +265,51 @@ export function App() {
             onConfirm={() => {
               saveGame(null);
               setSaved(null);
+              setOnline(false);
               setScreen('setup');
             }}
           />
+          <button
+            className="btn big"
+            onClick={() => {
+              setOnline(true);
+              setCreating('');
+              setScreen('setup');
+            }}
+          >
+            {t('online.new')}
+          </button>
+          <button className="btn big" onClick={() => setScreen('join')}>
+            {t('online.join')}
+          </button>
           <button className="btn big ghost" onClick={() => openRules('home')}>
             {t('rules')}
           </button>
         </div>
+        {rooms.length > 0 && (
+          <section className="my-rooms">
+            <h2>{t('online.myGames')}</h2>
+            {rooms.map((r) => (
+              <div key={r.id} className="room-row">
+                <button className="btn" onClick={() => openRoom(r)}>
+                  <span>{r.names?.length ? r.names.join(', ') : t('online.title')}</span>
+                  <span className="muted small">{new Date(r.at).toLocaleDateString(lang)}</span>
+                </button>
+                <button
+                  className="icon-btn"
+                  aria-label={t('online.forget')}
+                  title={t('online.forget')}
+                  onClick={() => {
+                    forgetRoom(r.id);
+                    setRooms(loadRooms());
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </section>
+        )}
       </main>
     </div>
   );
@@ -181,11 +321,12 @@ function SetupScreen(props: {
   lang: Lang;
   settings: Settings;
   update: (p: Partial<Settings>) => void;
+  online: boolean;
   langToggle: React.ReactNode;
   onBack: () => void;
   onNext: () => void;
 }) {
-  const { lang, settings, update } = props;
+  const { lang, settings, update, online } = props;
   const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
   const setBot = (i: number, level: BotLevel) => update({ bots: settings.bots.map((b, j) => (j === i ? level : b)) });
   const toggleSet = (id: SetId) => {
@@ -199,10 +340,11 @@ function SetupScreen(props: {
         <button className="btn ghost" onClick={props.onBack}>
           ← {t('back')}
         </button>
-        <h1>{t('newGame')}</h1>
+        <h1>{online ? t('online.title') : t('newGame')}</h1>
         {props.langToggle}
       </header>
       <main className="page setup">
+        {online && !DEFAULT_DB && <DbField lang={lang} value={settings.onlineDb} onChange={(v) => update({ onlineDb: v.trim() })} />}
         <section>
           <label className="field">
             <span>{t('yourName')}</span>
@@ -215,7 +357,8 @@ function SetupScreen(props: {
           </label>
         </section>
 
-        <section>
+        {online && <OnlineSlots lang={lang} slots={settings.onlineSlots} onChange={(onlineSlots) => update({ onlineSlots })} />}
+        {!online && <section>
           <h2>{t('opponents')}</h2>
           {settings.bots.map((b, i) => (
             <div className="bot-row" key={i}>
@@ -239,7 +382,7 @@ function SetupScreen(props: {
               + {t('addBot')}
             </button>
           )}
-        </section>
+        </section>}
 
         <section>
           <h2>{t('packs')}</h2>
@@ -290,11 +433,51 @@ function SetupScreen(props: {
           </div>
         </section>
 
-        <button className="btn primary big" onClick={props.onNext}>
+        <button
+          className="btn primary big"
+          onClick={props.onNext}
+          disabled={online && (!settings.onlineSlots.includes('human') || !normalizeDb(DEFAULT_DB || settings.onlineDb))}
+        >
           {t('kingdom')} →
         </button>
       </main>
     </div>
+  );
+}
+
+/** Gra online: pozostałe miejsca przy stole – gracz (człowiek) albo bot. */
+function OnlineSlots({ lang, slots, onChange }: { lang: Lang; slots: OnlineSlot[]; onChange: (s: OnlineSlot[]) => void }) {
+  const t = (k: string, p?: Record<string, string | number>) => tr(lang, k, p);
+  const kinds: OnlineSlot[] = ['human', ...LEVELS];
+  let b = 0;
+  return (
+    <section>
+      <h2>{t('online.players')}</h2>
+      <p className="muted small">{t('online.youHost')}</p>
+      {slots.map((s, i) => (
+        <div className="bot-row online-row" key={i}>
+          <span className="bot-name">{s === 'human' ? t('online.playerN', { n: i + 2 }) : BOT_NAMES[b++]}</span>
+          <div className="seg">
+            {kinds.map((k) => (
+              <button key={k} className={s === k ? 'on' : ''} onClick={() => onChange(slots.map((x, j) => (j === i ? k : x)))}>
+                {k === 'human' ? t('online.human') : t(`level.${k}`)}
+              </button>
+            ))}
+          </div>
+          {slots.length > 1 && (
+            <button className="icon-btn" aria-label={t('remove')} onClick={() => onChange(slots.filter((_, j) => j !== i))}>
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+      {slots.length < 3 && (
+        <button className="btn ghost" onClick={() => onChange([...slots, 'human'])}>
+          + {t('online.addPlayer')}
+        </button>
+      )}
+      {!slots.includes('human') && <p className="muted small warn">{t('online.needHuman')}</p>}
+    </section>
   );
 }
 
@@ -311,6 +494,9 @@ function KingdomScreen(props: {
   langToggle: React.ReactNode;
   onBack: () => void;
   onStart: (extras: boolean) => void;
+  startLabel?: string;
+  busy?: boolean;
+  error?: string;
 }) {
   const { lang, sets, kingdom, setKingdom } = props;
   const symbols = props.pileView === 'symbols';
@@ -425,8 +611,13 @@ function KingdomScreen(props: {
           </section>
         )}
 
-        <button className="btn primary big sticky" disabled={kingdom.length !== KINGDOM_SIZE} onClick={() => props.onStart(hoardIn && extras)}>
-          {t('start')}
+        {props.error && <p className="lobby-status warn">{props.error}</p>}
+        <button
+          className="btn primary big sticky"
+          disabled={kingdom.length !== KINGDOM_SIZE || props.busy}
+          onClick={() => props.onStart(hoardIn && extras)}
+        >
+          {props.busy ? t('online.creating') : props.startLabel ?? t('start')}
         </button>
       </main>
       {detail && (
