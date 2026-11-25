@@ -45,7 +45,8 @@ function allowed(p, value) {
   if (!field) return !exists && room.length >= 20 && room.length <= 40 && typeof value?.cfg === 'string';
   if (field === 'seats') return /^\d$/.test(sub ?? '') && !exists && get(`${base}/cfg`) !== null && get(`${base}/start`) === null && typeof value?.name === 'string';
   if (field === 'start') return !sub && !exists && get(`${base}/cfg`) !== null && typeof value === 'number';
-  if (field === 'moves') return /^\d{1,5}$/.test(sub ?? '') && !exists && get(`${base}/start`) !== null && typeof value === 'string';
+  if (field === 'moves') return /^\d{1,5}$/.test(sub ?? '') && !exists && get(`${base}/start`) !== null && get(`${base}/end`) === null && typeof value === 'string';
+  if (field === 'end') return !sub && !exists && get(`${base}/start`) !== null && Number.isInteger(value) && get(`${base}/seats/${value}`) !== null;
   if (field === 'act') return !sub && get(`${base}/cfg`) !== null && typeof value === 'number';
   if (field === 'prep') return !sub && get(`${base}/start`) !== null && typeof value === 'number';
   if (field === 'next') return !sub && !exists && get(`${base}/start`) !== null && typeof value === 'string' && value.length >= 20 && value.length <= 40;

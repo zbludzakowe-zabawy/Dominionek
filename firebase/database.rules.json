@@ -34,9 +34,13 @@
         },
         "moves": {
           "$n": {
-            ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",
+            ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists() && !root.child('rooms').child($room).child('end').exists()",
             ".validate": "$n.matches(/^[0-9]{1,5}$/) && newData.isString() && newData.val().length <= 300"
           }
+        },
+        "end": {
+          ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 9"
         },
         "next": {
           ".write": "!data.exists() && root.child('rooms').child($room).child('start').exists()",

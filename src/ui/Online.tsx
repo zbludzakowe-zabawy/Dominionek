@@ -149,6 +149,8 @@ export function OnlineRoom(props: {
           ping: st.ping,
           push: (a) => conn.push(a),
           rematch: seat === 0 ? rematch : undefined,
+          resigned: st.end,
+          resign: () => void conn.resign(seat).catch(() => undefined),
         }}
       />
       {waiting && <RematchWait t={t} onClose={() => setHideWait(true)} />}

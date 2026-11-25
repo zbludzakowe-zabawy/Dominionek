@@ -37,10 +37,10 @@ Dalej w planie (kolejność jak w README → Plan):
    `FIREBASE_SERVICE_ACCOUNT`; zmiana zasad kasowania = aplikacja, reguły i skrypt – test pilnuje zgodności).
    Zmiany reguł wymagają opublikowania ich w konsoli Firebase. Środowisko chmurowe „Dominionek” ma dostęp do bazy
    (zapis testowych danych do prawdziwej bazy tylko za zgodą użytkownika).
-   **Do zrobienia (zapisane 25.11, „popracujemy później”):** w menu gry online opcja „Koniec gry – poddaję się”
-   (każdy gracz). Najpierw potwierdzenie (`ConfirmButton`/pytanie „Na pewno?”); „Nie” = nic. „Tak” = gra kończy się
-   u wszystkich, inni dostają informację, kto poddał grę, i „Wygrywasz walkowerem”. Do przemyślenia: zapis w pokoju
-   (np. pole `resign` z miejscem gracza – zmiana reguł + `fake-firebase.mjs`), z botami/3–4 graczami.
+   Poddanie gry (25.11): menu gry online → „Koniec gry – poddaję się” (`ConfirmButton`) → `RoomConn.resign` zapisuje raz
+   pole `end` (nr miejsca); reguły nie pozwalają potem dopisywać ruchów. `GameScreen` (`online.resigned`): brak decyzji
+   i botów, okienko końca: „Gra została poddana przez gracza: X.” + „Wygrywasz walkowerem!” (wszyscy pozostali), punkty
+   w chwili poddania, poddający na końcu listy bez miejsca. Wyniki – przycisk „Wyniki” na pasku fazy (też przy zwykłym końcu).
 3. (zrobione: widok „Symbole” stosów Królestwa – ewentualne poprawki ikon/opisów w `symbols.ts`.)
 4. Statystyki gier.
 

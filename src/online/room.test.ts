@@ -70,6 +70,27 @@ describe('pokój online', () => {
     expect(allSeated(st)).toBe(true);
   });
 
+  it('poddanie gry: zapis raz, po starcie; potem nie ma nowych ruchów', async () => {
+    const t = new MemoryStore().transport();
+    const id = await createRoom(t, cfg(9, [{ k: 'h' }, { k: 'h' }]), { name: 'Adam', cid: 'cA' });
+    const a = new RoomConn(t, id).open();
+    const b = new RoomConn(t, id).open();
+    await settle();
+    await b.join('Basia', 'cB');
+    await settle();
+    expect(await b.resign(1)).toBe(false); // przed startem nie
+    await a.begin();
+    await settle();
+    expect(a.state.end).toBeNull();
+    expect(await b.resign(1)).toBe(true);
+    await settle();
+    expect(a.state.end).toBe(1);
+    expect(await a.resign(0)).toBe(false); // już poddana
+    a.push([{ t: 'end' }]);
+    await settle();
+    expect(a.state.moves).toEqual([]);
+  });
+
   it('w poczekalni można zmienić imię, po starcie już nie', async () => {
     const t = new MemoryStore().transport();
     const id = await createRoom(t, cfg(7, [{ k: 'h' }, { k: 'h' }]), { name: 'Gracz 1', cid: 'cA' });
