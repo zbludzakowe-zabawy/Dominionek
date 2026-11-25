@@ -9,6 +9,7 @@ import type { Answer, Decision, Lang } from '../engine/types';
 import { msg, tr } from '../i18n';
 import { CardFace, Coin, ConfirmButton, Flask, PileTile, PlayedCard, useEscape } from './CardView';
 import { typeKey } from './art';
+import { useCardFx } from './Fx';
 import { saveGame, type SavedGame, type Settings, CARDS_REV } from './store';
 import type { LinkState } from '../online/transport';
 import { reconcile } from '../online/sync';
@@ -120,6 +121,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const handRef = useRef<HTMLDivElement>(null);
   const [handEdge, setHandEdge] = useState({ l: false, r: false });
   const names = game.players.map((p) => p.name);
+  // animacje: lot zdobytych kart, okienko z kartami z efektów
+  const fx = useCardFx({ game, human: HUMAN, enabled: settings.anim !== false, speed: settings.speed, ff, lang });
 
   const persist = (pl: Record<number, Plan> | null = plans, g: Game = game) =>
     online ? online.push(g.answers) : saveGame(g.over ? null : { v: 2, hoardRev: CARDS_REV, setup: g.setup, answers: g.answers, plans: pl ?? {} });
@@ -226,7 +229,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   // automatyczne kończenie tury (opcja w menu): tylko gdy nie zostały już żadne zakupy.
   // Dopóki jest zakup, czekamy na gracza – może chce kupić coś za 0.
   useEffect(() => {
-    if (!settings.autoEnd || !plans || !d || d.player !== HUMAN || d.kind !== 'buy' || game.turn.buys > 0) return;
+    if (!settings.autoEnd || fx.busy || !plans || !d || d.player !== HUMAN || d.kind !== 'buy' || game.turn.buys > 0) return;
     const id = window.setTimeout(() => {
       if (game.pending === d) submit({ t: 'end' });
     }, canUndo ? 1500 : 450);
@@ -239,6 +242,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
       if (ff) setFf(false);
       return;
     }
+    // boty czekają, aż skończy się okienko z moimi kartami (np. Urok od ataku) i lot kupionej karty
+    if ((fx.busy || fx.flying) && !ff) return;
     const step = () => {
       const p = game.pending;
       if (!p || p.player === HUMAN || !isBot(p.player)) return;
@@ -341,9 +346,13 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   };
 
   /** Powyżej 6 kart w ręce takie same karty są zgrupowane (ręka jest posortowana, więc leżą obok siebie). */
-  const grouped = me.hand.length > HAND_GROUP_FROM;
+  // karty, które jeszcze „lecą” w okienku animacji, pokazujemy na ręce dopiero po niej
+  const hiddenLeft: Record<string, number> = {};
+  for (const id of fx.hidden) hiddenLeft[id] = (hiddenLeft[id] ?? 0) + 1;
+  const shownHand = me.hand.map((id, i) => ({ id, i })).filter(({ id }) => !(hiddenLeft[id]-- > 0));
+  const grouped = shownHand.length > HAND_GROUP_FROM;
   const handGroups: { id: string; is: number[] }[] = [];
-  me.hand.forEach((id, i) => {
+  shownHand.forEach(({ id, i }) => {
     const last = handGroups[handGroups.length - 1];
     if (grouped && last && last.id === id) last.is.push(i);
     else handGroups.push({ id, is: [i] });
@@ -520,7 +529,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
 
       <div className="opponents">
         {[me, ...game.players.filter((p) => p.id !== HUMAN)].map((p) => (
-          <div key={p.id} className={'opp' + (turn.player === p.id ? ' active' : '') + (p.id === HUMAN ? ' me' : '')}>
+          <div key={p.id} data-p={p.id} className={'opp' + (turn.player === p.id ? ' active' : '') + (p.id === HUMAN ? ' me' : '')}>
             <div className="opp-main">
               <div className="opp-name">
                 {online && !p.bot && p.id !== HUMAN && (
@@ -659,7 +668,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
         <button className="deck-pill" onClick={() => setPanel('deck')}>
           {grouped && (
             <span className="pill-hand">
-              {t('hand')} {me.hand.length}
+              {t('hand')} {shownHand.length}
             </span>
           )}
           <span>
@@ -684,7 +693,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           ref={handRef}
           onScroll={updHandEdge}
           className={'hand n' + Math.min(handGroups.length, 12) + (handScroll ? ' scroll' : '')}
-          style={{ ['--n' as string]: grouped ? handGroups.length : Math.max(me.hand.length, 5), ['--lim' as string]: handLimit }}
+          style={{ ['--n' as string]: grouped ? handGroups.length : Math.max(shownHand.length, 5), ['--lim' as string]: handLimit }}
         >
           {handGroups.map(({ id, is }) => {
             if (is.length === 1) {
@@ -719,7 +728,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               </div>
             );
           })}
-          {!me.hand.length && <span className="muted">{t('noCards')}</span>}
+          {!shownHand.length && <span className="muted">{t('noCards')}</span>}
         </div>
         </div>
       </footer>
@@ -881,6 +890,10 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
               </div>
             </div>
             <label className="check menu-check">
+              <input type="checkbox" checked={settings.anim !== false} onChange={(e) => onSettings({ anim: e.target.checked })} />
+              <span>{t('animations')}</span>
+            </label>
+            <label className="check menu-check">
               <input type="checkbox" checked={settings.autoEnd} onChange={(e) => onSettings({ autoEnd: e.target.checked })} />
               <span>{t('autoEnd')}</span>
             </label>
@@ -955,6 +968,7 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           {t('gameOver')}
         </button>
       )}
+      {fx.layer}
     </div>
   );
 }

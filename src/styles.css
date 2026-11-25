@@ -654,6 +654,38 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .online-row .seg { min-width: 0; }
 .online-row .seg button { min-width: 0; padding: 8px 2px; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* ---------- animacje (src/ui/Fx.tsx) ---------- */
+.fx-fly { position: fixed; z-index: 140; pointer-events: none; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .55)); }
+.fx-fly .card { width: 100%; }
+.fx-backdrop {
+  position: fixed; inset: 0; z-index: 120; background: rgba(8, 10, 14, .45);
+  display: flex; align-items: center; justify-content: center; padding: 16px; animation: fade .15s ease;
+  transition: background .3s;
+}
+.fx-backdrop.out { background: rgba(8, 10, 14, 0); }
+.fx-pop {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: min(560px, 100%); padding: 14px 12px 10px;
+  background: color-mix(in srgb, var(--bg2) 92%, transparent); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+  transition: background .3s, border-color .3s, box-shadow .3s;
+}
+.fx-backdrop.out .fx-pop { background: transparent; border-color: transparent; box-shadow: none; }
+.fx-backdrop.out .fx-title, .fx-backdrop.out .fx-skip { opacity: 0; }
+.fx-title { font-family: Georgia, serif; font-weight: 700; font-size: 1.05rem; color: var(--gold); transition: opacity .2s; }
+.fx-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.fx-card { width: 104px; animation: fx-in .32s cubic-bezier(.2, .8, .3, 1.2) both; }
+.fx-cards.n4 .fx-card { width: min(104px, calc((100vw - 100px) / 4)); }
+.fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: min(86px, calc((100vw - 104px) / 5)); }
+.fx-card .card { width: 100%; }
+@keyframes fx-in { from { transform: translateY(-26px) scale(.7) rotate(-4deg); opacity: 0; } }
+.fx-bin { color: var(--muted); margin-top: 2px; transform-origin: 50% 100%; }
+.fx-skip { transition: opacity .2s; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .fx-card { width: 78px; }
+  .fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: 68px; }
+}
+
 /* ---------- udostępnianie ---------- */
 .icon-btn svg { display: block; margin: auto; }
 .share-btn {

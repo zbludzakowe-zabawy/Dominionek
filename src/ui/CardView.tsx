@@ -221,6 +221,7 @@ export function PileTile({ id, lang, count, state = '', onTap, onLong, onDouble,
     <div
       className={`tile ${typeClass(c)} ${state} ${count <= 0 ? 'empty' : ''}${symbols ? ' sym' : ''}`}
       style={style}
+      data-pile={id}
       {...press}
       role="button"
       aria-label={c.name[lang]}

@@ -6,6 +6,7 @@ import type {
   Ask,
   Decision,
   GameSetup,
+  Fx,
   LogEntry,
   Msg,
   PlayerState,
@@ -62,6 +63,8 @@ export class Game {
   readonly kingdom: string[];
   readonly trash: string[] = [];
   readonly log: LogEntry[] = [];
+  /** Zdarzenia do animacji w UI (dobrane / zdobyte / spalone karty); silnik ich nie czyta. */
+  readonly fx: Fx[] = [];
   readonly answers: Answer[] = [];
   turn: TurnState;
   pending: Decision | null = null;
@@ -127,7 +130,7 @@ export class Game {
 
     for (const p of this.players) {
       p.deck = this.rng.shuffle([...Array(7).fill('copper'), ...Array(3).fill('homestead')]);
-      this.draw(p, 5);
+      this.draw(p, 5, true);
     }
     const first = this.rng.int(n);
     this.turn = this.freshTurn(first, 1);
@@ -256,7 +259,7 @@ export class Game {
     p.discard.push(...p.play, ...p.hand);
     p.play = [];
     p.hand = [];
-    this.draw(p, 5);
+    this.draw(p, 5, true);
   }
 
   /** Czy obecny gracz stać na kartę (monety i Eliksiry). */
@@ -299,7 +302,8 @@ export class Game {
     this.logMsg(p.id, 'log.shuffle');
   }
 
-  draw(p: PlayerState, n: number): string[] {
+  /** Dobiera n kart na rękę. `quiet` = zwykłe dobranie (start, koniec tury) – bez animacji. */
+  draw(p: PlayerState, n: number, quiet = false): string[] {
     const drawn: string[] = [];
     for (let k = 0; k < n; k++) {
       this.ensureDeck(p, 1);
@@ -308,6 +312,7 @@ export class Game {
       drawn.push(id);
     }
     if (drawn.length) this.reveals++;
+    if (drawn.length && !quiet) this.fx.push({ k: 'hand', p: p.id, cards: drawn, how: 'draw' });
     p.hand.push(...drawn);
     sortCards(p.hand);
     return drawn;
@@ -326,7 +331,8 @@ export class Game {
     return out;
   }
 
-  addToHand(p: PlayerState, ids: string[]): void {
+  addToHand(p: PlayerState, ids: string[], fx = true): void {
+    if (fx && ids.length) this.fx.push({ k: 'hand', p: p.id, cards: [...ids], how: 'put' });
     p.hand.push(...ids);
     sortCards(p.hand);
   }
@@ -350,6 +356,7 @@ export class Game {
       this.trash.push(id);
       this.logMsg(p.id, 'log.trash', { card: '@' + id });
     }
+    if (ids.length) this.fx.push({ k: 'trash', p: p.id, cards: [...ids] });
   }
 
   discardCards(p: PlayerState, ids: string[], log = true): void {
@@ -361,7 +368,8 @@ export class Game {
   gain(p: PlayerState, id: string, to: 'discard' | 'hand' | 'deck' = 'discard', bought = false): boolean {
     if (!(this.supply[id] > 0)) return false;
     this.supply[id]--;
-    if (to === 'hand') this.addToHand(p, [id]);
+    this.fx.push({ k: 'gain', p: p.id, card: id, to, bought });
+    if (to === 'hand') this.addToHand(p, [id], false);
     else if (to === 'deck') p.deck.unshift(id);
     else p.discard.push(id);
     if (p.id === this.turn.player) this.turn.gained.push(id);

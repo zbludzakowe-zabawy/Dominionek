@@ -73,6 +73,11 @@ Dalej w planie (kolejność jak w README → Plan):
   - `GameScreen.tsx` – plansza; „ja” = `online.seat` (solo 0), boty liczy tylko gospodarz (`runBots`), online bez Cofnij
     i bez „Zacznij od nowa”; pętla botów, autozapis (`store.ts`, localStorage, `SavedGame.v = 2`;
     zmiana przebiegu tury wymaga podbicia wersji; zmiana działania kart → `CARDS_REV` + `CHANGED_IN`).
+  - `Fx.tsx` – animacje (`useCardFx`): silnik zapisuje zdarzenia w `Game.fx` (`hand` = dobrane z efektu / włożone na rękę,
+    `gain`, `trash`; zwykłe dobieranie 5 kart – `draw(p, n, true)` – bez zdarzenia). Zdobyte karty innych graczy (i moje
+    zakupy) lecą ze stosu (`data-pile`) do gracza (`.opp[data-p]`) / do talii; moje karty z efektów – okienko, karty
+    dochodzą po kolei, potem lecą na rękę/talię, spalone przechylają się i wpadają do kosza. Ręka chowa karty,
+    które jeszcze są w okienku (`fx.hidden`); boty czekają na koniec animacji. Wyłącznik: `settings.anim` (menu gry).
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
   - `Icons.tsx` – ikona dziennika (otwarta książka, inna niż ☰ menu) i `ShareButton` (trzy połączone kropki,
