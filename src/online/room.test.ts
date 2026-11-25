@@ -197,4 +197,15 @@ describe('pokój online', () => {
       g.localStorage = before;
     }
   });
+
+  it('gracz bez imienia dostaje „Gracz N” według miejsca', async () => {
+    const store = new MemoryStore();
+    const t = store.transport();
+    const id = await createRoom(t, cfg(9, [{ k: 'h' }, { k: 'b', level: 'easy' }, { k: 'h' }]), { name: 'A', cid: 'a' });
+    const c = new RoomConn(t, id).open();
+    await settle();
+    expect(await c.join((i) => `Gracz ${i + 1}`, 'c')).toBe(2);
+    await settle();
+    expect(c.state.seats[2]?.name).toBe('Gracz 3');
+  });
 });

@@ -238,14 +238,16 @@ export class RoomConn {
   }
 
   /** Dołącza do pierwszego wolnego miejsca człowieka. Zwraca nr miejsca albo null (brak miejsc). */
-  async join(name: string, cid: string): Promise<number | null> {
+  /** `name` może zależeć od miejsca (np. „Gracz 2”, gdy ktoś nie wpisał imienia). */
+  async join(name: string | ((seat: number) => string), cid: string): Promise<number | null> {
     const cfg = this.state.cfg;
     if (!cfg) return null;
     const mine = seatOf(this.state, cid);
     if (mine !== null) return mine;
     for (const i of humanSlots(cfg)) {
       if (this.state.seats[i]) continue;
-      if (await this.t.create(`rooms/${this.id}/seats/${i}`, { name, cid })) return i;
+      const n = typeof name === 'function' ? name(i) : name;
+      if (await this.t.create(`rooms/${this.id}/seats/${i}`, { name: n, cid })) return i;
     }
     return null;
   }

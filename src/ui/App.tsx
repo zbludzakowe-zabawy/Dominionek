@@ -146,7 +146,7 @@ export function App() {
     };
     const cid = rematch?.from.cid ?? randomId(16);
     const tp = firebaseTransport(ONLINE_DB);
-    const host = { name: settings.name.trim() || t('defaultName'), cid };
+    const host = { name: settings.name.trim() || t('online.playerN', { n: 1 }), cid };
     try {
       let extra = {};
       if (rematch) {
@@ -426,7 +426,7 @@ function SetupScreen(props: {
             <input
               value={settings.name}
               maxLength={16}
-              placeholder={t('defaultName')}
+              placeholder={online ? t('online.playerN', { n: 1 }) : t('defaultName')}
               onChange={(e) => update({ name: e.target.value })}
             />
           </label>
