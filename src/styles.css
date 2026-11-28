@@ -464,6 +464,12 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .sheet-actions .muted { margin-right: auto; }
 .sheet-actions .peek-btn { margin-right: auto; }
 .sheet-actions .peek-btn + .muted { margin-right: 0; }
+/* tak/nie: dwa przyciski wyboru na całą szerokość, „Pokaż rękę” w osobnym wierszu na wąskim ekranie */
+.yesno-sheet .sheet-actions { flex-wrap: wrap; }
+.yesno-sheet .yn { flex: 1 1 0; min-width: 0; }
+@media (max-width: 520px) {
+  .yesno-sheet .peek-btn { order: 3; flex-basis: 100%; margin-right: 0; }
+}
 .list-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding-top: 10px; }
 .list-cards .card { width: 120px; }
 .options { display: flex; flex-direction: column; gap: 8px; }
@@ -701,15 +707,23 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .fx-skip { transition: opacity .2s; }
 /* karty odkryte u przeciwników (atak) */
 .fx-reveal.gone { opacity: 0; transition: opacity .3s; }
+.fx-rows { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .fx-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+/* kilku przeciwników (wiersze jeden pod drugim) – karty mniejsze, żeby wszystko zmieściło się na ekranie */
+.fx-reveal .fx-card { max-width: max(52px, calc((100dvh - 150px - var(--rows) * 78px) / (var(--rows) * 1.48))); }
+.fx-reveal .fx-pop { max-height: 100%; overflow-y: auto; }
 .fx-who { font-weight: 700; font-size: .9rem; }
 .fx-out { margin-top: 3px; text-align: center; font-size: .72rem; font-weight: 700; border-radius: 6px; padding: 1px 4px; }
 .fx-discard .card, .fx-trash .card { filter: saturate(.55) brightness(.8); }
 .fx-discard .fx-out { color: #f0c27a; background: rgba(240, 194, 122, .12); }
 .fx-trash .fx-out { color: #f08a7a; background: rgba(240, 138, 122, .14); }
 .fx-deck .fx-out { color: #9fd49a; background: rgba(159, 212, 154, .12); }
+.fx-gain .fx-out, .fx-gainDeck .fx-out { color: #c9b3f0; background: rgba(201, 179, 240, .14); }
 @media (orientation: landscape) and (max-height: 520px) {
   .fx-card { width: 78px; }
+  /* poziomo: przeciwnicy obok siebie */
+  .fx-rows { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 8px 18px; }
+  .fx-reveal .fx-pop { --rows: 1 !important; width: min(860px, 100%); }
   .fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: 68px; }
 }
 

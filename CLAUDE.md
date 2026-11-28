@@ -94,8 +94,13 @@ Dalej w planie (kolejność jak w README → Plan):
     które jeszcze są w okienku (`fx.hidden`); boty czekają na koniec animacji. Wyłącznik: `settings.anim` (menu gry).
     Karty odkryte u przeciwników przez atak: `Game.revealFx(by, v, src, cards, out, show)` → zdarzenie `reveal`
     (co z każdą kartą: odrzucona / wraca na talię / spalona; `show` = komu pokazać) → okienko `RevealSheet` z wierszem
-    na każdego przeciwnika (~2 s, stuknięcie zamyka). Rzezimieszek: grający i ofiara; Herszt Bandytów: grający; Plotka: ofiara
-    (grający widział kartę przy wyborze). Nowy atak odkrywający karty → też `revealFx`.
+    na każdego przeciwnika (~2 s, stuknięcie zamyka). Tym samym okienkiem pokazujemy skutek każdego ataku (`RevealOut`:
+    odrzucona / wraca na talię / spalona / zdobyta / zdobyta na talię). Zasada (ustalona z użytkownikiem): okienko widzą
+    wszyscy gracze (też niezaatakowani) poza tym, kto sam wybierał (`revealFx(..., chose)`); wyłącza je tylko „Animacje”.
+    Rzezimieszek, Tkaczka Uroków, Smocza Danina: wszyscy (zdobyty Urok/Grosz ofiary nie ma osobnego „Zdobywasz”);
+    Herszt Bandytów, Syrena, Najemny Strażnik, Prastary Smok, Hrabianka, Skandal, Trujące Opary: wszyscy poza ofiarą
+    (Opary bez Skarbu na ręce – wszyscy); Plotka: wszyscy poza grającym; Smoczątko: nikt (karta zakryta).
+    Przy przewijaniu tur botów („»”) tylko okienka ataków na mnie. Kilka wierszy: karty mniejsze (`--rows`), poziomo wiersze obok siebie. Nowy atak → też `revealFx`.
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
   - `Icons.tsx` – ikona dziennika (otwarta książka, inna niż ☰ menu) i `ShareButton` (trzy połączone kropki,
@@ -155,7 +160,10 @@ Dalej w planie (kolejność jak w README → Plan):
   i `.end-buttons` też przyklejone. Pola, które trzeba wypełnić przed głównym przyciskiem, na górze ekranu.
 - Esc zamyka okienka (`useEscape` w `CardView.tsx` – stos: zamyka tylko to na wierzchu, np. najpierw pytanie
   „Nowa gra?”, potem menu). Okienko wyboru (opcje, odkryte karty) Esc chowa jak „Pokaż rękę”. Nowe okienko = `useEscape`.
-- Okienko wyboru (odkryte karty, opcje) ma „Pokaż rękę” – chowa je (`peek`), na pasku fazy pojawia się
+- Pytanie tak/nie (`yesno`: Wieża Mędrca, Plotka, Homunkulus, Warzelnik) – okienko z kartą, której dotyczy (`Decision.card`),
+  i przyciskami z opisem wyboru (`yes`/`no`, np. „Odłóż na bok” / „Weź na rękę”); `g.yesNo(..., { card, yes, no })`
+  – nowa karta z pytaniem tak/nie też podaje kartę i napisy (test pilnuje).
+- Okienko wyboru (odkryte karty, opcje, tak/nie) ma „Pokaż rękę” – chowa je (`peek`), na pasku fazy pojawia się
   „Wróć do wyboru”.
 
 ## Polecenia

@@ -404,8 +404,9 @@ describe('silnik', () => {
     const seen: Record<string, number> = {};
     for (let seed = 1; seed <= 12; seed++) {
       const r = new Rng(seed);
-      const rest = randomKingdom(['keep', 'court'], () => r.next()).filter((id) => !['footpad', 'banditchief', 'rumor'].includes(id));
-      const kingdom = ['footpad', 'banditchief', 'rumor', ...rest.slice(0, 7)];
+      const fixed = ['footpad', 'banditchief', 'rumor', 'siren', 'weaver'];
+      const rest = randomKingdom(['keep', 'court'], () => r.next()).filter((id) => !fixed.includes(id));
+      const kingdom = [...fixed, ...rest.slice(0, 5)];
       const players = [{ name: 'A', bot: 'medium' as const }, { name: 'B', bot: 'medium' as const }, { name: 'C', bot: 'easy' as const }];
       const g = new Game({ seed, kingdom, extras: [], players });
       playOut(g, seed, 4000);
@@ -415,16 +416,51 @@ describe('silnik', () => {
         expect(f.p).not.toBe(f.by);
         expect(f.cards.length).toBe(f.out.length);
         expect(f.cards.length).toBeGreaterThan(0);
+        const all = g.players.map((x) => x.id);
         if (f.src === 'footpad') {
-          expect(f.show).toEqual([f.by, f.p]);
+          expect(f.show).toEqual(all);
           f.cards.forEach((id, i) => {
             const good = card(id).types.includes('action') || card(id).types.includes('treasure');
             expect(f.out[i]).toBe(good ? 'discard' : 'deck');
           });
         }
         if (f.src === 'banditchief') expect(f.out.filter((o) => o === 'trash').length).toBeLessThanOrEqual(1);
+        // ofiara sama wybierała, co odrzuca – skutek widzą wszyscy poza nią
+        if (f.src === 'siren' || f.src === 'banditchief') expect(f.show).toEqual(all.filter((id) => id !== f.p));
+        if (f.src === 'rumor') expect(f.show).toEqual(all.filter((id) => id !== f.by));
+        if (f.src === 'siren') {
+          expect(f.out.every((o) => o === 'discard')).toBe(true);
+        }
+        // Urok od Tkaczki: nikt nie wybierał – widzą wszyscy
+        if (f.src === 'weaver') {
+          expect(f.show).toEqual(all);
+          expect(f).toMatchObject({ cards: ['hex'], out: ['gain'] });
+        }
       }
     }
     expect(seen.footpad).toBeGreaterThan(0);
+    expect(seen.siren).toBeGreaterThan(0);
+    expect(seen.weaver).toBeGreaterThan(0);
+  });
+  it('pytania tak/nie pokazują kartę i opisują oba wybory', () => {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 15; seed++) {
+      const r = new Rng(seed);
+      const fixed = ['sage', 'rumor', 'brewer', 'homunculus', 'footpad'];
+      const rest = randomKingdom(['keep', 'court', 'tower'], () => r.next()).filter((id) => !fixed.includes(id) && !card(id).potionCost);
+      const players = [{ name: 'A', bot: 'medium' as const }, { name: 'B', bot: 'medium' as const }];
+      const g = new Game({ seed, kingdom: [...fixed, ...rest.slice(0, 5)], extras: [], players });
+      for (let k = 0; k < 4000 && g.pending; k++) {
+        const d = g.pending;
+        if (d.kind === 'yesno') {
+          seen.add(d.source ?? '');
+          expect(d.card).toBeTruthy();
+          expect(d.yes).toBeTruthy();
+          expect(d.no).toBeTruthy();
+        }
+        g.submit(decide(g, d, 'medium', () => r.next()));
+      }
+    }
+    expect(seen.has('sage')).toBe(true);
   });
 });

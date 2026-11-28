@@ -189,7 +189,9 @@ export const KEEP: CardDef[] = [
           purpose: 'discard',
           source: 'guard',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'guard', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 4, role: 'attack' },
@@ -269,7 +271,9 @@ export const KEEP: CardDef[] = [
           purpose: 'discard',
           source: 'siren',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'siren', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 6, role: 'attack' },
@@ -377,7 +381,7 @@ export const KEEP: CardDef[] = [
     plus: { cards: 2 },
     *play(g, p) {
       yield* g.attack(p, function* (v) {
-        g.gain(v, 'hex');
+        if (g.gain(v, 'hex')) g.revealFx(p, v, 'weaver', ['hex'], ['gain']);
       });
     },
     ai: { value: 8, role: 'attack' },
@@ -407,8 +411,8 @@ export const KEEP: CardDef[] = [
         });
         g.trashCards(v, top.filter((_, i) => is.includes(i)));
         g.discardCards(v, top.filter((_, i) => !is.includes(i)), false);
-        // ofiara sama wybierała (i widzi spalenie) – okienko tylko dla grającego
-        g.revealFx(p, v, 'banditchief', top, top.map((_, i) => (is.includes(i) ? 'trash' : 'discard')), [p.id]);
+        // ofiara sama wybierała (i widzi spalenie) – okienko dla wszystkich poza nią
+        g.revealFx(p, v, 'banditchief', top, top.map((_, i) => (is.includes(i) ? 'trash' : 'discard')), v.id);
       });
     },
     ai: { value: 5, role: 'attack' },
@@ -479,7 +483,11 @@ export const KEEP: CardDef[] = [
         const [id] = g.takeTop(p, 1);
         if (!id) break;
         if (isType(card(id), 'action')) {
-          const skip = yield* g.yesNo(p, { k: 'prompt.setAside', p: { card: '@' + id } }, 'sage', g.turn.actions === 0);
+          const skip = yield* g.yesNo(p, { k: 'prompt.setAside', p: { card: '@' + id } }, 'sage', g.turn.actions === 0, {
+            card: id,
+            yes: { k: 'yn.setAside' },
+            no: { k: 'yn.toHand' },
+          });
           if (skip) {
             aside.push(id);
             continue;

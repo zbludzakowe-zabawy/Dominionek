@@ -360,8 +360,12 @@ export class Game {
     if (ids.length) this.fx.push({ k: 'trash', p: p.id, cards: [...ids] });
   }
 
-  /** Zdarzenie dla animacji: karty odkryte u gracza `v` przez atak gracza `by` i co się z nimi stało. */
-  revealFx(by: PlayerState, v: PlayerState, src: string, cards: string[], out: RevealOut[], show = [by.id, v.id]): void {
+  /**
+   * Zdarzenie dla animacji: skutek ataku gracza `by` u gracza `v` (karty i co się z nimi stało).
+   * Okienko widzą wszyscy poza tym, kto sam wybierał (`chose`) – on już te karty widział.
+   */
+  revealFx(by: PlayerState, v: PlayerState, src: string, cards: string[], out: RevealOut[], chose?: number): void {
+    const show = this.players.map((x) => x.id).filter((id) => id !== chose);
     if (cards.length) this.fx.push({ k: 'reveal', p: v.id, by: by.id, src, cards: [...cards], out: [...out], show });
   }
 
@@ -485,13 +489,14 @@ export class Game {
     return a.t === 'opts' ? a.is : [];
   }
 
-  *yesNo(p: PlayerState, prompt: Msg, source?: string, hint?: boolean): Ask<boolean> {
+  *yesNo(p: PlayerState, prompt: Msg, source?: string, hint?: boolean, show?: { card?: string; yes?: Msg; no?: Msg }): Ask<boolean> {
     const a = yield {
       kind: 'yesno',
       player: p.id,
       prompt,
       source,
       hint: hint === undefined ? undefined : { t: 'yes', v: hint },
+      ...show,
     };
     return a.t === 'yes' && a.v;
   }
