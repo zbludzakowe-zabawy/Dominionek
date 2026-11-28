@@ -46,6 +46,14 @@ const PALETTE: Record<string, [string, string, string]> = {
   curse: ['#30243a', '#b79ac6', '#d9c3df'],
 };
 
+// tła połówek karty wielotypowej – wyraźniejsze niż zwykłe, żeby podział było widać
+const DUAL_BG: Record<string, string> = {
+  action: '#2f4058',
+  reaction: '#1d4a4a',
+  treasure: '#5a4415',
+  victory: '#2c4c1c',
+};
+
 const f = (n: number) => n.toFixed(1);
 
 export interface Art {
@@ -61,7 +69,9 @@ export function cardArt(c: CardDef): Art {
   const hit = cache.get(c.id);
   if (hit) return hit;
   const r = new Rng(hash(c.id));
-  const [bg, line, accent] = PALETTE[typeKey(c)];
+  const k2 = typeKey2(c);
+  const [bg0, line, accent] = PALETTE[typeKey(c)];
+  const bg = k2 ? DUAL_BG[typeKey(c)] : bg0;
   const W = 100;
   const H = 60;
   const cx = W / 2;
@@ -71,8 +81,17 @@ export function cardArt(c: CardDef): Art {
   parts.push(
     `<defs><radialGradient id="g" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="${line}" stop-opacity=".2"/><stop offset="1" stop-color="${bg}" stop-opacity="0"/></radialGradient></defs>`,
     `<rect width="${W}" height="${H}" fill="${bg}"/>`,
-    `<rect width="${W}" height="${H}" fill="url(#g)"/>`,
   );
+  // karta wielotypowa: tło podzielone po skosie (jak ramka) – prawa dolna część w kolorze drugiego typu
+  if (k2) {
+    const bg2 = DUAL_BG[k2];
+    const d = 22;
+    parts.push(
+      `<path d="M${cx + d} 0H${W}V${H}H${cx - d}Z" fill="${bg2}"/>`,
+      `<path d="M${cx + d} 0L${cx - d} ${H}" stroke="${PALETTE[k2][1]}" stroke-opacity=".35" stroke-width=".6"/>`,
+    );
+  }
+  parts.push(`<rect width="${W}" height="${H}" fill="url(#g)"/>`);
   // Skarbiec Smoka: tło ze smoczych łusek zamiast kratki
   const scales = (c.symbol ?? c.set) === 'hoard';
   // Wieża Alchemika: siatka sześciokątów (jak wzory cząsteczek)
