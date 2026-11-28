@@ -128,8 +128,8 @@ export const COURT: CardDef[] = [
         const discard = yield* g.yesNo(p, { k: 'prompt.rumor', p: { card: '@' + id, name: v.name } }, 'rumor', good);
         if (discard) g.discardCards(v, [id]);
         else v.deck.unshift(id);
-        // grający widział kartę przy wyborze – okienko tylko dla odkrywającego
-        g.revealFx(p, v, 'rumor', [id], [discard ? 'discard' : 'deck'], [v.id]);
+        // grający widział kartę przy wyborze – okienko dla wszystkich poza nim
+        g.revealFx(p, v, 'rumor', [id], [discard ? 'discard' : 'deck'], p.id);
       });
     },
     ai: { value: 4, role: 'attack' },
@@ -315,7 +315,7 @@ export const COURT: CardDef[] = [
       yield* g.attack(p, function* (v) {
         const [i] = yield* g.chooseOptions(v, [o('opt.discardTwo'), o('opt.gainHex')], 1, { k: 'prompt.scandal' }, 'scandal', opts([0]));
         if (i === 1) {
-          if (g.gain(v, 'hex')) g.revealFx(p, v, 'scandal', ['hex'], ['gain'], [p.id]);
+          if (g.gain(v, 'hex')) g.revealFx(p, v, 'scandal', ['hex'], ['gain'], v.id);
           return;
         }
         const is = yield* g.chooseFromHand(v, {
@@ -327,7 +327,7 @@ export const COURT: CardDef[] = [
         });
         const out = g.takeFromHand(v, is);
         g.discardCards(v, out);
-        g.revealFx(p, v, 'scandal', out, out.map(() => 'discard' as const), [p.id]);
+        g.revealFx(p, v, 'scandal', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 7, role: 'attack' },
@@ -361,7 +361,7 @@ export const COURT: CardDef[] = [
         });
         const out = g.takeFromHand(v, is);
         g.discardCards(v, out);
-        g.revealFx(p, v, 'margravine', out, out.map(() => 'discard' as const), [p.id]);
+        g.revealFx(p, v, 'margravine', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 6, role: 'attack' },

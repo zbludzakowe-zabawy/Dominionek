@@ -191,7 +191,7 @@ export const KEEP: CardDef[] = [
         });
         const out = g.takeFromHand(v, is);
         g.discardCards(v, out);
-        g.revealFx(p, v, 'guard', out, out.map(() => 'discard' as const), [p.id]);
+        g.revealFx(p, v, 'guard', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 4, role: 'attack' },
@@ -273,7 +273,7 @@ export const KEEP: CardDef[] = [
         });
         const out = g.takeFromHand(v, is);
         g.discardCards(v, out);
-        g.revealFx(p, v, 'siren', out, out.map(() => 'discard' as const), [p.id]);
+        g.revealFx(p, v, 'siren', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 6, role: 'attack' },
@@ -411,8 +411,8 @@ export const KEEP: CardDef[] = [
         });
         g.trashCards(v, top.filter((_, i) => is.includes(i)));
         g.discardCards(v, top.filter((_, i) => !is.includes(i)), false);
-        // ofiara sama wybierała (i widzi spalenie) – okienko tylko dla grającego
-        g.revealFx(p, v, 'banditchief', top, top.map((_, i) => (is.includes(i) ? 'trash' : 'discard')), [p.id]);
+        // ofiara sama wybierała (i widzi spalenie) – okienko dla wszystkich poza nią
+        g.revealFx(p, v, 'banditchief', top, top.map((_, i) => (is.includes(i) ? 'trash' : 'discard')), v.id);
       });
     },
     ai: { value: 5, role: 'attack' },

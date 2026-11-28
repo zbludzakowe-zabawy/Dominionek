@@ -416,22 +416,24 @@ describe('silnik', () => {
         expect(f.p).not.toBe(f.by);
         expect(f.cards.length).toBe(f.out.length);
         expect(f.cards.length).toBeGreaterThan(0);
+        const all = g.players.map((x) => x.id);
         if (f.src === 'footpad') {
-          expect(f.show).toEqual([f.by, f.p]);
+          expect(f.show).toEqual(all);
           f.cards.forEach((id, i) => {
             const good = card(id).types.includes('action') || card(id).types.includes('treasure');
             expect(f.out[i]).toBe(good ? 'discard' : 'deck');
           });
         }
         if (f.src === 'banditchief') expect(f.out.filter((o) => o === 'trash').length).toBeLessThanOrEqual(1);
-        // ofiara sama wybierała, co odrzuca – skutek widzi grający
+        // ofiara sama wybierała, co odrzuca – skutek widzą wszyscy poza nią
+        if (f.src === 'siren' || f.src === 'banditchief') expect(f.show).toEqual(all.filter((id) => id !== f.p));
+        if (f.src === 'rumor') expect(f.show).toEqual(all.filter((id) => id !== f.by));
         if (f.src === 'siren') {
-          expect(f.show).toEqual([f.by]);
           expect(f.out.every((o) => o === 'discard')).toBe(true);
         }
-        // Urok od Tkaczki: widzi grający i ofiara
+        // Urok od Tkaczki: nikt nie wybierał – widzą wszyscy
         if (f.src === 'weaver') {
-          expect(f.show).toEqual([f.by, f.p]);
+          expect(f.show).toEqual(all);
           expect(f).toMatchObject({ cards: ['hex'], out: ['gain'] });
         }
       }

@@ -141,10 +141,10 @@ export const TOWER: CardDef[] = [
           });
           const out = g.takeFromHand(v, is);
           g.discardCards(v, out);
-          g.revealFx(p, v, 'vapors', out, out.map(() => 'discard' as const), [p.id]);
+          g.revealFx(p, v, 'vapors', out, out.map(() => 'discard' as const), v.id);
         } else if (g.gain(v, 'hex')) {
           // bez Skarbu na ręce ofiara nie wybierała – widzi skutek też ona
-          g.revealFx(p, v, 'vapors', ['hex'], ['gain'], hasTreasure ? [p.id] : [p.id, v.id]);
+          g.revealFx(p, v, 'vapors', ['hex'], ['gain'], hasTreasure ? v.id : undefined);
         }
       });
     },

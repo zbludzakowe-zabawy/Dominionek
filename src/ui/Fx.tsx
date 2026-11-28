@@ -4,15 +4,15 @@
 // - moje karty z efektów (dobrane, włożone na rękę, zdobyte, spalone) pokazują się po kolei w okienku,
 //   a potem lecą tam, gdzie trafiły (ręka, talia) albo – spalone – przechylają się i wpadają do kosza.
 // Silnik zapisuje zdarzenia w `Game.fx`; tu czytamy tylko nowe (po każdej zmianie gry).
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { Game } from '../engine/game';
-import type { Fx, Lang, RevealOut } from '../engine/types';
-import { tr } from '../i18n';
-import { CardFace } from './CardView';
-import type { Speed } from './store';
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { Game } from "../engine/game";
+import type { Fx, Lang, RevealOut } from "../engine/types";
+import { tr } from "../i18n";
+import { CardFace } from "./CardView";
+import type { Speed } from "./store";
 
-type PopKind = 'draw' | 'put' | 'gain' | 'gainHand' | 'gainDeck' | 'trash';
-type Dest = 'hand' | 'deck' | 'trash';
+type PopKind = "draw" | "put" | "gain" | "gainHand" | "gainDeck" | "trash";
+type Dest = "hand" | "deck" | "trash";
 interface Pop {
   key: number;
   kind: PopKind;
@@ -22,7 +22,7 @@ interface Pop {
 /** Karty odkryte u przeciwników przez jeden atak: wiersz na gracza. */
 interface RevealPop {
   key: number;
-  kind: 'reveal';
+  kind: "reveal";
   by: number;
   src: string;
   rows: { p: number; cards: string[]; out: RevealOut[] }[];
@@ -47,18 +47,33 @@ const FLY = 1000;
 /** Odkryte karty przeciwników – dłużej, żeby dało się przeczytać. */
 const REVEAL_HOLD = 2200;
 
-const popOf = (f: Exclude<Fx, { k: 'reveal' }>): Omit<Pop, 'key'> | null => {
-  if (f.k === 'hand') return { kind: f.how, cards: f.cards, dest: 'hand' };
-  if (f.k === 'trash') return { kind: 'trash', cards: f.cards, dest: 'trash' };
+const popOf = (f: Exclude<Fx, { k: "reveal" }>): Omit<Pop, "key"> | null => {
+  if (f.k === "hand") return { kind: f.how, cards: f.cards, dest: "hand" };
+  if (f.k === "trash") return { kind: "trash", cards: f.cards, dest: "trash" };
   if (f.bought) return null;
-  if (f.to === 'hand') return { kind: 'gainHand', cards: [f.card], dest: 'hand' };
-  return { kind: f.to === 'deck' ? 'gainDeck' : 'gain', cards: [f.card], dest: 'deck' };
+  if (f.to === "hand")
+    return { kind: "gainHand", cards: [f.card], dest: "hand" };
+  return {
+    kind: f.to === "deck" ? "gainDeck" : "gain",
+    cards: [f.card],
+    dest: "deck",
+  };
 };
 
-const rectOf = (sel: string) => document.querySelector(sel)?.getBoundingClientRect() ?? null;
-const visible = (r: DOMRect | null): r is DOMRect => !!r && r.width > 0 && r.height > 0;
+const rectOf = (sel: string) =>
+  document.querySelector(sel)?.getBoundingClientRect() ?? null;
+const visible = (r: DOMRect | null): r is DOMRect =>
+  !!r && r.width > 0 && r.height > 0;
 
-export function useCardFx(opts: { game: Game; human: number; enabled: boolean; speed: Speed; ff: boolean; lang: Lang; names: string[] }) {
+export function useCardFx(opts: {
+  game: Game;
+  human: number;
+  enabled: boolean;
+  speed: Speed;
+  ff: boolean;
+  lang: Lang;
+  names: string[];
+}) {
   const { game, human, enabled, ff, lang, names } = opts;
   const k = SCALE[opts.speed];
   const seen = useRef({ game, n: game.fx.length });
@@ -84,39 +99,63 @@ export function useCardFx(opts: { game: Game; human: number; enabled: boolean; s
     // karty zdobyte przez atak (Urok od Tkaczki…) pokazuje okienko ataku – bez osobnego „Zdobywasz”
     const byAttack: Record<string, number> = {};
     for (const f of fresh)
-      if (f.k === 'reveal' && f.p === human && f.show.includes(human))
+      if (f.k === "reveal" && f.p === human && f.show.includes(human))
         f.cards.forEach((id, i) => {
-          if (f.out[i] === 'gain' || f.out[i] === 'gainDeck') byAttack[id] = (byAttack[id] ?? 0) + 1;
+          if (f.out[i] === "gain" || f.out[i] === "gainDeck")
+            byAttack[id] = (byAttack[id] ?? 0) + 1;
         });
     for (const f of fresh) {
-      if (f.k === 'gain' && f.p === human && !f.bought && byAttack[f.card]) {
+      if (f.k === "gain" && f.p === human && !f.bought && byAttack[f.card]) {
         byAttack[f.card]--;
         continue;
       }
-      if (f.k === 'reveal') {
+      if (f.k === "reveal") {
         if (!f.show.includes(human)) continue;
+        // przewijanie tur botów: bez zaległych okienek z atakami, które mnie nie dotyczą
+        if (ff && f.p !== human) continue;
         const last = pops[pops.length - 1];
         const row = { p: f.p, cards: f.cards, out: f.out };
-        if (last && last.kind === 'reveal' && last.by === f.by && last.src === f.src) last.rows = [...last.rows, row];
-        else pops.push({ key: keyGen.current++, kind: 'reveal', by: f.by, src: f.src, rows: [row] });
+        if (
+          last &&
+          last.kind === "reveal" &&
+          last.by === f.by &&
+          last.src === f.src
+        )
+          last.rows = [...last.rows, row];
+        else
+          pops.push({
+            key: keyGen.current++,
+            kind: "reveal",
+            by: f.by,
+            src: f.src,
+            rows: [row],
+          });
         continue;
       }
       if (f.p === human) {
         const p = popOf(f);
         if (p) {
           const last = pops[pops.length - 1];
-          if (last && last.kind !== 'reveal' && last.kind === p.kind) last.cards = [...last.cards, ...p.cards];
+          if (last && last.kind !== "reveal" && last.kind === p.kind)
+            last.cards = [...last.cards, ...p.cards];
           else pops.push({ ...p, key: keyGen.current++ });
           continue;
         }
       }
       // zdobyta karta leci ze stosu do gracza
-      if (f.k !== 'gain' || ff) continue;
+      if (f.k !== "gain" || ff) continue;
       const from = rectOf(`[data-pile="${f.card}"]`);
-      const target = f.p === human ? '.deck-pill' : `.opp[data-p="${f.p}"]`;
+      const target = f.p === human ? ".deck-pill" : `.opp[data-p="${f.p}"]`;
       const to = rectOf(target);
       if (!visible(from) || !visible(to)) continue;
-      newFlies.push({ key: keyGen.current++, id: f.card, from, to, target, delay: flyDelay });
+      newFlies.push({
+        key: keyGen.current++,
+        id: f.card,
+        from,
+        to,
+        target,
+        delay: flyDelay,
+      });
       flyDelay += 250 * k;
     }
     if (pops.length) setQueue((q) => [...q, ...pops]);
@@ -126,25 +165,58 @@ export function useCardFx(opts: { game: Game; human: number; enabled: boolean; s
   const done = (key: number) => setQueue((q) => q.filter((p) => p.key !== key));
   const current = queue[0] ?? null;
   /** Karty, które są już na ręce, ale jeszcze „lecą” w okienku – ręka pokaże je po animacji. */
-  const hidden = queue.flatMap((p) => (p.kind !== 'reveal' && p.dest === 'hand' ? p.cards : []));
+  const hidden = queue.flatMap((p) =>
+    p.kind !== "reveal" && p.dest === "hand" ? p.cards : [],
+  );
 
   const layer = (
     <>
       {flies.map((f) => (
-        <FlyCard key={f.key} fly={f} lang={lang} dur={FLY * k} onEnd={() => setFlies((fl) => fl.filter((x) => x.key !== f.key))} />
+        <FlyCard
+          key={f.key}
+          fly={f}
+          lang={lang}
+          dur={FLY * k}
+          onEnd={() => setFlies((fl) => fl.filter((x) => x.key !== f.key))}
+        />
       ))}
       {current &&
-        (current.kind === 'reveal' ? (
-          <RevealSheet key={current.key} pop={current} human={human} names={names} lang={lang} k={k} onDone={() => done(current.key)} />
+        (current.kind === "reveal" ? (
+          <RevealSheet
+            key={current.key}
+            pop={current}
+            human={human}
+            names={names}
+            lang={lang}
+            k={k}
+            onDone={() => done(current.key)}
+          />
         ) : (
-          <PopSheet key={current.key} pop={current} lang={lang} k={k} onDone={() => done(current.key)} onSkip={() => setQueue([])} />
+          <PopSheet
+            key={current.key}
+            pop={current}
+            lang={lang}
+            k={k}
+            onDone={() => done(current.key)}
+            onSkip={() => setQueue([])}
+          />
         ))}
     </>
   );
   return { hidden, busy: queue.length > 0, flying: flies.length > 0, layer };
 }
 
-function FlyCard({ fly, lang, dur, onEnd }: { fly: Fly; lang: Lang; dur: number; onEnd: () => void }) {
+function FlyCard({
+  fly,
+  lang,
+  dur,
+  onEnd,
+}: {
+  fly: Fly;
+  lang: Lang;
+  dur: number;
+  onEnd: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const w = Math.max(54, Math.min(90, fly.from.width));
   useLayoutEffect(() => {
@@ -158,20 +230,43 @@ function FlyCard({ fly, lang, dur, onEnd }: { fly: Fly; lang: Lang; dur: number;
     el.style.top = `${y0}px`;
     const a = el.animate(
       [
-        { transform: 'translate(0,0) scale(.8)', opacity: 0, easing: 'ease-out' },
-        { transform: 'translate(0,-10px) scale(1.1)', opacity: 1, offset: 0.18 },
-        { transform: 'translate(0,-10px) scale(1.1)', opacity: 1, offset: 0.35, easing: 'cubic-bezier(.5,0,.4,1)' },
-        { transform: `translate(${dx}px,${dy}px) scale(.45)`, opacity: 1, offset: 0.9 },
+        {
+          transform: "translate(0,0) scale(.8)",
+          opacity: 0,
+          easing: "ease-out",
+        },
+        {
+          transform: "translate(0,-10px) scale(1.1)",
+          opacity: 1,
+          offset: 0.18,
+        },
+        {
+          transform: "translate(0,-10px) scale(1.1)",
+          opacity: 1,
+          offset: 0.35,
+          easing: "cubic-bezier(.5,0,.4,1)",
+        },
+        {
+          transform: `translate(${dx}px,${dy}px) scale(.45)`,
+          opacity: 1,
+          offset: 0.9,
+        },
         { transform: `translate(${dx}px,${dy}px) scale(.35)`, opacity: 0 },
       ],
-      { duration: dur, delay: fly.delay, fill: 'both' },
+      { duration: dur, delay: fly.delay, fill: "both" },
     );
     a.onfinish = () => {
       // gracz, do którego trafiła karta, na chwilę się podświetla
-      document.querySelector(fly.target)?.animate?.(
-        [{ boxShadow: '0 0 0 0 rgba(216,185,104,0)' }, { boxShadow: '0 0 0 3px rgba(216,185,104,.9)' }, { boxShadow: '0 0 0 0 rgba(216,185,104,0)' }],
-        { duration: 500 },
-      );
+      document
+        .querySelector(fly.target)
+        ?.animate?.(
+          [
+            { boxShadow: "0 0 0 0 rgba(216,185,104,0)" },
+            { boxShadow: "0 0 0 3px rgba(216,185,104,.9)" },
+            { boxShadow: "0 0 0 0 rgba(216,185,104,0)" },
+          ],
+          { duration: 500 },
+        );
       onEnd();
     };
     a.oncancel = onEnd;
@@ -185,7 +280,19 @@ function FlyCard({ fly, lang, dur, onEnd }: { fly: Fly; lang: Lang; dur: number;
   );
 }
 
-function PopSheet({ pop, lang, k, onDone, onSkip }: { pop: Pop; lang: Lang; k: number; onDone: () => void; onSkip: () => void }) {
+function PopSheet({
+  pop,
+  lang,
+  k,
+  onDone,
+  onSkip,
+}: {
+  pop: Pop;
+  lang: Lang;
+  k: number;
+  onDone: () => void;
+  onSkip: () => void;
+}) {
   const refs = useRef<(HTMLDivElement | null)[]>([]);
   const bin = useRef<HTMLDivElement>(null);
   const [out, setOut] = useState(false);
@@ -199,29 +306,65 @@ function PopSheet({ pop, lang, k, onDone, onSkip }: { pop: Pop; lang: Lang; k: n
   useEffect(() => {
     if (!out) return;
     const target =
-      pop.dest === 'trash' ? bin.current?.getBoundingClientRect() ?? null : pop.dest === 'hand' ? rectOf('.hand-area .hand') : rectOf('.deck-pill');
+      pop.dest === "trash"
+        ? (bin.current?.getBoundingClientRect() ?? null)
+        : pop.dest === "hand"
+          ? rectOf(".hand-area .hand")
+          : rectOf(".deck-pill");
     const anims: Animation[] = [];
     refs.current.forEach((el, i) => {
       if (!el || !el.animate) return;
       const r = el.getBoundingClientRect();
-      const tx = target ? target.left + target.width / 2 - (r.left + r.width / 2) : 0;
-      const ty = target ? target.top + target.height / 2 - (r.top + r.height / 2) : 200;
+      const tx = target
+        ? target.left + target.width / 2 - (r.left + r.width / 2)
+        : 0;
+      const ty = target
+        ? target.top + target.height / 2 - (r.top + r.height / 2)
+        : 200;
       const frames =
-        pop.dest === 'trash'
+        pop.dest === "trash"
           ? [
-              { transform: 'none', opacity: 1 },
-              { transform: `translate(${tx * 0.15}px, -14px) rotate(${i % 2 ? 14 : -14}deg)`, opacity: 1, offset: 0.3 },
-              { transform: `translate(${tx}px, ${ty}px) rotate(${i % 2 ? 40 : -40}deg) scale(.25)`, opacity: 0 },
+              { transform: "none", opacity: 1 },
+              {
+                transform: `translate(${tx * 0.15}px, -14px) rotate(${i % 2 ? 14 : -14}deg)`,
+                opacity: 1,
+                offset: 0.3,
+              },
+              {
+                transform: `translate(${tx}px, ${ty}px) rotate(${i % 2 ? 40 : -40}deg) scale(.25)`,
+                opacity: 0,
+              },
             ]
           : [
-              { transform: 'none', opacity: 1 },
-              { transform: `translate(${tx}px, ${ty}px) scale(.45)`, opacity: 0.2 },
+              { transform: "none", opacity: 1 },
+              {
+                transform: `translate(${tx}px, ${ty}px) scale(.45)`,
+                opacity: 0.2,
+              },
             ];
-      anims.push(el.animate(frames, { duration: OUT * k * (pop.dest === 'trash' ? 1.4 : 1), delay: i * 60 * k, easing: 'cubic-bezier(.5,0,.6,1)', fill: 'forwards' }));
+      anims.push(
+        el.animate(frames, {
+          duration: OUT * k * (pop.dest === "trash" ? 1.4 : 1),
+          delay: i * 60 * k,
+          easing: "cubic-bezier(.5,0,.6,1)",
+          fill: "forwards",
+        }),
+      );
     });
-    if (pop.dest === 'trash' && bin.current?.animate)
-      anims.push(bin.current.animate([{ transform: 'none' }, { transform: 'rotate(-8deg)' }, { transform: 'rotate(6deg)' }, { transform: 'none' }], { duration: 300, delay: OUT * k * 1.1 }));
-    const total = (pop.dest === 'trash' ? OUT * 1.4 + 200 : OUT) * k + n * 60 * k;
+    if (pop.dest === "trash" && bin.current?.animate)
+      anims.push(
+        bin.current.animate(
+          [
+            { transform: "none" },
+            { transform: "rotate(-8deg)" },
+            { transform: "rotate(6deg)" },
+            { transform: "none" },
+          ],
+          { duration: 300, delay: OUT * k * 1.1 },
+        ),
+      );
+    const total =
+      (pop.dest === "trash" ? OUT * 1.4 + 200 : OUT) * k + n * 60 * k;
     const id = window.setTimeout(onDone, total);
     return () => {
       window.clearTimeout(id);
@@ -231,10 +374,14 @@ function PopSheet({ pop, lang, k, onDone, onSkip }: { pop: Pop; lang: Lang; k: n
   }, [out]);
 
   return (
-    <div className={'fx-backdrop' + (out ? ' out' : '')} onClick={onSkip} role="presentation">
-      <div className="fx-pop" style={{ ['--fx-k' as string]: k }}>
+    <div
+      className={"fx-backdrop" + (out ? " out" : "")}
+      onClick={onSkip}
+      role="presentation"
+    >
+      <div className="fx-pop" style={{ ["--fx-k" as string]: k }}>
         <div className="fx-title">{tr(lang, `fx.${pop.kind}`, { n })}</div>
-        <div className={'fx-cards n' + Math.min(n, 6)}>
+        <div className={"fx-cards n" + Math.min(n, 6)}>
           {pop.cards.map((id, i) => (
             <div
               key={i}
@@ -248,26 +395,45 @@ function PopSheet({ pop, lang, k, onDone, onSkip }: { pop: Pop; lang: Lang; k: n
             </div>
           ))}
         </div>
-        {pop.dest === 'trash' && (
+        {pop.dest === "trash" && (
           <div ref={bin} className="fx-bin" aria-hidden="true">
-            <svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 48 48"
+              width="44"
+              height="44"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M10 14h28M19 14v-4h10v4M13 14l2 26h18l2-26M20 20v14M28 20v14" />
             </svg>
           </div>
         )}
-        <div className="fx-skip muted small">{tr(lang, 'fx.tapToSkip')}</div>
+        <div className="fx-skip muted small">{tr(lang, "fx.tapToSkip")}</div>
       </div>
     </div>
   );
 }
 
 /** Karty odkryte u przeciwników przez atak: kto, jakie karty i co się z nimi stało. Stuknięcie zamyka. */
-function RevealSheet(props: { pop: RevealPop; human: number; names: string[]; lang: Lang; k: number; onDone: () => void }) {
+function RevealSheet(props: {
+  pop: RevealPop;
+  human: number;
+  names: string[];
+  lang: Lang;
+  k: number;
+  onDone: () => void;
+}) {
   const { pop, human, names, lang, k, onDone } = props;
   const [out, setOut] = useState(false);
   const n = pop.rows.reduce((s, r) => s + r.cards.length, 0);
   useEffect(() => {
-    const a = window.setTimeout(() => setOut(true), (n * STAGGER + REVEAL_HOLD) * k);
+    const a = window.setTimeout(
+      () => setOut(true),
+      (n * STAGGER + REVEAL_HOLD) * k,
+    );
     const b = window.setTimeout(onDone, (n * STAGGER + REVEAL_HOLD + 300) * k);
     return () => {
       window.clearTimeout(a);
@@ -275,28 +441,52 @@ function RevealSheet(props: { pop: RevealPop; human: number; names: string[]; la
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const who = (p: number) => (p === human ? tr(lang, 'fx.you') : names[p] ?? '');
+  const who = (p: number) =>
+    p === human ? tr(lang, "fx.you") : (names[p] ?? "");
   const title =
-    pop.by === human ? tr(lang, 'fx.reveal', { card: '@' + pop.src }) : tr(lang, 'fx.revealBy', { card: '@' + pop.src, who: names[pop.by] ?? '' });
+    pop.by === human
+      ? tr(lang, "fx.reveal", { card: "@" + pop.src })
+      : tr(lang, "fx.revealBy", {
+          card: "@" + pop.src,
+          who: names[pop.by] ?? "",
+        });
   let i = 0;
   return (
-    <div className={'fx-backdrop fx-reveal' + (out ? ' out gone' : '')} onClick={onDone} role="presentation">
-      <div className="fx-pop" style={{ ['--fx-k' as string]: k }}>
+    <div
+      className={"fx-backdrop fx-reveal" + (out ? " out gone" : "")}
+      onClick={onDone}
+      role="presentation"
+    >
+      <div
+        className="fx-pop"
+        style={{
+          ["--fx-k" as string]: k,
+          ["--rows" as string]: pop.rows.length,
+        }}
+      >
         <div className="fx-title">{title}</div>
-        {pop.rows.map((r, ri) => (
-          <div key={ri} className="fx-row">
-            <div className="fx-who">{who(r.p)}</div>
-            <div className={'fx-cards n' + Math.min(r.cards.length, 6)}>
-              {r.cards.map((id, ci) => (
-                <div key={ci} className={'fx-card fx-' + r.out[ci]} style={{ animationDelay: `${i++ * STAGGER * k}ms` }}>
-                  <CardFace id={id} lang={lang} />
-                  <div className="fx-out">{tr(lang, 'fx.out.' + r.out[ci])}</div>
-                </div>
-              ))}
+        <div className="fx-rows">
+          {pop.rows.map((r, ri) => (
+            <div key={ri} className="fx-row">
+              <div className="fx-who">{who(r.p)}</div>
+              <div className={"fx-cards n" + Math.min(r.cards.length, 6)}>
+                {r.cards.map((id, ci) => (
+                  <div
+                    key={ci}
+                    className={"fx-card fx-" + r.out[ci]}
+                    style={{ animationDelay: `${i++ * STAGGER * k}ms` }}
+                  >
+                    <CardFace id={id} lang={lang} />
+                    <div className="fx-out">
+                      {tr(lang, "fx.out." + r.out[ci])}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-        <div className="fx-skip muted small">{tr(lang, 'fx.tapToClose')}</div>
+          ))}
+        </div>
+        <div className="fx-skip muted small">{tr(lang, "fx.tapToClose")}</div>
       </div>
     </div>
   );

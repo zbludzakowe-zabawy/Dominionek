@@ -391,7 +391,7 @@ export const HOARD: CardDef[] = [
         });
         const out = g.takeFromHand(v, is);
         g.discardCards(v, out);
-        g.revealFx(p, v, 'elderdragon', out, out.map(() => 'discard' as const), [p.id]);
+        g.revealFx(p, v, 'elderdragon', out, out.map(() => 'discard' as const), v.id);
       });
     },
     ai: { value: 8, role: 'attack' },
