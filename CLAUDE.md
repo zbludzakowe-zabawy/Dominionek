@@ -110,7 +110,8 @@ Dalej w planie (kolejność jak w README → Plan):
     (Twierdza: wieża; Skarbiec: konturowy łeb smoka z otwartą paszczą, patrzy w lewo, bez płomienia,
     bez tła; Wieża: konturowa buteleczka eliksiru; Dwór: konturowa maska karnawałowa z wypełnionymi oczami, przechylona, z falującymi sznureczkami,
     tło w arlekinowe romby). Karty wielotypowe (bez Ataku) mają ramkę po skosie w dwóch kolorach
-    (`typeClass`, `--tc2`).
+    (`typeClass`, `--tc2`) i tło obrazka podzielone po skosie na kolory obu typów (`DUAL_BG` w `art.ts`;
+    np. Skarb–Zwycięstwo żółto-zielone; Akcja–Atak i Akcja–Reakcja liczą się jako jednotypowe).
   - Koszt z Eliksirem: komponent `Cost` (moneta + fioletowa buteleczka `Flask`); licznik Eliksirów
     na pasku fazy, gdy stos Eliksiru jest w grze.
 - `src/i18n.ts` – wszystkie teksty UI/podpowiedzi/dziennika EN+PL (`tr`, liczba mnoga PL).
