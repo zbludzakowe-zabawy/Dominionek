@@ -282,7 +282,11 @@ export const TOWER: CardDef[] = [
       if (pick) g.gain(p, pick, 'hand');
     },
     *onAttack(g, v) {
-      if (!(yield* g.yesNo(v, { k: 'prompt.homunculusReact' }, 'homunculus', true))) return false;
+      if (!(yield* g.yesNo(v, { k: 'prompt.homunculusReact' }, 'homunculus', true, {
+          card: 'homunculus',
+          yes: { k: 'yn.reveal' },
+          no: { k: 'yn.takeAttack' },
+        }))) return false;
       g.logMsg(v.id, 'log.reveal', { card: '@homunculus' });
       const is = yield* g.chooseFromHand(v, {
         prompt: { k: 'prompt.discardN', p: { n: 1 } },
@@ -310,7 +314,11 @@ export const TOWER: CardDef[] = [
     plus: { cards: 2, actions: 1, coins: 1 },
     *onCleanup(g, p) {
       if (!p.play.includes('elixir')) return;
-      if (!(yield* g.yesNo(p, { k: 'prompt.brewerTop' }, 'brewer', true))) return;
+      if (!(yield* g.yesNo(p, { k: 'prompt.brewerTop' }, 'brewer', true, {
+          card: 'brewer',
+          yes: { k: 'yn.onDeck' },
+          no: { k: 'yn.leave' },
+        }))) return;
       const i = p.play.indexOf('brewer');
       if (i < 0) return;
       p.play.splice(i, 1);

@@ -442,4 +442,25 @@ describe('silnik', () => {
     expect(seen.siren).toBeGreaterThan(0);
     expect(seen.weaver).toBeGreaterThan(0);
   });
+  it('pytania tak/nie pokazują kartę i opisują oba wybory', () => {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 15; seed++) {
+      const r = new Rng(seed);
+      const fixed = ['sage', 'rumor', 'brewer', 'homunculus', 'footpad'];
+      const rest = randomKingdom(['keep', 'court', 'tower'], () => r.next()).filter((id) => !fixed.includes(id) && !card(id).potionCost);
+      const players = [{ name: 'A', bot: 'medium' as const }, { name: 'B', bot: 'medium' as const }];
+      const g = new Game({ seed, kingdom: [...fixed, ...rest.slice(0, 5)], extras: [], players });
+      for (let k = 0; k < 4000 && g.pending; k++) {
+        const d = g.pending;
+        if (d.kind === 'yesno') {
+          seen.add(d.source ?? '');
+          expect(d.card).toBeTruthy();
+          expect(d.yes).toBeTruthy();
+          expect(d.no).toBeTruthy();
+        }
+        g.submit(decide(g, d, 'medium', () => r.next()));
+      }
+    }
+    expect(seen.has('sage')).toBe(true);
+  });
 });

@@ -489,13 +489,14 @@ export class Game {
     return a.t === 'opts' ? a.is : [];
   }
 
-  *yesNo(p: PlayerState, prompt: Msg, source?: string, hint?: boolean): Ask<boolean> {
+  *yesNo(p: PlayerState, prompt: Msg, source?: string, hint?: boolean, show?: { card?: string; yes?: Msg; no?: Msg }): Ask<boolean> {
     const a = yield {
       kind: 'yesno',
       player: p.id,
       prompt,
       source,
       hint: hint === undefined ? undefined : { t: 'yes', v: hint },
+      ...show,
     };
     return a.t === 'yes' && a.v;
   }

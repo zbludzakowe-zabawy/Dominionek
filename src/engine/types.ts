@@ -87,7 +87,8 @@ export type Decision =
     })
   | (DecisionBase & { kind: 'pile'; allowed: string[]; optional: boolean; purpose: Purpose })
   | (DecisionBase & { kind: 'options'; options: Msg[]; count: number })
-  | (DecisionBase & { kind: 'yesno' });
+  /** Pytanie tak/nie o kartę `card` (UI pokazuje ją w okienku); `yes`/`no` = napisy na przyciskach. */
+  | (DecisionBase & { kind: 'yesno'; card?: string; yes?: Msg; no?: Msg });
 
 export type Answer =
   | { t: 'play'; i: number }

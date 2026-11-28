@@ -464,6 +464,12 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .sheet-actions .muted { margin-right: auto; }
 .sheet-actions .peek-btn { margin-right: auto; }
 .sheet-actions .peek-btn + .muted { margin-right: 0; }
+/* tak/nie: dwa przyciski wyboru na całą szerokość, „Pokaż rękę” w osobnym wierszu na wąskim ekranie */
+.yesno-sheet .sheet-actions { flex-wrap: wrap; }
+.yesno-sheet .yn { flex: 1 1 0; min-width: 0; }
+@media (max-width: 520px) {
+  .yesno-sheet .peek-btn { order: 3; flex-basis: 100%; margin-right: 0; }
+}
 .list-cards { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; padding-top: 10px; }
 .list-cards .card { width: 120px; }
 .options { display: flex; flex-direction: column; gap: 8px; }

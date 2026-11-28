@@ -125,7 +125,11 @@ export const COURT: CardDef[] = [
         if (!id) return;
         g.logMsg(v.id, 'log.reveal', { card: '@' + id });
         const good = isAction(id) || (isTreasure(id) && id !== 'copper');
-        const discard = yield* g.yesNo(p, { k: 'prompt.rumor', p: { card: '@' + id, name: v.name } }, 'rumor', good);
+        const discard = yield* g.yesNo(p, { k: 'prompt.rumor', p: { card: '@' + id, name: v.name } }, 'rumor', good, {
+          card: id,
+          yes: { k: 'yn.discard' },
+          no: { k: 'yn.backOnDeck' },
+        });
         if (discard) g.discardCards(v, [id]);
         else v.deck.unshift(id);
         // grający widział kartę przy wyborze – okienko dla wszystkich poza nim

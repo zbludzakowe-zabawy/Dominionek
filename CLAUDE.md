@@ -160,7 +160,10 @@ Dalej w planie (kolejność jak w README → Plan):
   i `.end-buttons` też przyklejone. Pola, które trzeba wypełnić przed głównym przyciskiem, na górze ekranu.
 - Esc zamyka okienka (`useEscape` w `CardView.tsx` – stos: zamyka tylko to na wierzchu, np. najpierw pytanie
   „Nowa gra?”, potem menu). Okienko wyboru (opcje, odkryte karty) Esc chowa jak „Pokaż rękę”. Nowe okienko = `useEscape`.
-- Okienko wyboru (odkryte karty, opcje) ma „Pokaż rękę” – chowa je (`peek`), na pasku fazy pojawia się
+- Pytanie tak/nie (`yesno`: Wieża Mędrca, Plotka, Homunkulus, Warzelnik) – okienko z kartą, której dotyczy (`Decision.card`),
+  i przyciskami z opisem wyboru (`yes`/`no`, np. „Odłóż na bok” / „Weź na rękę”); `g.yesNo(..., { card, yes, no })`
+  – nowa karta z pytaniem tak/nie też podaje kartę i napisy (test pilnuje).
+- Okienko wyboru (odkryte karty, opcje, tak/nie) ma „Pokaż rękę” – chowa je (`peek`), na pasku fazy pojawia się
   „Wróć do wyboru”.
 
 ## Polecenia

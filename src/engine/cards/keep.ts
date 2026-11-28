@@ -483,7 +483,11 @@ export const KEEP: CardDef[] = [
         const [id] = g.takeTop(p, 1);
         if (!id) break;
         if (isType(card(id), 'action')) {
-          const skip = yield* g.yesNo(p, { k: 'prompt.setAside', p: { card: '@' + id } }, 'sage', g.turn.actions === 0);
+          const skip = yield* g.yesNo(p, { k: 'prompt.setAside', p: { card: '@' + id } }, 'sage', g.turn.actions === 0, {
+            card: id,
+            yes: { k: 'yn.setAside' },
+            no: { k: 'yn.toHand' },
+          });
           if (skip) {
             aside.push(id);
             continue;

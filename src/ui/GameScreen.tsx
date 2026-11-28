@@ -284,7 +284,8 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
   const myDecision = d && d.player === HUMAN ? d : null;
 
   // Esc zamyka okienka (od wierzchu): okienko wyboru chowa się jak „Pokaż rękę”
-  const choiceSheet = !peek && (myDecision?.kind === 'options' || (myDecision?.kind === 'cards' && myDecision.zone === 'list'));
+  const choiceSheet =
+    !peek && (myDecision?.kind === 'options' || myDecision?.kind === 'yesno' || (myDecision?.kind === 'cards' && myDecision.zone === 'list'));
   useEscape(choiceSheet && (() => setPeek(true)));
   useEscape(ended && showEnd && (() => setShowEnd(false)));
   useEscape(panel && (() => setPanel(null)));
@@ -477,24 +478,15 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
           </button>
         ) : null;
         break;
+      // tak/nie i opcje – w okienku nad planszą
       case 'yesno':
-        buttons = (
-          <>
-            <button className="btn" onClick={() => submit({ t: 'yes', v: false })}>
-              {t('no')}
-            </button>
-            <button className="btn primary" onClick={() => submit({ t: 'yes', v: true })}>
-              {t('yes')}
-            </button>
-          </>
-        );
-        break;
       case 'options':
         break;
     }
   }
 
-  const sheetChoice = !!myDecision && ((myDecision.kind === 'cards' && myDecision.zone === 'list') || myDecision.kind === 'options');
+  const sheetChoice =
+    !!myDecision && ((myDecision.kind === 'cards' && myDecision.zone === 'list') || myDecision.kind === 'options' || myDecision.kind === 'yesno');
   if (sheetChoice && peek) {
     buttons = (
       <button className="btn primary" onClick={() => setPeek(false)}>
@@ -791,6 +783,34 @@ export function GameScreen({ saved, settings, onSettings, onRules, onExit, onNew
                 onClick={() => submit({ t: 'cards', is: sel })}
               >
                 {myDecision.min === 0 && sel.length === 0 ? t('skip') : t('confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* tak/nie: karta, której dotyczy pytanie, i przyciski z opisem wyboru */}
+      {myDecision?.kind === 'yesno' && !peek && (
+        <div className="sheet-backdrop">
+          <div className="sheet yesno-sheet">
+            <p className="sheet-prompt">
+              {myDecision.source && <b>{card(myDecision.source).name[lang]}: </b>}
+              {msg(lang, myDecision.prompt)}
+            </p>
+            {myDecision.card && (
+              <div className="list-cards">
+                <CardFace id={myDecision.card} lang={lang} onLong={() => setDetail({ id: myDecision.card!, from: 'other' })} />
+              </div>
+            )}
+            <div className="sheet-actions">
+              <button className="btn ghost peek-btn" onClick={() => setPeek(true)}>
+                {t('peekHand')}
+              </button>
+              <button className="btn yn" onClick={() => submit({ t: 'yes', v: false })}>
+                {myDecision.no ? msg(lang, myDecision.no) : t('no')}
+              </button>
+              <button className="btn primary yn" onClick={() => submit({ t: 'yes', v: true })}>
+                {myDecision.yes ? msg(lang, myDecision.yes) : t('yes')}
               </button>
             </div>
           </div>
