@@ -1,6 +1,6 @@
 // Animacje zmian, które dzieją się bez stuknięcia gracza:
 // - zdobyta/kupiona karta leci ze stosu do gracza (boty, inni gracze online; moje zakupy – do talii),
-// - karty odkryte u przeciwników przez atak (Rzezimieszek…) – okienko z tym, co stało się z każdą kartą,
+// - skutek ataku (Rzezimieszek, Syrena, Tkaczka Uroków…) – okienko z tym, co stało się z każdą kartą,
 // - moje karty z efektów (dobrane, włożone na rękę, zdobyte, spalone) pokazują się po kolei w okienku,
 //   a potem lecą tam, gdzie trafiły (ręka, talia) albo – spalone – przechylają się i wpadają do kosza.
 // Silnik zapisuje zdarzenia w `Game.fx`; tu czytamy tylko nowe (po każdej zmianie gry).
@@ -81,7 +81,18 @@ export function useCardFx(opts: { game: Game; human: number; enabled: boolean; s
     const pops: AnyPop[] = [];
     const newFlies: Fly[] = [];
     let flyDelay = 0;
+    // karty zdobyte przez atak (Urok od Tkaczki…) pokazuje okienko ataku – bez osobnego „Zdobywasz”
+    const byAttack: Record<string, number> = {};
+    for (const f of fresh)
+      if (f.k === 'reveal' && f.p === human && f.show.includes(human))
+        f.cards.forEach((id, i) => {
+          if (f.out[i] === 'gain' || f.out[i] === 'gainDeck') byAttack[id] = (byAttack[id] ?? 0) + 1;
+        });
     for (const f of fresh) {
+      if (f.k === 'gain' && f.p === human && !f.bought && byAttack[f.card]) {
+        byAttack[f.card]--;
+        continue;
+      }
       if (f.k === 'reveal') {
         if (!f.show.includes(human)) continue;
         const last = pops[pops.length - 1];

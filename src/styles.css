@@ -708,6 +708,7 @@ h1, h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 600; lette
 .fx-discard .fx-out { color: #f0c27a; background: rgba(240, 194, 122, .12); }
 .fx-trash .fx-out { color: #f08a7a; background: rgba(240, 138, 122, .14); }
 .fx-deck .fx-out { color: #9fd49a; background: rgba(159, 212, 154, .12); }
+.fx-gain .fx-out, .fx-gainDeck .fx-out { color: #c9b3f0; background: rgba(201, 179, 240, .14); }
 @media (orientation: landscape) and (max-height: 520px) {
   .fx-card { width: 78px; }
   .fx-cards.n5 .fx-card, .fx-cards.n6 .fx-card { width: 68px; }

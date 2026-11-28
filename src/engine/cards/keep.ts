@@ -189,7 +189,9 @@ export const KEEP: CardDef[] = [
           purpose: 'discard',
           source: 'guard',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'guard', out, out.map(() => 'discard' as const), [p.id]);
       });
     },
     ai: { value: 4, role: 'attack' },
@@ -269,7 +271,9 @@ export const KEEP: CardDef[] = [
           purpose: 'discard',
           source: 'siren',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'siren', out, out.map(() => 'discard' as const), [p.id]);
       });
     },
     ai: { value: 6, role: 'attack' },
@@ -377,7 +381,7 @@ export const KEEP: CardDef[] = [
     plus: { cards: 2 },
     *play(g, p) {
       yield* g.attack(p, function* (v) {
-        g.gain(v, 'hex');
+        if (g.gain(v, 'hex')) g.revealFx(p, v, 'weaver', ['hex'], ['gain']);
       });
     },
     ai: { value: 8, role: 'attack' },

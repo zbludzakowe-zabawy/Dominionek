@@ -182,7 +182,7 @@ export const HOARD: CardDef[] = [
     plus: { coins: 2 },
     *play(g, p) {
       yield* g.attack(p, function* (v) {
-        g.gain(v, 'copper', 'deck');
+        if (g.gain(v, 'copper', 'deck')) g.revealFx(p, v, 'tribute', ['copper'], ['gainDeck']);
       });
     },
     ai: { value: 4, role: 'attack' },
@@ -389,7 +389,9 @@ export const HOARD: CardDef[] = [
           purpose: 'discard',
           source: 'elderdragon',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'elderdragon', out, out.map(() => 'discard' as const), [p.id]);
       });
     },
     ai: { value: 8, role: 'attack' },

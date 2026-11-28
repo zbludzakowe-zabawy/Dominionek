@@ -107,10 +107,11 @@ export type Fx =
   | { k: 'hand'; p: number; cards: string[]; how: 'draw' | 'put' }
   | { k: 'gain'; p: number; card: string; to: 'discard' | 'hand' | 'deck'; bought: boolean }
   | { k: 'trash'; p: number; cards: string[] }
-  /** Karty odkryte u gracza `p` przez atak gracza `by` (karta `src`): co się stało z każdą; `show` = komu pokazać. */
+  /** Skutek ataku gracza `by` (karta `src`) u gracza `p`: karty i co się stało z każdą; `show` = komu pokazać. */
   | { k: 'reveal'; p: number; by: number; src: string; cards: string[]; out: RevealOut[]; show: number[] };
 
-export type RevealOut = 'discard' | 'deck' | 'trash';
+/** Co stało się z kartą: odrzucona, wraca na talię, spalona, zdobyta (na odrzucone / na talię). */
+export type RevealOut = 'discard' | 'deck' | 'trash' | 'gain' | 'gainDeck';
 
 export interface LogEntry {
   turn: number;

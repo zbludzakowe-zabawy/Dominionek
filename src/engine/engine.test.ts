@@ -404,8 +404,9 @@ describe('silnik', () => {
     const seen: Record<string, number> = {};
     for (let seed = 1; seed <= 12; seed++) {
       const r = new Rng(seed);
-      const rest = randomKingdom(['keep', 'court'], () => r.next()).filter((id) => !['footpad', 'banditchief', 'rumor'].includes(id));
-      const kingdom = ['footpad', 'banditchief', 'rumor', ...rest.slice(0, 7)];
+      const fixed = ['footpad', 'banditchief', 'rumor', 'siren', 'weaver'];
+      const rest = randomKingdom(['keep', 'court'], () => r.next()).filter((id) => !fixed.includes(id));
+      const kingdom = [...fixed, ...rest.slice(0, 5)];
       const players = [{ name: 'A', bot: 'medium' as const }, { name: 'B', bot: 'medium' as const }, { name: 'C', bot: 'easy' as const }];
       const g = new Game({ seed, kingdom, extras: [], players });
       playOut(g, seed, 4000);
@@ -423,8 +424,20 @@ describe('silnik', () => {
           });
         }
         if (f.src === 'banditchief') expect(f.out.filter((o) => o === 'trash').length).toBeLessThanOrEqual(1);
+        // ofiara sama wybierała, co odrzuca – skutek widzi grający
+        if (f.src === 'siren') {
+          expect(f.show).toEqual([f.by]);
+          expect(f.out.every((o) => o === 'discard')).toBe(true);
+        }
+        // Urok od Tkaczki: widzi grający i ofiara
+        if (f.src === 'weaver') {
+          expect(f.show).toEqual([f.by, f.p]);
+          expect(f).toMatchObject({ cards: ['hex'], out: ['gain'] });
+        }
       }
     }
     expect(seen.footpad).toBeGreaterThan(0);
+    expect(seen.siren).toBeGreaterThan(0);
+    expect(seen.weaver).toBeGreaterThan(0);
   });
 });

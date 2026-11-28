@@ -94,8 +94,11 @@ Dalej w planie (kolejność jak w README → Plan):
     które jeszcze są w okienku (`fx.hidden`); boty czekają na koniec animacji. Wyłącznik: `settings.anim` (menu gry).
     Karty odkryte u przeciwników przez atak: `Game.revealFx(by, v, src, cards, out, show)` → zdarzenie `reveal`
     (co z każdą kartą: odrzucona / wraca na talię / spalona; `show` = komu pokazać) → okienko `RevealSheet` z wierszem
-    na każdego przeciwnika (~2 s, stuknięcie zamyka). Rzezimieszek: grający i ofiara; Herszt Bandytów: grający; Plotka: ofiara
-    (grający widział kartę przy wyborze). Nowy atak odkrywający karty → też `revealFx`.
+    na każdego przeciwnika (~2 s, stuknięcie zamyka). Tym samym okienkiem pokazujemy skutek każdego ataku (`RevealOut`:
+    odrzucona / wraca na talię / spalona / zdobyta / zdobyta na talię). Zasada: widzi to, kto nie wybierał sam.
+    Rzezimieszek, Tkaczka Uroków, Smocza Danina: grający i ofiara (zdobyty Urok/Grosz ofiary nie ma osobnego „Zdobywasz”);
+    Herszt Bandytów, Syrena, Najemny Strażnik, Prastary Smok, Hrabianka, Skandal, Trujące Opary: grający (Opary bez Skarbu
+    na ręce – też ofiara); Plotka: ofiara; Smoczątko: nikt (karta zakryta). Nowy atak → też `revealFx`.
   - `CardView.tsx` – `CardFace`, `PileTile`, `PlayedCard`, `usePress` (stuknięcie / dwuklik /
     przytrzymanie), `ConfirmButton` (zamiast `window.confirm`, który w podglądzie jest blokowany).
   - `Icons.tsx` – ikona dziennika (otwarta książka, inna niż ☰ menu) i `ShareButton` (trzy połączone kropki,

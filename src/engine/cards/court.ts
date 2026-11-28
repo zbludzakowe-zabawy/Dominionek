@@ -315,7 +315,7 @@ export const COURT: CardDef[] = [
       yield* g.attack(p, function* (v) {
         const [i] = yield* g.chooseOptions(v, [o('opt.discardTwo'), o('opt.gainHex')], 1, { k: 'prompt.scandal' }, 'scandal', opts([0]));
         if (i === 1) {
-          g.gain(v, 'hex');
+          if (g.gain(v, 'hex')) g.revealFx(p, v, 'scandal', ['hex'], ['gain'], [p.id]);
           return;
         }
         const is = yield* g.chooseFromHand(v, {
@@ -325,7 +325,9 @@ export const COURT: CardDef[] = [
           purpose: 'discard',
           source: 'scandal',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'scandal', out, out.map(() => 'discard' as const), [p.id]);
       });
     },
     ai: { value: 7, role: 'attack' },
@@ -357,7 +359,9 @@ export const COURT: CardDef[] = [
           purpose: 'discard',
           source: 'margravine',
         });
-        g.discardCards(v, g.takeFromHand(v, is));
+        const out = g.takeFromHand(v, is);
+        g.discardCards(v, out);
+        g.revealFx(p, v, 'margravine', out, out.map(() => 'discard' as const), [p.id]);
       });
     },
     ai: { value: 6, role: 'attack' },
